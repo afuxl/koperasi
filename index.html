@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Interaktif: Panduan Perizinan & Kelembagaan Koperasi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (Warm Neutrals with Blue Accents) -->
+    <!-- Application Structure Plan: The SPA is structured as a narrative journey. It starts with the "Why" (Challenges), moves to the "How" (Licensing & Institutions), addresses the "What If" (Compliance & Sanctions), and concludes with the "Path Forward" (Recommendations). This thematic flow is more intuitive for learning than the report's linear structure, guiding users from problem to solution. Key interactions include interactive flowcharts and org charts built with HTML/CSS, and dynamic charts to visualize data, making complex procedures and structures digestible. -->
+    <!-- Visualization & Content Choices: 
+        - Challenges (Cards): Goal: Inform. Method: Styled HTML divs. Justification: Quickly highlights core problems.
+        - Establishment Flowchart: Goal: Organize. Method: HTML/CSS with Tailwind. Justification: Clearly shows a step-by-step process without SVG/Mermaid.
+        - Requirements Donut Chart: Goal: Compare/Inform. Method: Chart.js/Canvas. Justification: Visualizes key components of founding a cooperative.
+        - License Requirements (Tabs): Goal: Organize/Inform. Method: JS-powered tabs. Justification: Prevents information overload by separating general vs. specific (KSP) license requirements.
+        - Org Chart: Goal: Organize. Method: HTML/CSS with Tailwind. Justification: Visualizes hierarchy effectively without SVG/Mermaid.
+        - Reporting Timeline: Goal: Change/Organize. Method: HTML/CSS with Tailwind. Justification: Best way to represent time-based compliance duties.
+        - Sanctions Bar Chart: Goal: Compare. Method: Chart.js/Canvas. Justification: Effectively shows the escalating severity of non-compliance.
+        - Recommendations (Grid with Icons): Goal: Inform. Method: HTML/CSS with Unicode characters. Justification: Provides a scannable and memorable summary of actionable advice.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .flow-step {
+            transition: all 0.3s ease;
+        }
+        .flow-step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .tab-button.active {
+            border-color: #3b82f6;
+            background-color: #3b82f6;
+            color: white;
+        }
+        .org-line {
+            background-color: #6b7280;
+        }
+        .org-box {
+            border: 2px solid #6b7280;
+            background-color: white;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: #d1d5db;
+            border-radius: 2px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 24px;
+            width: 24px;
+            border-radius: 9999px;
+            background-color: #3b82f6;
+            border: 4px solid #f8f9fa;
+        }
+    </style>
+</head>
+<body class="text-gray-700">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-gray-800">Panduan Koperasi</h1>
+            <nav class="hidden md:flex space-x-8">
+                <a href="#tantangan" class="hover:text-blue-600">Tantangan</a>
+                <a href="#perizinan" class="hover:text-blue-600">Perizinan</a>
+                <a href="#kelembagaan" class="hover:text-blue-600">Kelembagaan</a>
+                <a href="#kepatuhan" class="hover:text-blue-600">Kepatuhan</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="text-center py-20 bg-blue-600 text-white px-6">
+        <div class="container mx-auto">
+            <h2 class="text-4xl md:text-5xl font-extrabold mb-4">Membangun Koperasi Profesional</h2>
+            <p class="text-lg md:text-xl max-w-3xl mx-auto text-blue-100">Sebuah panduan interaktif untuk menavigasi perizinan dan memperkuat tata kelola kelembagaan koperasi Anda.</p>
+        </div>
+    </section>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section id="tantangan" class="mb-20 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center text-gray-800 mb-4">Mengapa Ini Penting?</h3>
+            <p class="text-center max-w-3xl mx-auto mb-12 text-gray-600">Koperasi adalah pilar ekonomi, namun seringkali terhambat oleh tantangan fundamental. Memahami masalah ini adalah langkah pertama menuju solusi.</p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-xl shadow-lg border-t-4 border-blue-500">
+                    <h4 class="font-bold text-2xl mb-3 text-gray-800">Ketidakpastian Perizinan</h4>
+                    <p>Prosedur yang rumit dan birokrasi yang panjang menjadi penghalang utama legalitas, meningkatkan biaya dan risiko bagi koperasi baru.</p>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-lg border-t-4 border-blue-500">
+                    <h4 class="font-bold text-2xl mb-3 text-gray-800">Kelemahan Kelembagaan</h4>
+                    <p>Kurangnya pemahaman anggota, manajemen yang belum optimal, dan tata kelola yang tidak transparan mengancam kesehatan dan keberlanjutan koperasi.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="perizinan" class="mb-20 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center text-gray-800 mb-4">Langkah Awal: Legalitas dan Perizinan</h3>
+            <p class="text-center max-w-3xl mx-auto mb-12 text-gray-600">Mendirikan koperasi adalah proses terstruktur yang mengubah ide kolektif menjadi badan hukum. Setelah itu, izin usaha yang tepat harus diperoleh untuk operasional yang sah.</p>
+            
+            <div class="bg-white p-6 md:p-10 rounded-xl shadow-2xl mb-12">
+                <h4 class="text-2xl font-bold text-center text-gray-800 mb-8">Alur Proses Pendirian Badan Hukum</h4>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+                    <div class="flow-step p-4 rounded-lg bg-blue-50 border border-blue-200">
+                        <div class="text-4xl mb-2">1️⃣</div>
+                        <h5 class="font-bold">Persiapan</h5>
+                        <p class="text-sm text-gray-600">Penyuluhan, konsolidasi min. 9 pendiri, dan identifikasi kepentingan ekonomi bersama.</p>
+                    </div>
+                    <div class="flow-step p-4 rounded-lg bg-blue-50 border border-blue-200">
+                        <div class="text-4xl mb-2">2️⃣</div>
+                        <h5 class="font-bold">Rapat Pendirian</h5>
+                        <p class="text-sm text-gray-600">Penyusunan AD/ART, rencana usaha, dan pemilihan pengurus/pengawas.</p>
+                    </div>
+                    <div class="flow-step p-4 rounded-lg bg-blue-50 border border-blue-200">
+                        <div class="text-4xl mb-2">3️⃣</div>
+                        <h5 class="font-bold">Akta Notaris</h5>
+                        <p class="text-sm text-gray-600">Formalisasi dokumen pendirian oleh Notaris Pembuat Akta Koperasi (NPAK).</p>
+                    </div>
+                    <div class="flow-step p-4 rounded-lg bg-blue-50 border border-blue-200">
+                        <div class="text-4xl mb-2">4️⃣</div>
+                        <h5 class="font-bold">Pengesahan</h5>
+                        <p class="text-sm text-gray-600">Pengajuan online via SABH Kemenkumham untuk mendapatkan SK Badan Hukum.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <h4 class="text-xl font-bold text-center text-gray-800 mb-6">Komponen Kunci Pendirian</h4>
+                    <div class="chart-container">
+                        <canvas id="pendirianChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <h4 class="text-xl font-bold text-center text-gray-800 mb-6">Persyaratan Izin Usaha</h4>
+                    <div class="border-b border-gray-200 mb-4">
+                        <nav class="-mb-px flex space-x-4" aria-label="Tabs">
+                            <button id="tab-umum" class="tab-button active whitespace-nowrap py-3 px-4 border-b-2 font-semibold text-sm rounded-t-lg">Izin Umum</button>
+                            <button id="tab-ksp" class="tab-button whitespace-nowrap py-3 px-4 border-b-2 font-semibold text-sm rounded-t-lg">Khusus Simpan Pinjam</button>
+                        </nav>
+                    </div>
+                    <div id="content-umum" class="tab-content">
+                        <p class="mb-4">Untuk operasional umum, koperasi memerlukan izin dasar seperti Nomor Induk Berusaha (NIB) yang kini terintegrasi dalam sistem Online Single Submission (OSS).</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600">
+                            <li>Akta Pendirian & SK Kemenkumham</li>
+                            <li>Nomor Pokok Wajib Pajak (NPWP) Koperasi</li>
+                            <li>Data Pengurus dan Penanggung Jawab</li>
+                            <li>Surat Pernyataan Kedudukan Usaha</li>
+                        </ul>
+                    </div>
+                    <div id="content-ksp" class="tab-content hidden">
+                        <p class="mb-4">Untuk KSP/USP, persyaratannya jauh lebih ketat karena mengelola dana publik, memerlukan pengawasan khusus.</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600">
+                            <li>Rencana Usaha Simpan Pinjam untuk 3 tahun</li>
+                            <li>Laporan Keuangan Triwulan Terakhir</li>
+                            <li>SKCK dan Sertifikat Kompetensi Pengelola</li>
+                            <li>Pernyataan tidak ada hubungan keluarga antar organ</li>
+                            <li>Hasil Penilaian Kesehatan Usaha 2 tahun terakhir</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="kelembagaan" class="mb-20 scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center text-gray-800 mb-4">Pondasi Internal: Struktur & Tata Kelola</h3>
+            <p class="text-center max-w-3xl mx-auto mb-12 text-gray-600">Kekuatan koperasi terletak pada struktur kelembagaannya yang partisipatif dan akuntabel. Setiap organ memiliki peran vital dalam menjaga keseimbangan dan arah organisasi.</p>
+            
+            <div class="bg-white p-6 md:p-10 rounded-xl shadow-2xl mb-12">
+                <h4 class="text-2xl font-bold text-center text-gray-800 mb-10">Struktur Organisasi Koperasi</h4>
+                <div class="flex flex-col items-center">
+                    <div class="org-box p-4 w-64 text-center rounded-lg shadow-md">
+                        <h5 class="font-bold">RAPAT ANGGOTA</h5>
+                        <p class="text-sm text-gray-500">Pemegang Kekuasaan Tertinggi</p>
+                    </div>
+                    <div class="h-16 w-1 org-line"></div>
+                    <div class="flex justify-center w-full relative">
+                        <div class="h-1 w-2/3 md:w-1/2 org-line absolute top-1/2 -translate-y-1/2"></div>
+                        <div class="w-1 h-16 org-line absolute left-1/2 -translate-x-1/2 top-0"></div>
+                    </div>
+                    <div class="flex justify-around w-full mt-16">
+                        <div class="flex flex-col items-center text-center">
+                            <div class="org-box p-4 w-48 md:w-56 rounded-lg shadow-md">
+                                <h5 class="font-bold">PENGURUS</h5>
+                                <p class="text-sm text-gray-500">Pelaksana Operasional</p>
+                            </div>
+                            <p class="text-xs mt-2 max-w-xs text-gray-500">Mengelola usaha, menyelenggarakan RAT, dan bertanggung jawab penuh atas operasional.</p>
+                        </div>
+                        <div class="flex flex-col items-center text-center">
+                            <div class="org-box p-4 w-48 md:w-56 rounded-lg shadow-md">
+                                <h5 class="font-bold">PENGAWAS</h5>
+                                <p class="text-sm text-gray-500">Pengawas Internal</p>
+                            </div>
+                            <p class="text-xs mt-2 max-w-xs text-gray-500">Mengawasi kebijakan dan pengelolaan, serta melaporkan hasil pengawasan kepada RAT.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 md:p-10 rounded-xl shadow-2xl">
+                <h4 class="text-2xl font-bold text-center text-gray-800 mb-8">Saran Peningkatan Tata Kelola ✨</h4>
+                <p class="text-center max-w-2xl mx-auto mb-6 text-gray-600">Jelaskan tantangan tata kelola yang Anda hadapi, dan dapatkan saran praktis dari AI untuk memperkuat koperasi Anda.</p>
+                <textarea id="governance-input" class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500" rows="4" placeholder="Contoh: 'Sulit melibatkan anggota dalam pengambilan keputusan.' atau 'Transparansi keuangan masih kurang.'"></textarea>
+                <button id="generate-governance-btn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200">Dapatkan Saran Peningkatan</button>
+                <div id="governance-loading" class="hidden text-center mt-4 text-blue-600">Memproses...</div>
+                <div id="governance-output" class="mt-6"></div>
+            </div>
+        </section>
+
+        <section id="kepatuhan" class="scroll-mt-20">
+            <h3 class="text-3xl font-bold text-center text-gray-800 mb-4">Menjaga Integritas: Kepatuhan & Sanksi</h3>
+            <p class="text-center max-w-3xl mx-auto mb-12 text-gray-600">Profesionalisme koperasi tercermin dari kepatuhannya terhadap kewajiban pelaporan dan pemahaman atas konsekuensi hukum jika terjadi pelanggaran.</p>
+            <div class="grid lg:grid-cols-2 gap-12">
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <h4 class="text-xl font-bold text-center text-gray-800 mb-8">Linimasa Kewajiban Pelaporan</h4>
+                    <div class="relative pl-8 timeline">
+                        <div class="relative pl-8 pb-8 timeline-item">
+                            <h5 class="font-bold text-lg">Laporan Triwulanan</h5>
+                            <p class="text-gray-600">Disampaikan paling lambat tanggal 20 bulan berikutnya (April, Juli, Oktober).</p>
+                        </div>
+                        <div class="relative pl-8 pb-8 timeline-item">
+                            <h5 class="font-bold text-lg">Laporan Tahunan</h5>
+                            <p class="text-gray-600">Untuk Koperasi Primer paling lambat 30 April, dan Koperasi Sekunder paling lambat 30 Juni.</p>
+                        </div>
+                        <div class="relative pl-8 timeline-item">
+                            <h5 class="font-bold text-lg">Kewajiban Audit Eksternal</h5>
+                            <p class="text-gray-600">Wajib bagi KSP/USP dengan modal di atas <span class="font-black text-blue-600">Rp 5 Miliar</span> dalam satu tahun buku.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-8 rounded-xl shadow-lg">
+                    <h4 class="text-xl font-bold text-center text-gray-800 mb-8">Spektrum Sanksi Pelanggaran</h4>
+                    <div class="chart-container h-96">
+                        <canvas id="sanksiChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 md:p-10 rounded-xl shadow-2xl mt-12">
+                <h4 class="text-2xl font-bold text-center text-gray-800 mb-8">Draft Surat/Pengumuman ✨</h4>
+                <p class="text-center max-w-2xl mx-auto mb-6 text-gray-600">Pilih jenis dokumen dan berikan detail penting, AI akan membantu Anda menyusun drafnya dengan cepat.</p>
+                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="doc-type" class="block text-sm font-medium text-gray-700 mb-1">Jenis Dokumen:</label>
+                        <select id="doc-type" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Pilih Jenis Dokumen</option>
+                            <option value="Surat Undangan RAT">Surat Undangan RAT</option>
+                            <option value="Pengumuman Pembagian SHU">Pengumuman Pembagian SHU</option>
+                            <option value="Pemberitahuan Perubahan AD/ART">Pemberitahuan Perubahan AD/ART</option>
+                            <option value="Surat Pemberitahuan Umum">Surat Pemberitahuan Umum</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="doc-details" class="block text-sm font-medium text-gray-700 mb-1">Detail Penting:</label>
+                        <textarea id="doc-details" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" rows="3" placeholder="Contoh: 'Tanggal RAT 10 Agustus 2025, Pukul 09.00, Tempat Aula Koperasi, Agenda: Laporan Pengurus, Pengesahan Program Kerja.'"></textarea>
+                    </div>
+                </div>
+                <button id="generate-doc-btn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200">Buat Draf Dokumen</button>
+                <div id="doc-loading" class="hidden text-center mt-4 text-blue-600">Memproses...</div>
+                <div id="doc-output" class="mt-6"></div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-gray-800 text-white mt-20">
+        <div class="container mx-auto px-6 py-8">
+            <div class="text-center">
+                <h3 class="text-2xl font-bold mb-4">Rekomendasi untuk Koperasi Unggul</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-8 max-w-4xl mx-auto text-gray-300">
+                    <div class="p-4"><span class="text-3xl block mb-2">💻</span> Digitalisasi Proses</div>
+                    <div class="p-4"><span class="text-3xl block mb-2">🎓</span> Penguatan Kapasitas SDM</div>
+                    <div class="p-4"><span class="text-3xl block mb-2">🏛️</span> Penerapan GCG Konsisten</div>
+                    <div class="p-4"><span class="text-3xl block mb-2">💡</span> Pemahaman Jati Diri</div>
+                    <div class="p-4"><span class="text-3xl block mb-2">💰</span> Akses Modal & Pasar</div>
+                    <div class="p-4"><span class="text-3xl block mb-2">🤝</span> Jaringan & Kolaborasi</div>
+                </div>
+            </div>
+            <div class="text-center text-gray-400 text-sm mt-12 pt-8 border-t border-gray-700">
+                <p>&copy; 2025 Panduan Interaktif Koperasi. Dibuat untuk tujuan edukasi.</p>
+            </div>
+        </div>
+    </footer>
+
+
+    <script>
+        const tooltipTitleCallback = (tooltipItems) => {
+            const item = tooltipItems[0];
+            let label = item.chart.data.labels[item.dataIndex];
+            if (Array.isArray(label)) {
+                return label.join(' ');
+            }
+            return label;
+        };
+
+        const wrapLabel = (label) => {
+            const maxLength = 16;
+            if (label.length <= maxLength) return label;
+            const words = label.split(' ');
+            const lines = [];
+            let currentLine = '';
+            words.forEach(word => {
+                if ((currentLine + ' ' + word).trim().length > maxLength) {
+                    lines.push(currentLine.trim());
+                    currentLine = word;
+                } else {
+                    currentLine = (currentLine + ' ' + word).trim();
+                }
+            });
+            if (currentLine) {
+                lines.push(currentLine.trim());
+            }
+            return lines;
+        };
+
+        const pendirianCtx = document.getElementById('pendirianChart').getContext('2d');
+        new Chart(pendirianCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Jumlah Pendiri Cukup', 'Kepentingan Ekonomi Sama', 'Dokumen Lengkap (AD/ART & Rencana Usaha)'],
+                datasets: [{
+                    data: [33.3, 33.3, 33.3],
+                    backgroundColor: ['#3b82f6', '#60a5fa', '#93c5fd'],
+                    borderColor: '#f8f9fa',
+                    borderWidth: 5,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#4b5563', font: { family: "'Inter', sans-serif" } }
+                    },
+                    tooltip: { callbacks: { title: tooltipTitleCallback } }
+                }
+            }
+        });
+
+        const sanksiCtx = document.getElementById('sanksiChart').getContext('2d');
+        const sanksiLabels = [
+            'Peringatan Tertulis', 'Penangguhan NIK', 'Pembekuan Izin Usaha', 
+            'Pencabutan Izin Usaha', 'Pidana Penggelapan', 'Pidana Pencucian Uang'
+        ].map(wrapLabel);
+        
+        new Chart(sanksiCtx, {
+            type: 'bar',
+            data: {
+                labels: sanksiLabels,
+                datasets: [{
+                    label: 'Tingkat Keparahan Sanksi',
+                    data: [20, 40, 60, 80, 95, 100],
+                    backgroundColor: ['#93c5fd', '#60a5fa', '#3b82f6', '#2563eb', '#f97316', '#ef4444'],
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: { color: '#4b5563', font: { family: "'Inter', sans-serif" }},
+                        grid: { drawOnChartArea: false }
+                    },
+                    y: {
+                        ticks: { color: '#4b5563', font: { family: "'Inter', sans-serif" } },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { title: tooltipTitleCallback } }
+                }
+            }
+        });
+
+        const tabUmumBtn = document.getElementById('tab-umum');
+        const tabKspBtn = document.getElementById('tab-ksp');
+        const contentUmum = document.getElementById('content-umum');
+        const contentKsp = document.getElementById('content-ksp');
+
+        tabUmumBtn.addEventListener('click', () => {
+            tabUmumBtn.classList.add('active');
+            tabKspBtn.classList.remove('active');
+            contentUmum.classList.remove('hidden');
+            contentKsp.classList.add('hidden');
+        });
+
+        tabKspBtn.addEventListener('click', () => {
+            tabKspBtn.classList.add('active');
+            tabUmumBtn.classList.remove('active');
+            contentKsp.classList.remove('hidden');
+            contentUmum.classList.add('hidden');
+        });
+
+        const callGeminiApi = async (prompt, retries = 0) => {
+            const maxRetries = 5;
+            const baseDelay = 1000; // 1 second
+
+            try {
+                const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                const payload = { contents: chatHistory };
+                const apiKey = ""; // Canvas will provide this at runtime
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    if (response.status === 429 && retries < maxRetries) {
+                        const delay = baseDelay * Math.pow(2, retries);
+                        console.log(`Rate limit hit. Retrying in ${delay / 1000} seconds...`);
+                        await new Promise(res => setTimeout(res, delay));
+                        return callGeminiApi(prompt, retries + 1);
+                    }
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error("Invalid response structure from Gemini API");
+                }
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                return "Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.";
+            }
+        };
+
+        const governanceInput = document.getElementById('governance-input');
+        const generateGovernanceBtn = document.getElementById('generate-governance-btn');
+        const governanceOutput = document.getElementById('governance-output');
+        const governanceLoading = document.getElementById('governance-loading');
+
+        if (generateGovernanceBtn) {
+            generateGovernanceBtn.addEventListener('click', async () => {
+                const challenge = governanceInput.value.trim();
+                if (!challenge) {
+                    governanceOutput.innerHTML = '<p class="text-red-500">Mohon masukkan deskripsi tantangan Anda.</p>';
+                    return;
+                }
+
+                governanceLoading.classList.remove('hidden');
+                governanceOutput.innerHTML = '';
+
+                const prompt = `Berikan saran singkat dan praktis untuk meningkatkan tata kelola koperasi berdasarkan tantangan berikut: "${challenge}". Fokus pada aspek transparansi, akuntabilitas, partisipasi anggota, dan efisiensi manajemen. Berikan dalam format poin-poin.`;
+                const responseText = await callGeminiApi(prompt);
+
+                governanceLoading.classList.add('hidden');
+                governanceOutput.innerHTML = `<div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-800 whitespace-pre-wrap">${responseText}</div>`;
+            });
+        }
+
+        const docTypeSelect = document.getElementById('doc-type');
+        const docDetailsInput = document.getElementById('doc-details');
+        const generateDocBtn = document.getElementById('generate-doc-btn');
+        const docOutput = document.getElementById('doc-output');
+        const docLoading = document.getElementById('doc-loading');
+
+        if (generateDocBtn) {
+            generateDocBtn.addEventListener('click', async () => {
+                const docType = docTypeSelect.value;
+                const details = docDetailsInput.value.trim();
+
+                if (!docType || !details) {
+                    docOutput.innerHTML = '<p class="text-red-500">Mohon lengkapi jenis dokumen dan detail.</p>';
+                    return;
+                }
+
+                docLoading.classList.remove('hidden');
+                docOutput.innerHTML = '';
+
+                let prompt = `Buatkan draf ${docType} untuk koperasi dengan detail sebagai berikut: "${details}". Formatnya harus formal dan sesuai untuk koperasi.`;
+
+                if (docType === "Surat Undangan RAT") {
+                    prompt = `Buatkan draf Surat Undangan Rapat Anggota Tahunan (RAT) untuk koperasi. Detail penting: ${details}. Sertakan tanggal, waktu, tempat, agenda utama, dan instruksi RSVP jika relevan.`;
+                } else if (docType === "Pengumuman Pembagian SHU") {
+                    prompt = `Buatkan draf Pengumuman Pembagian Sisa Hasil Usaha (SHU) untuk anggota koperasi. Detail penting: ${details}. Sertakan periode SHU, tanggal pembagian, dan metode pengambilan.`;
+                } else if (docType === "Pemberitahuan Perubahan AD/ART") {
+                    prompt = `Buatkan draf Pemberitahuan Perubahan Anggaran Dasar/Anggaran Rumah Tangga (AD/ART) kepada anggota koperasi. Detail penting: ${details}. Sertakan poin-poin perubahan utama dan tanggal berlaku.`;
+                }
+
+                const responseText = await callGeminiApi(prompt);
+
+                docLoading.classList.add('hidden');
+                docOutput.innerHTML = `<div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-800 whitespace-pre-wrap">${responseText}</div>`;
+            });
+        }
+    </script>
+</body>
+</html>
