@@ -82,6 +82,35 @@
             background-color: #3b82f6;
             border: 4px solid #f8f9fa;
         }
+        .output-container {
+            white-space: pre-wrap;
+            background-color: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            color: #1f2937;
+        }
+        .output-container h4 {
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .output-container p {
+            margin-bottom: 1rem;
+        }
+        .output-container ul {
+            list-style-type: disc;
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .output-container ol {
+            list-style-type: decimal;
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .output-container strong, .output-container b {
+            font-weight: 700;
+        }
     </style>
 </head>
 <body class="text-gray-700">
@@ -494,6 +523,42 @@
         const docOutput = document.getElementById('doc-output');
         const docLoading = document.getElementById('doc-loading');
 
+        const formatOutput = (text) => {
+            let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formattedText = formattedText.replace(/^\* (.*?)(\n|$)/gm, '<li>$1</li>');
+            formattedText = `<ul>${formattedText}</ul>`;
+
+            const headingRegex = /^# (.+)/;
+            if (headingRegex.test(formattedText)) {
+                formattedText = formattedText.replace(headingRegex, '<h4>$1</h4>');
+            }
+
+            const lines = formattedText.split('\n');
+            const newLines = [];
+            let inList = false;
+            
+            lines.forEach(line => {
+                if (line.startsWith('<li>')) {
+                    if (!inList) {
+                        newLines.push('<ul>');
+                        inList = true;
+                    }
+                    newLines.push(line);
+                } else {
+                    if (inList) {
+                        newLines.push('</ul>');
+                        inList = false;
+                    }
+                    newLines.push(`<p>${line}</p>`);
+                }
+            });
+            if (inList) {
+                newLines.push('</ul>');
+            }
+
+            return newLines.join('');
+        };
+        
         if (generateDocBtn) {
             generateDocBtn.addEventListener('click', async () => {
                 const docType = docTypeSelect.value;
@@ -510,17 +575,19 @@
                 let prompt = `Buatkan draf ${docType} untuk koperasi dengan detail sebagai berikut: "${details}". Formatnya harus formal dan sesuai untuk koperasi.`;
 
                 if (docType === "Surat Undangan RAT") {
-                    prompt = `Buatkan draf Surat Undangan Rapat Anggota Tahunan (RAT) untuk koperasi. Detail penting: ${details}. Sertakan tanggal, waktu, tempat, agenda utama, dan instruksi RSVP jika relevan.`;
+                    prompt = `Buatkan draf Surat Undangan Rapat Anggota Tahunan (RAT) untuk koperasi. Detail penting: ${details}. Sertakan tanggal, waktu, tempat, agenda utama, dan instruksi RSVP jika relevan. Gunakan format markdown dengan teks tebal (**teks**) dan bullet point (* item).`;
                 } else if (docType === "Pengumuman Pembagian SHU") {
-                    prompt = `Buatkan draf Pengumuman Pembagian Sisa Hasil Usaha (SHU) untuk anggota koperasi. Detail penting: ${details}. Sertakan periode SHU, tanggal pembagian, dan metode pengambilan.`;
+                    prompt = `Buatkan draf Pengumuman Pembagian Sisa Hasil Usaha (SHU) untuk anggota koperasi. Detail penting: ${details}. Sertakan periode SHU, tanggal pembagian, dan metode pengambilan. Gunakan format markdown dengan teks tebal (**teks**) dan bullet point (* item).`;
                 } else if (docType === "Pemberitahuan Perubahan AD/ART") {
-                    prompt = `Buatkan draf Pemberitahuan Perubahan Anggaran Dasar/Anggaran Rumah Tangga (AD/ART) kepada anggota koperasi. Detail penting: ${details}. Sertakan poin-poin perubahan utama dan tanggal berlaku.`;
+                    prompt = `Buatkan draf Pemberitahuan Perubahan Anggaran Dasar/Anggaran Rumah Tangga (AD/ART) kepada anggota koperasi. Detail penting: ${details}. Sertakan poin-poin perubahan utama dan tanggal berlaku. Gunakan format markdown dengan teks tebal (**teks**) dan bullet point (* item).`;
+                } else if (docType === "Surat Pemberitahuan Umum") {
+                    prompt = `Buatkan draf Surat Pemberitahuan Umum untuk koperasi. Detail penting: ${details}. Gunakan format markdown dengan teks tebal (**teks**) dan bullet point (* item).`;
                 }
 
                 const responseText = await callGeminiApi(prompt);
 
                 docLoading.classList.add('hidden');
-                docOutput.innerHTML = `<div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-800 whitespace-pre-wrap">${responseText}</div>`;
+                docOutput.innerHTML = `<div class="output-container">${formatOutput(responseText)}</div>`;
             });
         }
     </script>
