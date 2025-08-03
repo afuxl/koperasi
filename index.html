@@ -256,10 +256,9 @@
 
             <div class="bg-white p-6 md:p-10 rounded-xl shadow-2xl">
                 <h4 class="text-2xl font-bold text-center text-gray-800 mb-8">Saran Peningkatan Tata Kelola ✨</h4>
-                <p class="text-center max-w-2xl mx-auto mb-6 text-gray-600">Jelaskan tantangan tata kelola yang Anda hadapi, dan dapatkan saran praktis dari AI untuk memperkuat koperasi Anda.</p>
+                <p class="text-center max-w-2xl mx-auto mb-6 text-gray-600">Jelaskan tantangan tata kelola yang Anda hadapi, dan dapatkan saran praktis untuk memperkuat koperasi Anda.</p>
                 <textarea id="governance-input" class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-blue-500 focus:border-blue-500" rows="4" placeholder="Contoh: 'Sulit melibatkan anggota dalam pengambilan keputusan.' atau 'Transparansi keuangan masih kurang.'"></textarea>
                 <button id="generate-governance-btn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200">Dapatkan Saran Peningkatan</button>
-                <div id="governance-loading" class="hidden text-center mt-4 text-blue-600">Memproses...</div>
                 <div id="governance-output" class="mt-6"></div>
             </div>
         </section>
@@ -295,7 +294,7 @@
 
             <div class="bg-white p-6 md:p-10 rounded-xl shadow-2xl mt-12">
                 <h4 class="text-2xl font-bold text-center text-gray-800 mb-8">Draft Surat/Pengumuman ✨</h4>
-                <p class="text-center max-w-2xl mx-auto mb-6 text-gray-600">Pilih jenis dokumen dan berikan detail penting, AI akan membantu Anda menyusun drafnya dengan cepat.</p>
+                <p class="text-center max-w-2xl mx-auto mb-6 text-gray-600">Pilih jenis dokumen dan berikan detail penting, fitur ini akan membantu Anda menyusun drafnya dengan cepat.</p>
                 <div class="grid md:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="doc-type" class="block text-sm font-medium text-gray-700 mb-1">Jenis Dokumen:</label>
@@ -313,7 +312,6 @@
                     </div>
                 </div>
                 <button id="generate-doc-btn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200">Buat Draf Dokumen</button>
-                <div id="doc-loading" class="hidden text-center mt-4 text-blue-600">Memproses...</div>
                 <div id="doc-output" class="mt-6"></div>
             </div>
         </section>
@@ -341,15 +339,7 @@
 
 
     <script>
-        const tooltipTitleCallback = (tooltipItems) => {
-            const item = tooltipItems[0];
-            let label = item.chart.data.labels[item.dataIndex];
-            if (Array.isArray(label)) {
-                return label.join(' ');
-            }
-            return label;
-        };
-
+        // Fungsi untuk melipat label yang panjang
         const wrapLabel = (label) => {
             const maxLength = 16;
             if (label.length <= maxLength) return label;
@@ -370,6 +360,17 @@
             return lines;
         };
 
+        // Fungsi callback untuk tooltip chart
+        const tooltipTitleCallback = (tooltipItems) => {
+            const item = tooltipItems[0];
+            let label = item.chart.data.labels[item.dataIndex];
+            if (Array.isArray(label)) {
+                return label.join(' ');
+            }
+            return label;
+        };
+
+        // Inisialisasi Chart Donut untuk Pendirian Koperasi
         const pendirianCtx = document.getElementById('pendirianChart').getContext('2d');
         new Chart(pendirianCtx, {
             type: 'doughnut',
@@ -395,6 +396,7 @@
             }
         });
 
+        // Inisialisasi Chart Bar untuk Sanksi Pelanggaran
         const sanksiCtx = document.getElementById('sanksiChart').getContext('2d');
         const sanksiLabels = [
             'Peringatan Tertulis', 'Penangguhan NIK', 'Pembekuan Izin Usaha', 
@@ -434,6 +436,7 @@
             }
         });
 
+        // Logika untuk Tab Persyaratan Izin Usaha
         const tabUmumBtn = document.getElementById('tab-umum');
         const tabKspBtn = document.getElementById('tab-ksp');
         const contentUmum = document.getElementById('content-umum');
@@ -453,141 +456,23 @@
             contentUmum.classList.add('hidden');
         });
 
-        const callGeminiApi = async (prompt, retries = 0) => {
-            const maxRetries = 5;
-            const baseDelay = 1000; // 1 second
-
-            try {
-                const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
-                const payload = { contents: chatHistory };
-                const apiKey = "AIzaSyAPXqAerRuDmxin3ELceSj6tvq1Ks8VywY"; // Canvas will provide this at runtime
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    if (response.status === 429 && retries < maxRetries) {
-                        const delay = baseDelay * Math.pow(2, retries);
-                        console.log(`Rate limit hit. Retrying in ${delay / 1000} seconds...`);
-                        await new Promise(res => setTimeout(res, delay));
-                        return callGeminiApi(prompt, retries + 1);
-                    }
-                    throw new Error(`API request failed with status ${response.status}`);
-                }
-
-                const result = await response.json();
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    return result.candidates[0].content.parts[0].text;
-                } else {
-                    throw new Error("Invalid response structure from Gemini API");
-                }
-            } catch (error) {
-                console.error("Error calling Gemini API:", error);
-                return "Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.";
-            }
-        };
-
-        const governanceInput = document.getElementById('governance-input');
+        // Logika untuk tombol "Dapatkan Saran"
         const generateGovernanceBtn = document.getElementById('generate-governance-btn');
         const governanceOutput = document.getElementById('governance-output');
-        const governanceLoading = document.getElementById('governance-loading');
 
         if (generateGovernanceBtn) {
-            generateGovernanceBtn.addEventListener('click', async () => {
-                const challenge = governanceInput.value.trim();
-                if (!challenge) {
-                    governanceOutput.innerHTML = '<p class="text-red-500">Mohon masukkan deskripsi tantangan Anda.</p>';
-                    return;
-                }
-
-                governanceLoading.classList.remove('hidden');
-                governanceOutput.innerHTML = '';
-
-                const prompt = `Berikan saran singkat dan praktis untuk meningkatkan tata kelola koperasi berdasarkan tantangan berikut: "${challenge}". Fokus pada aspek transparansi, akuntabilitas, partisipasi anggota, dan efisiensi manajemen. Berikan dalam format poin-poin.`;
-                const responseText = await callGeminiApi(prompt);
-
-                governanceLoading.classList.add('hidden');
-                governanceOutput.innerHTML = `<div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-800 whitespace-pre-wrap">${responseText}</div>`;
+            generateGovernanceBtn.addEventListener('click', () => {
+                governanceOutput.innerHTML = '<p class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-800">Fitur ini telah dinonaktifkan.</p>';
             });
         }
 
-        const docTypeSelect = document.getElementById('doc-type');
-        const docDetailsInput = document.getElementById('doc-details');
+        // Logika untuk tombol "Buat Draf Dokumen"
         const generateDocBtn = document.getElementById('generate-doc-btn');
         const docOutput = document.getElementById('doc-output');
-        const docLoading = document.getElementById('doc-loading');
 
-        const formatOutput = (text) => {
-            let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            formattedText = formattedText.replace(/^\* (.*?)(\n|$)/gm, '<li>$1</li>');
-            formattedText = `<ul>${formattedText}</ul>`;
-
-            const headingRegex = /^# (.+)/;
-            if (headingRegex.test(formattedText)) {
-                formattedText = formattedText.replace(headingRegex, '<h4>$1</h4>');
-            }
-
-            const lines = formattedText.split('\n');
-            const newLines = [];
-            let inList = false;
-            
-            lines.forEach(line => {
-                if (line.startsWith('<li>')) {
-                    if (!inList) {
-                        newLines.push('<ul>');
-                        inList = true;
-                    }
-                    newLines.push(line);
-                } else {
-                    if (inList) {
-                        newLines.push('</ul>');
-                        inList = false;
-                    }
-                    newLines.push(`<p>${line}</p>`);
-                }
-            });
-            if (inList) {
-                newLines.push('</ul>');
-            }
-
-            return newLines.join('');
-        };
-        
         if (generateDocBtn) {
-            generateDocBtn.addEventListener('click', async () => {
-                const docType = docTypeSelect.value;
-                const details = docDetailsInput.value.trim();
-
-                if (!docType || !details) {
-                    docOutput.innerHTML = '<p class="text-red-500">Mohon lengkapi jenis dokumen dan detail.</p>';
-                    return;
-                }
-
-                docLoading.classList.remove('hidden');
-                docOutput.innerHTML = '';
-
-                let prompt = `Buatkan draf ${docType} untuk koperasi dengan detail sebagai berikut: "${details}". Formatnya harus formal dan sesuai untuk koperasi.`;
-
-                if (docType === "Surat Undangan RAT") {
-                    prompt = `Buatkan draf Surat Undangan Rapat Anggota Tahunan (RAT) untuk koperasi. Detail penting: ${details}. Sertakan tanggal, waktu, tempat, agenda utama, dan instruksi RSVP jika relevan. Gunakan format markdown dengan teks tebal (**teks**) dan bullet point (* item).`;
-                } else if (docType === "Pengumuman Pembagian SHU") {
-                    prompt = `Buatkan draf Pengumuman Pembagian Sisa Hasil Usaha (SHU) untuk anggota koperasi. Detail penting: ${details}. Sertakan periode SHU, tanggal pembagian, dan metode pengambilan. Gunakan format markdown dengan teks tebal (**teks**) dan bullet point (* item).`;
-                } else if (docType === "Pemberitahuan Perubahan AD/ART") {
-                    prompt = `Buatkan draf Pemberitahuan Perubahan Anggaran Dasar/Anggaran Rumah Tangga (AD/ART) kepada anggota koperasi. Detail penting: ${details}. Sertakan poin-poin perubahan utama dan tanggal berlaku. Gunakan format markdown dengan teks tebal (**teks**) dan bullet point (* item).`;
-                } else if (docType === "Surat Pemberitahuan Umum") {
-                    prompt = `Buatkan draf Surat Pemberitahuan Umum untuk koperasi. Detail penting: ${details}. Gunakan format markdown dengan teks tebal (**teks**) dan bullet point (* item).`;
-                }
-
-                const responseText = await callGeminiApi(prompt);
-
-                docLoading.classList.add('hidden');
-                docOutput.innerHTML = `<div class="output-container">${formatOutput(responseText)}</div>`;
+            generateDocBtn.addEventListener('click', () => {
+                docOutput.innerHTML = '<p class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-800">Fitur ini telah dinonaktifkan.</p>';
             });
         }
     </script>
