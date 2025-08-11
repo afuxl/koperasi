@@ -326,8 +326,28 @@
         </div>
     </footer>
 
-
     <script>
+        // Logika untuk menampilkan dan menyembunyikan tab
+        const tabUmumBtn = document.getElementById('tab-umum');
+        const tabKspBtn = document.getElementById('tab-ksp');
+        const contentUmum = document.getElementById('content-umum');
+        const contentKsp = document.getElementById('content-ksp');
+
+        tabUmumBtn.addEventListener('click', () => {
+            tabUmumBtn.classList.add('active');
+            tabKspBtn.classList.remove('active');
+            contentUmum.classList.remove('hidden');
+            contentKsp.classList.add('hidden');
+        });
+
+        tabKspBtn.addEventListener('click', () => {
+            tabKspBtn.classList.add('active');
+            tabUmumBtn.classList.remove('active');
+            contentKsp.classList.remove('hidden');
+            contentUmum.classList.add('hidden');
+        });
+
+        // Logika untuk Chart.js
         const tooltipTitleCallback = (tooltipItems) => {
             const item = tooltipItems[0];
             let label = item.chart.data.labels[item.dataIndex];
@@ -384,7 +404,7 @@
 
         const sanksiCtx = document.getElementById('sanksiChart').getContext('2d');
         const sanksiLabels = [
-            'Peringatan Tertulis', 'Penangguhan NIK', 'Pembekuan Izin Usaha', 
+            'Peringatan Tertulis', 'Penangguhan NIK', 'Pembekuan Izin Usaha',
             'Pencabutan Izin Usaha', 'Pidana Penggelapan', 'Pidana Pencucian Uang'
         ].map(wrapLabel);
         
@@ -421,25 +441,8 @@
             }
         });
 
-        const tabUmumBtn = document.getElementById('tab-umum');
-        const tabKspBtn = document.getElementById('tab-ksp');
-        const contentUmum = document.getElementById('content-umum');
-        const contentKsp = document.getElementById('content-ksp');
+        // --- Logika Interaksi AI Generatif ---
 
-        tabUmumBtn.addEventListener('click', () => {
-            tabUmumBtn.classList.add('active');
-            tabKspBtn.classList.remove('active');
-            contentUmum.classList.remove('hidden');
-            contentKsp.classList.add('hidden');
-        });
-
-        tabKspBtn.addEventListener('click', () => {
-            tabKspBtn.classList.add('active');
-            tabUmumBtn.classList.remove('active');
-            contentKsp.classList.remove('hidden');
-            contentUmum.classList.add('hidden');
-        });
-        
         const governanceInput = document.getElementById('governance-input');
         const generateGovernanceBtn = document.getElementById('generate-governance-btn');
         const governanceOutput = document.getElementById('governance-output');
@@ -451,6 +454,7 @@
         const docOutput = document.getElementById('doc-output');
         const docLoading = document.getElementById('doc-loading');
 
+        // Fungsi utilitas untuk memformat output Markdown ke HTML
         const formatOutput = (text) => {
             const textLines = text.split('\n');
             let formattedHtml = '';
@@ -460,8 +464,8 @@
                 let trimmedLine = line.trim();
         
                 if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
-                    formattedHtml += `<p><strong>${trimmedLine.slice(2, -2)}</strong></p>`;
-                    inList = false;
+                    if (inList) { formattedHtml += '</ul>'; inList = false; }
+                    formattedHtml += `<h4>${trimmedLine.slice(2, -2)}</h4>`;
                 } else if (trimmedLine.startsWith('* ')) {
                     const listItem = `<li>${trimmedLine.substring(2)}</li>`;
                     if (!inList) {
@@ -469,51 +473,57 @@
                         inList = true;
                     }
                     formattedHtml += listItem;
-                } else {
-                    if (inList) {
-                        formattedHtml += '</ul>';
-                        inList = false;
+                } else if (trimmedLine.startsWith('1. ') || trimmedLine.startsWith('2. ') || trimmedLine.startsWith('3. ')) {
+                    // Tambahkan dukungan untuk ordered list
+                    const listItem = `<li>${trimmedLine.substring(3)}</li>`;
+                    if (!inList || !formattedHtml.endsWith('</ol>')) {
+                        if (inList) formattedHtml += '</ul>';
+                        formattedHtml += '<ol>';
+                        inList = true;
                     }
+                    formattedHtml += listItem;
+                } else if (trimmedLine === '') {
+                    if (inList) { formattedHtml += '</ul>'; inList = false; }
+                    formattedHtml += '<p></p>';
+                } else {
+                    if (inList) { formattedHtml += '</ul>'; inList = false; }
                     formattedHtml += `<p>${trimmedLine}</p>`;
                 }
             });
             if (inList) {
                 formattedHtml += '</ul>';
+                inList = false;
             }
-        
             return formattedHtml;
         };
-
+        
+        // Fungsi untuk memanggil endpoint Vercel Serverless Function
         const callGeminiApi = async (prompt) => {
-            const googleAppsScriptUrl = "/api/generate/route";
+            // Mengubah URL endpoint sesuai permintaan
+            const endpointUrl = "/api/generate";
 
             try {
-                const response = await fetch(googleAppsScriptUrl, {
+                const response = await fetch(endpointUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: prompt }),
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
-
-                if (data.error) {
-                    return `Error: ${data.error}`;
-                }
-
                 return data.generatedText;
 
             } catch (error) {
-                console.error("Error calling Google Apps Script:", error);
-                return "Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.";
+                console.error("Error calling Vercel Serverless Function:", error);
+                return `Maaf, terjadi kesalahan saat memproses permintaan Anda: ${error.message}`;
             }
         };
 
+        // Event listener untuk tombol 'Dapatkan Saran Peningkatan'
         if (generateGovernanceBtn) {
             generateGovernanceBtn.addEventListener('click', async () => {
                 const challenge = governanceInput.value.trim();
@@ -525,14 +535,15 @@
                 governanceLoading.classList.remove('hidden');
                 governanceOutput.innerHTML = '';
 
-                const prompt = `Berikan saran singkat dan praktis untuk meningkatkan tata kelola koperasi berdasarkan tantangan berikut: "${challenge}". Fokus pada aspek transparansi, akuntabilitas, partisipasi anggota, dan efisiensi manajemen. Berikan dalam format poin-poin.`;
+                const prompt = `Berikan saran singkat dan praktis untuk meningkatkan tata kelola koperasi berdasarkan tantangan berikut: "${challenge}". Fokus pada aspek transparansi, akuntabilitas, partisipasi anggota, dan efisiensi manajemen. Berikan dalam format poin-poin yang mudah dibaca dengan menggunakan format Markdown.`;
                 const responseText = await callGeminiApi(prompt);
 
                 governanceLoading.classList.add('hidden');
-                governanceOutput.innerHTML = `<div class="bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-800 whitespace-pre-wrap">${responseText}</div>`;
+                governanceOutput.innerHTML = `<div class="output-container">${formatOutput(responseText)}</div>`;
             });
         }
         
+        // Event listener untuk tombol 'Buat Draf Dokumen'
         if (generateDocBtn) {
             generateDocBtn.addEventListener('click', async () => {
                 const docType = docTypeSelect.value;
@@ -546,17 +557,7 @@
                 docLoading.classList.remove('hidden');
                 docOutput.innerHTML = '';
 
-                let prompt = `Buatkan draf ${docType} untuk koperasi dengan detail sebagai berikut: "${details}". Formatnya harus formal dan sesuai untuk koperasi.`;
-
-                if (docType === "Surat Undangan RAT") {
-                    prompt = `Buatkan draf Surat Undangan Rapat Anggota Tahunan (RAT) untuk koperasi. Detail penting: ${details}. Sertakan tanggal, waktu, tempat, agenda utama, dan instruksi RSVP jika relevan. Gunakan format markdown dengan teks tebal (**teks**) dan bullet point (* item).`;
-                } else if (docType === "Pengumuman Pembagian SHU") {
-                    prompt = `Buatkan draf Pengumuman Pembagian Sisa Hasil Usaha (SHU) untuk anggota koperasi. Detail penting: ${details}. Sertakan periode SHU, tanggal pembagian, dan metode pengambilan. Gunakan format markdown dengan teks tebal (**teks**) dan bullet point (* item).`;
-                } else if (docType === "Pemberitahuan Perubahan AD/ART") {
-                    prompt = `Buatkan draf Pemberitahuan Perubahan Anggaran Dasar/Anggaran Rumah Tangga (AD/ART) kepada anggota koperasi. Detail penting: ${details}. Sertakan poin-poin perubahan utama dan tanggal berlaku. Gunakan format markdown dengan teks tebal (**teks**) dan bullet point (* item).`;
-                } else if (docType === "Surat Pemberitahuan Umum") {
-                    prompt = `Buatkan draf Surat Pemberitahuan Umum untuk koperasi. Detail penting: ${details}. Gunakan format markdown dengan teks tebal (**teks**) dan bullet point (* item).`;
-                }
+                let prompt = `Buatkan draf ${docType} untuk koperasi dengan detail sebagai berikut: "${details}". Gunakan format Markdown untuk membuat dokumen yang mudah dibaca, seperti menggunakan judul tebal dan poin-poin.`;
 
                 const responseText = await callGeminiApi(prompt);
 
