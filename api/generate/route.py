@@ -2,8 +2,6 @@ import os
 import json
 import requests
 import time
-from http.server import BaseHTTPRequestHandler
-from urllib.parse import urlparse, parse_qs
 
 def handler(request):
     """
@@ -18,32 +16,22 @@ def handler(request):
             "error": "GEMINI_API_KEY tidak ditemukan. Mohon atur variabel lingkungan."
         }), 500, {'Content-Type': 'application/json'}
 
-    # Mendapatkan prompt dari body permintaan JSON dengan cara yang lebih umum
+    # Mendapatkan prompt dari body permintaan JSON menggunakan request.json
     try:
-        if request.method == "POST":
-            # Baca body permintaan secara langsung dari input stream
-            content_length = int(request.headers.get('Content-Length', 0))
-            if content_length > 0:
-                body = request.rfile.read(content_length)
-                data = json.loads(body)
-                prompt = data.get('prompt')
-            else:
-                return json.dumps({
-                    "error": "Body permintaan kosong."
-                }), 400, {'Content-Type': 'application/json'}
-        else:
+        # Vercel menyediakan request.json untuk membaca body JSON
+        data = request.json
+        if data is None:
             return json.dumps({
-                "error": "Metode HTTP tidak didukung. Harap gunakan POST."
-            }), 405, {'Content-Type': 'application/json'}
+                "error": "Body permintaan tidak valid atau kosong. Harap kirim JSON."
+            }), 400, {'Content-Type': 'application/json'}
+
+        prompt = data.get('prompt')
 
         if not prompt:
             return json.dumps({
                 "error": "Prompt tidak ditemukan dalam permintaan."
             }), 400, {'Content-Type': 'application/json'}
-    except (json.JSONDecodeError, ValueError) as e:
-        return json.dumps({
-            "error": f"Format JSON tidak valid atau kesalahan saat membaca body: {str(e)}"
-        }), 400, {'Content-Type': 'application/json'}
+
     except Exception as e:
         return json.dumps({
             "error": f"Terjadi kesalahan tak terduga saat memproses permintaan: {str(e)}"
