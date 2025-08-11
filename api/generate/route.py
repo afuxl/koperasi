@@ -84,5 +84,5 @@ def handler(request):
             }), 500, {'Content-Type': 'application/json'}
     
     return json.dumps({
-        "error": "Gagal menghubungi API Google Gemini."
+        "error": "Gagal menghubungi API Google Gemini"
     }), 500, {'Content-Type': 'application/json'}
