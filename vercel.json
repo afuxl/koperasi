@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/generate/route.js": {
+      "runtime": "edge"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/generate",
