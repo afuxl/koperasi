@@ -1,0 +1,15 @@
+{
+  "name": "koperasi-sultra-app",
+  "version": "1.0.0",
+  "description": "Aplikasi interaktif untuk panduan perizinan dan kelembagaan koperasi.",
+  "main": "api/generate/route.js",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "node-fetch": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
