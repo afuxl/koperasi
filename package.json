@@ -9,6 +9,5 @@
   "dependencies": {},
   "engines": {
     "node": ">=18.x"
-  },
-  "type": "module"
+  }
 }
