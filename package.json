@@ -6,9 +6,7 @@
   "scripts": {
     "start": "vercel dev"
   },
-  "dependencies": {
-    "node-fetch": "^3.0.0"
-  },
+  "dependencies": {},
   "engines": {
     "node": ">=18.x"
   }
