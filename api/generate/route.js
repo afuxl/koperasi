@@ -1,6 +1,6 @@
 // File: /api/generate/route.js
 
-import fetch from 'node-fetch';
+//import fetch from 'node-fetch';
 
 /**
  * Fungsi handler Vercel untuk memproses permintaan API dari frontend.
