@@ -368,7 +368,7 @@
 
     <div id="loader">
         <i class="fas fa-circle-notch fa-spin fa-4x" style="color: var(--primary);"></i>
-        <p id="loader-text" style="margin-top: 20px; font-weight: 600; color: var(--text-main); font-size: 1.1rem; letter-spacing: 0.5px;">Menyiapkan Ruang Kerja...</p>
+        <p id="loader-text" style="margin-top: 20px; font-weight: 600; color: var(--text-main); font-size: 1.1rem; letter-spacing: 0.5px;">Memuat Data..</p>
     </div>
 
     <header>
@@ -1028,31 +1028,52 @@
         async function saveData() {
             if (!canEdit) return; 
             let dynamicFieldsData = {};
-            document.querySelectorAll('.dynamic-input-field').forEach(input => { const headerName = input.getAttribute('data-header'); dynamicFieldsData[headerName] = input.value; });
-            const formData = {
+            document.querySelectorAll('.dynamic-input-field').forEach(input => { 
+                const headerName = input.getAttribute('data-header'); 
+                dynamicFieldsData[headerName] = input.value; 
+            });
+            
+            // Data terpisah untuk backend dan lokal
+            const payloadData = {
                 id: currentItem.id, nama: document.getElementById('edit-nama').value, status: document.getElementById('edit-status').value, 
                 lat: document.getElementById('edit-lat').value, lng: document.getElementById('edit-lng').value, foto: document.getElementById('edit-foto').value, 
-                gerai: document.getElementById('edit-gerai').value, rat: document.getElementById('edit-rat').value, kesehatan: document.getElementById('edit-kesehatan').value, dynamicFields: dynamicFieldsData 
+                gerai: document.getElementById('edit-gerai').value, rat: document.getElementById('edit-rat').value, kesehatan: document.getElementById('edit-kesehatan').value, 
+                dynamicFields: dynamicFieldsData 
             };
-            
-            document.getElementById('loader-text').innerText = "Menyinkronkan data ke Cloud..."; 
+        
+            // Objek gabungan untuk memperbarui memori lokal (browser)
+            const localUpdateData = { ...payloadData };
+            delete localUpdateData.dynamicFields;
+            Object.keys(dynamicFieldsData).forEach(key => { localUpdateData[key] = dynamicFieldsData[key]; });
+        
+            document.getElementById('loader-text').innerText = "Menyinkronkan perubahan ke Cloud..."; 
             document.getElementById('loader').style.display = 'flex';
             
             try {
                 const response = await fetch(GAS_WEBAPP_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8',
-                    },
-                    body: JSON.stringify({ action: 'saveKoperasiData', data: formData })
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    redirect: 'follow',
+                    body: JSON.stringify({ action: 'saveKoperasiData', data: payloadData })
                 });
                 
                 const res = await response.json();
                 
                 if (res && res.success) { 
-                    document.getElementById('loader-text').innerText = "Memuat ulang area peta..."; 
-                    await loadDataFromServer(); 
-                    closeInfoPanel(); 
+                    // 1. Perbarui data di memori browser tanpa fetch ulang
+                    updateLocalData(localUpdateData);
+                    
+                    // 2. Sembunyikan loader
+                    document.getElementById('loader').style.display = 'none'; 
+                    
+                    // 3. Render ulang elemen visual (peta, tabel, grafik) dengan data baru
+                    renderData();
+                    processDataAndRenderCharts(currentMapData);
+                    
+                    // 4. Kembalikan panel info ke mode lihat dengan data terbaru
+                    const updatedItem = rawData.find(item => item.id === currentItem.id);
+                    if(updatedItem) showInfoPanel(updatedItem);
+                    
                 } else { 
                     document.getElementById('loader').style.display = 'none'; 
                     alert("Gagal sinkronisasi data: " + (res.message || "Unknown error")); 
@@ -1062,6 +1083,20 @@
                 console.error("Fetch error:", error);
                 alert("Koneksi gagal: Gagal mengirim data ke server.");
             }
+        }
+        
+        // Fungsi pembantu untuk menimpa data lama dengan data baru di memori
+        function updateLocalData(newData) {
+            const mergeData = (item) => {
+                if (item.id === newData.id) {
+                    Object.keys(newData).forEach(key => {
+                        item[key] = (newData[key] !== "" && newData[key] !== null && newData[key] !== undefined) ? newData[key] : "-";
+                    });
+                }
+            };
+            rawData.forEach(mergeData);
+            currentMapData.forEach(mergeData);
+            currentFilteredData.forEach(mergeData);
         }
 
         function makeDraggable(el) {
