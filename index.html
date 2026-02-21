@@ -985,19 +985,25 @@
         }
 
         function toggleEditMode() {
-            if (!canEdit) return; isEditMode = true; leafletMap.getContainer().classList.add('picking-location');
-            const content = document.getElementById("panel-content"); const panel = document.getElementById("info-panel");
-            panel.classList.remove('minimized'); document.getElementById("minimize-btn").className = "fas fa-chevron-down";
-
+            if (!canEdit) return; 
+            isEditMode = true; 
+            leafletMap.getContainer().classList.add('picking-location');
+            const content = document.getElementById("panel-content"); 
+            const panel = document.getElementById("info-panel");
+            panel.classList.remove('minimized'); 
+            document.getElementById("minimize-btn").className = "fas fa-chevron-down";
+        
             let dynamicEditHtml = '';
             if (dynamicHeadersList && dynamicHeadersList.length > 0) {
                 dynamicEditHtml += '<hr style="border:0; border-top:1px dashed var(--border); margin:15px 0;"><div style="margin-bottom:10px;"><label style="font-size:11px; font-weight:700; color:var(--primary);">UBAH INFORMASI TAMBAHAN</label></div>';
                 dynamicHeadersList.forEach(header => {
-                    const val = item[header] === '-' ? '' : (item[header] || ''); const safeId = 'edit-dyn-' + header.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                    // Perbaikan: Mengubah item[header] menjadi currentItem[header]
+                    const val = currentItem[header] === '-' ? '' : (currentItem[header] || ''); 
+                    const safeId = 'edit-dyn-' + header.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
                     dynamicEditHtml += `<div class="info-row"><label>${header}</label><input type="text" id="${safeId}" data-header="${header}" class="edit-input dynamic-input-field" value="${val}"></div>`;
                 });
             }
-
+        
             content.innerHTML = `
                 <div class="detail-only">
                     <div class="hint-box"><i class="fas fa-crosshairs"></i> Klik pada peta atau ketik manual untuk mengatur ulang koordinat lokasi secara presisi.</div>
