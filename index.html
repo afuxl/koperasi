@@ -564,6 +564,7 @@
         // --- KONFIGURASI URL GOOGLE APPS SCRIPT WEB APP ---
         // Ganti URL ini dengan URL Web App Google Apps Script milik Anda yang telah di-deploy
         const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzc96HHN04_Bd6DrkPXA5ww65-qqmu9v8--8rvlBQTHaqS9TSSEu-cjMMD7RBTwJpwL/exec";
+        
 
         // --- DEKLARASI VARIABEL GLOBAL ---
         let leafletMap, markersLayer, labelsLayer, rawData = [], allMarkers = [], currentFilteredData = [], currentItem = null, isEditMode = false;
@@ -799,7 +800,11 @@
             document.getElementById('loader').style.display = 'flex';
             
             try {
-                const response = await fetch(`${GAS_WEBAPP_URL}?action=getMapData`);
+                const response = await fetch(`${GAS_WEBAPP_URL}?action=getMapData`, {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+                
                 const res = await response.json();
 
                 if (res.success) {
