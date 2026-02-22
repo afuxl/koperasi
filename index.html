@@ -362,10 +362,30 @@
             .panel-header { cursor: default; } 
             .panel-header::before { content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; }
         }
+        /* Slider Container */
+        .slider-container { position: relative; width: 100%; height: 160px; margin-bottom: 20px; border-radius: var(--radius-md); overflow: hidden; background: #f1f5f9; border: 1px solid var(--border); }
+        .slider-images { display: flex; transition: transform 0.3s ease-in-out; height: 100%; }
+        .slider-images img { width: 100%; height: 100%; object-fit: cover; flex-shrink: 0; cursor: pointer; }
+        .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: 0.2s; }
+        .slider-btn:hover { background: rgba(0,0,0,0.8); }
+        .slider-btn.prev { left: 8px; }
+        .slider-btn.next { right: 8px; }
+        .slider-indicators { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; }
+        .indicator { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); }
+        .indicator.active { background: white; }
+        
+        /* Lightbox Overlay */
+        #lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(5px); }
+        #lightbox-img { max-width: 90%; max-height: 85vh; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); object-fit: contain; }
+        .lightbox-close { position: absolute; top: 20px; right: 20px; color: white; font-size: 30px; cursor: pointer; background: transparent; border: none; }
+        .lightbox-close:hover { color: var(--primary); }
     </style>
 </head>
 <body>
-
+    <div id="lightbox-overlay" onclick="closeLightbox()">
+    <button class="lightbox-close"><i class="fas fa-times"></i></button>
+    <img id="lightbox-img" src="" alt="Fullscreen Image" onclick="event.stopPropagation()">
+    </div>
     <div id="loader">
         <i class="fas fa-circle-notch fa-spin fa-4x" style="color: var(--primary);"></i>
         <p id="loader-text" style="margin-top: 20px; font-weight: 600; color: var(--text-main); font-size: 1.1rem; letter-spacing: 0.5px;">Memuat Data..</p>
@@ -942,25 +962,54 @@
             showInfoPanel(item);
         }
 
+        let currentSlideIndex = 0;
+        let imageArray = [];
+        
         function showInfoPanel(item) {
             cleanupEditUI(); currentItem = item; isEditMode = false;
             const panel = document.getElementById("info-panel"); const content = document.getElementById("panel-content");
             document.getElementById("panel-title").innerText = item.nama; document.getElementById("edit-mode-btn").style.display = canEdit ? 'flex' : 'none';
             panel.classList.remove('minimized'); document.getElementById("minimize-btn").className = "fas fa-chevron-down";
-
-            const photo = (item.foto && item.foto.trim() !== "") ? item.foto : defaultNoImage;
+        
+            // Logika Pemisahan Gambar (Mendukung banyak gambar dipisah dengan koma)
+            let rawFoto = (item.foto && item.foto !== "-") ? String(item.foto).split(',') : [];
+            imageArray = rawFoto.map(f => f.trim()).filter(f => f !== "");
+            if (imageArray.length === 0) imageArray = [defaultNoImage];
+            
+            currentSlideIndex = 0;
+            
+            let sliderHtml = `<div class="slider-container" id="slider-container">
+                <div class="slider-images" id="slider-images" style="width: ${imageArray.length * 100}%;">`;
+            
+            imageArray.forEach((img, idx) => {
+                sliderHtml += `<img src="${img}" style="width: ${100 / imageArray.length}%" onclick="openLightbox('${img}')" onerror="this.src='${defaultNoImage}'">`;
+            });
+            sliderHtml += `</div>`;
+        
+            if (imageArray.length > 1) {
+                sliderHtml += `
+                    <button class="slider-btn prev" onclick="changeSlide(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <button class="slider-btn next" onclick="changeSlide(1)"><i class="fas fa-chevron-right"></i></button>
+                    <div class="slider-indicators">`;
+                imageArray.forEach((_, idx) => {
+                    sliderHtml += `<div class="indicator ${idx === 0 ? 'active' : ''}" id="ind-${idx}"></div>`;
+                });
+                sliderHtml += `</div>`;
+            }
+            sliderHtml += `</div>`;
+        
             const isAktif = item.status.toLowerCase().includes("aktif") && !item.status.toLowerCase().includes("tidak");
             const statusColor = isAktif ? "var(--aktif)" : "var(--non-aktif)";
             const latVal = parseFloat(item.lat); const lngVal = parseFloat(item.lng); const hasCoords = !isNaN(latVal) && !isNaN(lngVal);
-
+        
             let dynamicHtml = '';
             if (dynamicHeadersList && dynamicHeadersList.length > 0) {
                 dynamicHtml += '<hr style="border:0; border-top:1px dashed var(--border); margin:15px 0;"><div style="margin-bottom:10px;"><label style="font-size:11px; font-weight:700; color:var(--primary);">INFORMASI TAMBAHAN</label></div>';
                 dynamicHeadersList.forEach(header => { const val = item[header] || '-'; dynamicHtml += `<div class="info-row"><label>${header}</label><span>${val}</span></div>`; });
             }
-
+        
             content.innerHTML = `
-                <div class="detail-only"><img src="${photo}" class="info-img" onerror="this.src='${defaultNoImage}'"></div>
+                <div class="detail-only">${sliderHtml}</div>
                 <div class="info-row"><label>Status Operasional</label><span style="color:${statusColor}; font-weight:700;"><i class="fas fa-circle" style="font-size:10px; margin-right:4px;"></i> ${item.status}</span></div>
                 <div class="info-row"><label>Lokasi Wilayah</label><span>${item.desa}, ${item.kecamatan}, ${item.kabupaten}</span></div>
                 <div class="detail-only">
@@ -977,27 +1026,16 @@
                 </div>`;
             panel.style.display = 'flex';
         }
-
-        function togglePanelMinimize() {
-            const p = document.getElementById("info-panel"); const btn = document.getElementById("minimize-btn");
-            if (p.classList.contains('minimized')) { p.classList.remove('minimized'); btn.className = "fas fa-chevron-down"; } 
-            else { p.classList.add('minimized'); btn.className = "fas fa-chevron-up"; }
-        }
-
+        
         function toggleEditMode() {
-            if (!canEdit) return; 
-            isEditMode = true; 
-            leafletMap.getContainer().classList.add('picking-location');
-            const content = document.getElementById("panel-content"); 
-            const panel = document.getElementById("info-panel");
-            panel.classList.remove('minimized'); 
-            document.getElementById("minimize-btn").className = "fas fa-chevron-down";
+            if (!canEdit) return; isEditMode = true; leafletMap.getContainer().classList.add('picking-location');
+            const content = document.getElementById("panel-content"); const panel = document.getElementById("info-panel");
+            panel.classList.remove('minimized'); document.getElementById("minimize-btn").className = "fas fa-chevron-down";
         
             let dynamicEditHtml = '';
             if (dynamicHeadersList && dynamicHeadersList.length > 0) {
                 dynamicEditHtml += '<hr style="border:0; border-top:1px dashed var(--border); margin:15px 0;"><div style="margin-bottom:10px;"><label style="font-size:11px; font-weight:700; color:var(--primary);">UBAH INFORMASI TAMBAHAN</label></div>';
                 dynamicHeadersList.forEach(header => {
-                    // Perbaikan: Mengubah item[header] menjadi currentItem[header]
                     const val = currentItem[header] === '-' ? '' : (currentItem[header] || ''); 
                     const safeId = 'edit-dyn-' + header.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
                     dynamicEditHtml += `<div class="info-row"><label>${header}</label><input type="text" id="${safeId}" data-header="${header}" class="edit-input dynamic-input-field" value="${val}"></div>`;
@@ -1006,11 +1044,19 @@
         
             content.innerHTML = `
                 <div class="detail-only">
-                    <div class="hint-box"><i class="fas fa-crosshairs"></i> Klik pada peta atau ketik manual untuk mengatur ulang koordinat lokasi secara presisi.</div>
+                    <div class="hint-box"><i class="fas fa-crosshairs"></i> Klik peta untuk ubah koordinat lokasi.</div>
                     <div class="info-row"><label>Nama Instansi Koperasi</label><input type="text" id="edit-nama" class="edit-input" value="${currentItem.nama}"></div>
                     <div class="info-row"><label>Status Koperasi</label>
                         <select id="edit-status" class="edit-input"><option value="Aktif" ${currentItem.status === 'Aktif' ? 'selected' : ''}>Aktif</option><option value="Tidak Aktif" ${currentItem.status !== 'Aktif' ? 'selected' : ''}>Tidak Aktif</option></select>
                     </div>
+                    <div class="info-row"><label>Unggah Gambar Baru (Bisa Lebih Dari 1)</label>
+                        <input type="file" id="upload-foto" accept="image/*" multiple style="font-size: 11px; padding: 8px 0;">
+                        <button class="btn-action" style="margin-top: 4px; width: fit-content; background: #e2e8f0;" onclick="uploadImagesToServer()">
+                            <i class="fas fa-cloud-upload-alt"></i> Mulai Unggah
+                        </button>
+                        <div id="upload-status" style="font-size: 11px; font-weight: 600; color: var(--primary); margin-top: 6px;"></div>
+                    </div>
+                    <div class="info-row"><label>Tautan URL Foto (Pisahkan dengan koma)</label><textarea id="edit-foto" class="edit-input" style="resize:vertical; height:60px;">${currentItem.foto === '-' ? '' : currentItem.foto}</textarea></div>
                     <div class="info-row"><label>Unit Gerai</label><input type="text" id="edit-gerai" class="edit-input" value="${currentItem.gerai}"></div>
                     <div class="info-row"><label>RAT Terakhir</label><input type="text" id="edit-rat" class="edit-input" value="${currentItem.rat}"></div>
                     <div class="info-row"><label>Tingkat Kesehatan</label><input type="text" id="edit-kesehatan" class="edit-input" value="${currentItem.kesehatan}"></div>
@@ -1018,12 +1064,107 @@
                        <div class="info-row" style="flex:1"><label>Latitude (Y)</label><input type="text" id="edit-lat" class="edit-input" value="${currentItem.lat || ''}"></div>
                        <div class="info-row" style="flex:1"><label>Longitude (X)</label><input type="text" id="edit-lng" class="edit-input" value="${currentItem.lng || ''}"></div>
                     </div>
-                    <div class="info-row"><label>Tautan URL Foto</label><input type="text" id="edit-foto" class="edit-input" value="${currentItem.foto}"></div>
                     ${dynamicEditHtml}
                     <button class="btn-save" onclick="saveData()"><i class="fas fa-cloud-arrow-up"></i> Terapkan Pembaruan</button>
                     <button class="btn-cancel" onclick="showInfoPanel(currentItem)">Batalkan</button>
                 </div>`;
         }
+        
+        // Logika Navigasi Slider Gambar
+        function changeSlide(direction) {
+            currentSlideIndex += direction;
+            if (currentSlideIndex < 0) currentSlideIndex = imageArray.length - 1;
+            if (currentSlideIndex >= imageArray.length) currentSlideIndex = 0;
+            
+            document.getElementById("slider-images").style.transform = `translateX(-${(currentSlideIndex * 100) / imageArray.length}%)`;
+            
+            document.querySelectorAll('.indicator').forEach((ind, idx) => {
+                ind.classList.toggle('active', idx === currentSlideIndex);
+            });
+        }
+        
+        // Logika Fullscreen Lightbox
+        function openLightbox(imgSrc) {
+            document.getElementById("lightbox-img").src = imgSrc;
+            document.getElementById("lightbox-overlay").style.display = "flex";
+        }
+        function closeLightbox() {
+            document.getElementById("lightbox-overlay").style.display = "none";
+            document.getElementById("lightbox-img").src = "";
+        }
+        
+        // Logika Pengunggahan Gambar ke Google Apps Script
+        async function uploadImagesToServer() {
+            const fileInput = document.getElementById('upload-foto');
+            const statusText = document.getElementById('upload-status');
+            const fotoUrlField = document.getElementById('edit-foto');
+            
+            if (fileInput.files.length === 0) { statusText.innerText = "Pilih file gambar terlebih dahulu."; return; }
+            
+            statusText.innerText = `Mengunggah 0 dari ${fileInput.files.length} gambar...`;
+            statusText.style.color = "var(--highlight)";
+            
+            let uploadedUrls = [];
+            
+            for (let i = 0; i < fileInput.files.length; i++) {
+                const file = fileInput.files[i];
+                
+                // Konversi File ke Base64
+                const base64Data = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.readAsDataURL(file);
+                });
+        
+                const payload = {
+                    action: 'uploadImage',
+                    data: base64Data,
+                    mimetype: file.type,
+                    filename: new Date().getTime() + "_" + file.name
+                };
+        
+                try {
+                    const response = await fetch(GAS_WEBAPP_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        redirect: 'follow',
+                        body: JSON.stringify(payload)
+                    });
+                    const res = await response.json();
+                    
+                    if (res.success) {
+                        uploadedUrls.push(res.url);
+                        statusText.innerText = `Mengunggah ${i + 1} dari ${fileInput.files.length} gambar...`;
+                    } else {
+                        alert(`Gagal mengunggah ${file.name}: ${res.message}`);
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert(`Koneksi terputus saat mengunggah ${file.name}`);
+                }
+            }
+            
+            if (uploadedUrls.length > 0) {
+                statusText.innerText = "Berhasil diunggah!";
+                statusText.style.color = "var(--aktif)";
+                
+                // Gabungkan URL baru dengan URL lama jika sudah ada
+                const currentVal = fotoUrlField.value.trim();
+                if (currentVal && currentVal !== "-") {
+                    fotoUrlField.value = currentVal + ", " + uploadedUrls.join(", ");
+                } else {
+                    fotoUrlField.value = uploadedUrls.join(", ");
+                }
+            }
+        }
+
+        function togglePanelMinimize() {
+            const p = document.getElementById("info-panel"); const btn = document.getElementById("minimize-btn");
+            if (p.classList.contains('minimized')) { p.classList.remove('minimized'); btn.className = "fas fa-chevron-down"; } 
+            else { p.classList.add('minimized'); btn.className = "fas fa-chevron-up"; }
+        }
+
+        
 
         async function saveData() {
             if (!canEdit) return; 
