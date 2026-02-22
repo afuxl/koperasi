@@ -973,7 +973,21 @@
         
             // Logika Pemisahan Gambar (Mendukung banyak gambar dipisah dengan koma)
             let rawFoto = (item.foto && item.foto !== "-") ? String(item.foto).split(',') : [];
-            imageArray = rawFoto.map(f => f.trim()).filter(f => f !== "");
+            
+            imageArray = rawFoto.map(f => {
+            let url = f.trim();
+            
+            // Konversi otomatis link bawaan Google Drive ke format yang didukung HTML
+            if (url.includes("drive.google.com/uc") || url.includes("drive.google.com/open")) {
+                const idMatch = url.match(/id=([^&]+)/);
+                if (idMatch) url = "https://lh3.googleusercontent.com/d/" + idMatch[1];
+            } else if (url.includes("drive.google.com/file/d/")) {
+                const idMatch = url.match(/d\/([^/]+)/);
+                if (idMatch) url = "https://lh3.googleusercontent.com/d/" + idMatch[1];
+            }
+            
+            return url;
+            }).filter(f => f !== "");
             if (imageArray.length === 0) imageArray = [defaultNoImage];
             
             currentSlideIndex = 0;
