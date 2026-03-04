@@ -118,12 +118,12 @@
         /* --- PENGATURAN AREA KONTEN UTAMA SPA --- */
         #content-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         
-        #view-peta { flex: 1; display: flex; flex-direction: column; padding: 12px; gap: 0; overflow: hidden; }
+        #view-peta { flex: 1; display: flex; flex-direction: column; padding: 10px; gap: 0; overflow: hidden; }
         #view-statistik { flex: 1; display: none; flex-direction: column; padding: 24px; gap: 20px; overflow-y: auto; background-color: var(--bg-body); }
 
         /* KOMPONEN VIEW PETA */
         #map-container {
-            flex: 0 0 50%; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); 
+            flex: 0 0 50%; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); 
             border: 1px solid var(--border); position: relative; background: #fff; display: flex; flex-direction: column;
         }
         #map { width: 100%; flex: 1; z-index: 1; }
@@ -133,95 +133,86 @@
             height: 12px; flex-shrink: 0; cursor: row-resize; 
             display: flex; align-items: center; justify-content: center; background: transparent; margin: 2px 0; z-index: 10;
         }
-        .resizer-line { width: 60px; height: 4px; background: var(--border); border-radius: 6px; transition: background 0.2s; }
+        .resizer-line { width: 50px; height: 4px; background: var(--border); border-radius: 6px; transition: background 0.2s; }
         #resizer:hover .resizer-line, #resizer:active .resizer-line { background: var(--primary); }
 
         #table-container {
-            flex: 1 1 0%; background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); 
-            border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; min-height: 200px;
+            flex: 1 1 0%; background: var(--surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); 
+            border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; min-height: 150px;
         }
 
         /* Kondisi Tabel Diciutkan */
         #view-peta.table-collapsed #map-container { flex: 1 1 auto; }
         #view-peta.table-collapsed #resizer { display: none; }
-        #view-peta.table-collapsed #table-container { flex: 0 0 auto; min-height: auto; }
+        #view-peta.table-collapsed #table-container { flex: 0 0 auto; min-height: auto; height: auto; }
+        #view-peta.table-collapsed .table-controls,
         #view-peta.table-collapsed .th-search-row,
         #view-peta.table-collapsed .adv-search-panel,
         #view-peta.table-collapsed .table-wrapper,
         #view-peta.table-collapsed .pagination-container { display: none !important; }
 
-        .table-header-box { padding: 12px 16px; background: #ffffff; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
-        .th-top-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; width: 100%; }
-        
-        /* Modifikasi h2 agar berfungsi sebagai tombol toggle */
-        .th-top-row h2 { 
-            margin: 0; font-size: 14px; font-weight: 700; color: var(--text-main); display: flex; align-items: center;
-            cursor: pointer; user-select: none; transition: color 0.2s;
-        }
-        .th-top-row h2:hover { color: var(--primary); }
-        #table-toggle-icon { margin-left: 8px; transition: transform 0.3s ease; }
-
-        .table-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap;}
+        .table-header-box { padding: 8px 12px; background: #ffffff; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
+        .table-controls { display: flex; gap: 6px; align-items: center; flex-wrap: wrap;}
         
         .th-search-row {
-            display: flex; align-items: center; gap: 10px; width: 100%; flex-wrap: wrap;
-            background: var(--bg-light); padding: 8px; border-radius: var(--radius-md); border: 1px solid #f1f5f9;
+            display: flex; align-items: center; gap: 8px; width: 100%; flex-wrap: wrap;
+            background: var(--bg-light); padding: 6px; border-radius: var(--radius-md); border: 1px solid #f1f5f9;
         }
 
-        .search-input-wrapper { flex: 2; min-width: 200px; position: relative; display: flex; align-items: center; margin: 0; }
+        .search-input-wrapper { flex: 2; min-width: 180px; position: relative; display: flex; align-items: center; margin: 0; }
         .search-input {
-            width: 100%; padding: 8px 30px 8px 14px; border: 1px solid var(--border); 
-            border-radius: 30px; outline: none; font-family: 'Inter'; font-size: 12px;
+            width: 100%; padding: 6px 28px 6px 12px; border: 1px solid var(--border); 
+            border-radius: 30px; outline: none; font-family: 'Inter'; font-size: 11px;
             background-color: var(--surface); transition: all 0.3s ease; margin: 0; box-sizing: border-box;
         }
         .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1); }
         .clear-search-btn {
-            position: absolute; right: 12px; color: var(--text-muted); cursor: pointer; 
-            display: none; padding: 4px; font-size: 14px; transition: color 0.2s;
+            position: absolute; right: 10px; color: var(--text-muted); cursor: pointer; 
+            display: none; padding: 4px; font-size: 12px; transition: color 0.2s;
         }
         .clear-search-btn:hover { color: var(--primary); }
 
         .filter-select { 
-            flex: 1; min-width: 150px; padding: 8px 14px; border-radius: 30px; 
-            border: 1px solid var(--border); font-size: 12px; font-family: 'Inter';
+            flex: 1; min-width: 130px; padding: 6px 12px; border-radius: 30px; 
+            border: 1px solid var(--border); font-size: 11px; font-family: 'Inter';
             background-color: var(--surface); outline: none; cursor: pointer; transition: 0.3s; margin: 0;
         }
         .filter-select:focus { border-color: var(--primary); }
 
         .adv-search-toggle {
             background: #e2e8f0; border: 1px solid var(--border); color: var(--text-main);
-            font-size: 12px; font-weight: 600; cursor: pointer; padding: 8px 14px; border-radius: 30px; 
-            transition: all 0.2s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; margin: 0;
+            font-size: 11px; font-weight: 600; cursor: pointer; padding: 6px 12px; border-radius: 30px; 
+            transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; white-space: nowrap; margin: 0;
         }
         .adv-search-toggle:hover { background: #cbd5e1; color: var(--primary); }
         
         .adv-search-panel {
-            display: none; flex-direction: row; flex-wrap: wrap; gap: 16px; 
-            background: #f8fafc; padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--border);
+            display: none; flex-direction: row; flex-wrap: wrap; gap: 12px; 
+            background: #f8fafc; padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border);
         }
         .adv-search-panel.active { display: flex; }
 
-        .filter-category { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 6px; }
-        .filter-category > span { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-        .checkbox-group { display: flex; flex-wrap: wrap; gap: 6px; }
+        .filter-category { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 4px; }
+        .filter-category > span { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 4px; }
         
         .cb-label { 
-            display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500;
-            background: var(--surface); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; color: var(--text-main);
+            display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 500;
+            background: var(--surface); padding: 3px 8px; border-radius: 20px; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; color: var(--text-main);
         }
         .cb-label:hover { background: #e2e8f0; }
-        .cb-input { margin: 0; cursor: pointer; accent-color: var(--primary); width: 14px; height: 14px;}
+        .cb-input { margin: 0; cursor: pointer; accent-color: var(--primary); width: 12px; height: 12px;}
 
         .btn-cancel { 
             background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); 
-            padding: 6px 14px; border-radius: 30px; cursor: pointer; height: fit-content; align-self: flex-end;
-            font-size: 11px; font-weight: 600; font-family: 'Inter'; transition: 0.2s; white-space: nowrap; margin-bottom: 2px;
+            padding: 4px 12px; border-radius: 30px; cursor: pointer; height: fit-content; align-self: flex-end;
+            font-size: 10px; font-weight: 600; font-family: 'Inter'; transition: 0.2s; white-space: nowrap; margin-bottom: 2px;
         }
         .btn-cancel:hover { background: #e2e8f0; color: var(--text-main); }
 
         .btn-action {
             background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; 
-            font-weight: 600; font-size: 11px; font-family: 'Inter'; padding: 6px 12px; display: flex; align-items: center; gap: 6px; transition: all 0.2s; box-shadow: var(--shadow-sm);
+            font-weight: 600; font-size: 10px; font-family: 'Inter'; padding: 4px 8px; display: flex; align-items: center; gap: 4px; transition: all 0.2s; box-shadow: var(--shadow-sm);
         }
         .btn-action:hover { background-color: #f1f5f9; border-color: #94a3b8; }
         .btn-export { background-color: #10b981; color: white; border: none; }
@@ -230,92 +221,93 @@
         .col-toggle-wrapper { position: relative; }
         .col-toggle-menu {
             position: absolute; top: calc(100% + 5px); right: 0; background: var(--surface); border: 1px solid var(--border);
-            border-radius: var(--radius-md); padding: 10px; box-shadow: var(--shadow-lg); display: none;
-            flex-direction: column; gap: 6px; z-index: 1050; min-width: 180px; max-height: 250px; overflow-y: auto;
+            border-radius: var(--radius-md); padding: 8px; box-shadow: var(--shadow-lg); display: none;
+            flex-direction: column; gap: 4px; z-index: 1050; min-width: 160px; max-height: 250px; overflow-y: auto;
         }
         .col-toggle-menu.show { display: flex; }
 
         .table-wrapper { flex: 1; overflow-y: auto; overflow-x: auto;}
-        .data-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; white-space: nowrap; }
         
+        /* Modifikasi Padding Tabel (Lebih Rapat) */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 10px; text-align: left; white-space: nowrap; }
         .data-table th { 
-            position: sticky; top: 0; background: #f1f5f9; padding: 8px 12px; 
+            position: sticky; top: 0; background: #f1f5f9; padding: 4px 8px; 
             color: var(--text-muted); font-weight: 700; text-transform: uppercase; 
-            font-size: 10px; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); z-index: 10; cursor: pointer; user-select: none; transition: background 0.2s;
+            font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); z-index: 10; cursor: pointer; user-select: none; transition: background 0.2s;
         }
         .data-table th:hover { background: #e2e8f0; color: var(--text-main); }
-        .sort-icon { margin-left: 4px; opacity: 0.4; font-size: 10px; }
+        .sort-icon { margin-left: 4px; opacity: 0.4; font-size: 9px; }
         .sort-icon.active { opacity: 1; color: var(--primary); }
 
-        .data-table td { padding: 6px 12px; border-bottom: 1px solid #f1f5f9; color: var(--text-main); vertical-align: middle; }
+        .data-table td { padding: 3px 8px; border-bottom: 1px solid #f1f5f9; color: var(--text-main); vertical-align: middle; }
         .data-table tr { cursor: pointer; transition: all 0.2s; }
         .data-table tr:nth-child(even) { background: #fafafa; }
         .data-table tr:hover { background: #f1f5f9; }
         .data-table tr.selected { background: #fef2f2; }
         .data-table tr.selected td { border-bottom: 1px solid #fecaca; }
-        .data-table tr.selected td:first-child { border-left: 4px solid var(--primary); }
+        .data-table tr.selected td:first-child { border-left: 3px solid var(--primary); }
 
         .status-badge {
-            display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 20px; font-size: 9px;
+            display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; border-radius: 12px; font-size: 8px;
             font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm);
         }
 
         .pagination-container {
-            display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; 
-            background: #f8fafc; border-top: 1px solid var(--border); font-size: 11px; font-weight: 500; color: var(--text-muted); flex-shrink: 0;
+            display: flex; justify-content: space-between; align-items: center; padding: 6px 12px; 
+            background: #f8fafc; border-top: 1px solid var(--border); font-size: 10px; font-weight: 500; color: var(--text-muted); flex-shrink: 0;
         }
-        .page-btn-group { display: flex; gap: 8px; }
-        .page-btn { padding: 4px 10px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; border-radius: 6px; font-weight: 600; color: var(--text-main); transition: 0.2s; }
+        .page-btn-group { display: flex; gap: 6px; }
+        .page-btn { padding: 3px 8px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; border-radius: 4px; font-weight: 600; color: var(--text-main); transition: 0.2s; }
         .page-btn:hover:not(:disabled) { background: #e2e8f0; }
         .page-btn:disabled { background: #f1f5f9; color: #cbd5e1; cursor: not-allowed; }
 
         #info-panel {
-            position: absolute; top: 10px; right: 10px; width: 320px;
+            position: absolute; top: 10px; right: 10px; width: 300px;
             background: rgba(255, 255, 255, 0.95); border-radius: var(--radius-lg); 
             box-shadow: var(--shadow-lg); z-index: 2000; display: none; flex-direction: column;
             max-height: calc(100% - 20px); border: 1px solid rgba(255,255,255,0.8); overflow: hidden;
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         #info-panel.minimized .detail-only { display: none; }
-        #info-panel.minimized { height: 50px !important; }
+        #info-panel.minimized { height: 45px !important; }
 
         .panel-header {
-            background: transparent; color: var(--text-main); padding: 12px 16px; 
+            background: transparent; color: var(--text-main); padding: 10px 14px; 
             cursor: grab; display: flex; justify-content: space-between; align-items: flex-start;
-            min-height: 50px; box-sizing: border-box; border-bottom: 1px solid var(--border);
+            min-height: 45px; box-sizing: border-box; border-bottom: 1px solid var(--border);
         }
         .panel-header:active { cursor: grabbing; }
-        .panel-header h3 { margin: 0; font-size: 14px; font-weight: 700; line-height: 1.4; padding-right: 15px; flex: 1; }
+        .panel-header h3 { margin: 0; font-size: 13px; font-weight: 700; line-height: 1.4; padding-right: 10px; flex: 1; }
         
-        .panel-controls { display: flex; gap: 6px; align-items: center; margin-top: -2px; }
-        .panel-controls i { cursor: pointer; font-size: 12px; color: var(--text-muted); background: #f1f5f9; padding: 6px; border-radius: 50%; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .panel-controls { display: flex; gap: 4px; align-items: center; margin-top: -2px; }
+        .panel-controls i { cursor: pointer; font-size: 11px; color: var(--text-muted); background: #f1f5f9; padding: 6px; border-radius: 50%; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
         .panel-controls i:hover { background: var(--primary); color: white; transform: scale(1.05); }
 
-        .panel-content { padding: 16px; overflow-y: auto; flex: 1; }
-        .info-img { width: 100%; height: 140px; object-fit: cover; border-radius: var(--radius-md); margin-bottom: 16px; border: 1px solid var(--border); background: #f1f5f9; }
-        .info-row { display: flex; flex-direction: column; margin-bottom: 12px; gap: 4px; }
-        .info-row label { font-weight: 600; color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .info-row span { font-size: 12px; font-weight: 500; color: var(--text-main); }
+        .panel-content { padding: 14px; overflow-y: auto; flex: 1; }
+        .info-img { width: 100%; height: 130px; object-fit: cover; border-radius: var(--radius-md); margin-bottom: 14px; border: 1px solid var(--border); background: #f1f5f9; }
+        .info-row { display: flex; flex-direction: column; margin-bottom: 10px; gap: 3px; }
+        .info-row label { font-weight: 600; color: var(--text-muted); font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-row span { font-size: 11px; font-weight: 500; color: var(--text-main); }
         
         .edit-input { 
-            width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-md); 
-            box-sizing: border-box; font-size: 12px; font-family: 'Inter'; transition: 0.3s; background: var(--bg-light);
+            width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-md); 
+            box-sizing: border-box; font-size: 11px; font-family: 'Inter'; transition: 0.3s; background: var(--bg-light);
         }
         .edit-input:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(211,47,47,0.1); }
         .btn-save { 
-            background: var(--primary-gradient); color: white; border: none; padding: 10px; border-radius: var(--radius-md); 
-            width: 100%; cursor: pointer; font-weight: 600; margin-top: 16px; font-family: 'Inter'; box-shadow: var(--shadow-md); transition: 0.2s;
+            background: var(--primary-gradient); color: white; border: none; padding: 8px; border-radius: var(--radius-md); 
+            width: 100%; cursor: pointer; font-weight: 600; margin-top: 12px; font-family: 'Inter'; box-shadow: var(--shadow-md); transition: 0.2s;
         }
         .btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
         
-        .gmaps-link { color: #2563eb; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; background: #eff6ff; border-radius: 20px; width: fit-content; transition: 0.2s; font-size: 11px; }
+        .gmaps-link { color: #2563eb; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; background: #eff6ff; border-radius: 20px; width: fit-content; transition: 0.2s; font-size: 10px; }
         .gmaps-link:hover { background: #dbeafe; color: #1d4ed8; }
 
-        .hint-box { background: #fffbeb; padding: 10px 14px; border-radius: var(--radius-md); border-left: 4px solid var(--highlight); font-size: 11px; margin-bottom: 16px; color: #b45309; line-height: 1.5; font-weight: 500; }
+        .hint-box { background: #fffbeb; padding: 8px 12px; border-radius: var(--radius-md); border-left: 3px solid var(--highlight); font-size: 10px; margin-bottom: 12px; color: #b45309; line-height: 1.4; font-weight: 500; }
 
         .leaflet-tooltip-koperasi {
-            background: rgba(30, 41, 59, 0.95); color: white; border: none; font-weight: 600; border-radius: 8px; 
-            padding: 6px 12px; font-size: 12px; text-align: center; box-shadow: var(--shadow-md); backdrop-filter: blur(4px); font-family: 'Inter';
+            background: rgba(30, 41, 59, 0.95); color: white; border: none; font-weight: 600; border-radius: 6px; 
+            padding: 4px 10px; font-size: 11px; text-align: center; box-shadow: var(--shadow-md); backdrop-filter: blur(4px); font-family: 'Inter';
         }
         .leaflet-tooltip-left:before, .leaflet-tooltip-right:before, .leaflet-tooltip-top:before, .leaflet-tooltip-bottom:before { border-top-color: rgba(30, 41, 59, 0.95); }
 
@@ -354,10 +346,10 @@
         #loader i { text-shadow: 0 4px 12px rgba(211,47,47,0.3); }
 
         @media (max-width: 992px) {
-            #view-peta { padding: 8px; gap: 8px; overflow-y: auto; }
+            #view-peta { padding: 6px; gap: 6px; overflow-y: auto; }
             #resizer { display: none; }
             #map-container { flex: none; min-height: 40vh; height: auto; }
-            #table-container { flex: none; min-height: 55vh; height: auto; }
+            #table-container { flex: none; min-height: 50vh; height: auto; }
             
             /* Responsive table collapse */
             #view-peta.table-collapsed #table-container { min-height: auto; flex: none; }
@@ -366,10 +358,10 @@
             #view-statistik { padding: 12px; gap: 12px;}
             .charts-grid { grid-template-columns: 1fr; }
 
-            header { padding: 8px 12px; flex-wrap: wrap; gap: 8px; justify-content: center;}
-            .header-brand h1 { font-size: 0.9rem; text-align: center; }
-            #stats-panel { font-size: 10px; padding: 4px 10px; min-width: 140px; }
-            .refresh-overlay { font-size: 10px; }
+            header { padding: 6px 10px; flex-wrap: wrap; gap: 6px; justify-content: center;}
+            .header-brand h1 { font-size: 0.85rem; text-align: center; }
+            #stats-panel { font-size: 9px; padding: 4px 8px; min-width: 120px; }
+            .refresh-overlay { font-size: 9px; }
             
             #sidebar { 
                 position: absolute; left: 0; top: 0; transform: translateX(-100%); 
@@ -380,22 +372,23 @@
 
             #info-panel { 
                 position: fixed; top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important;
-                width: 100% !important; border-radius: 24px 24px 0 0 !important; max-height: 75vh; 
+                width: 100% !important; border-radius: 20px 20px 0 0 !important; max-height: 75vh; 
                 border-bottom: none; border-left: none; border-right: none; box-shadow: 0 -10px 40px rgba(0,0,0,0.15); z-index: 3000;
             }
             .panel-header { cursor: default; } 
-            .panel-header::before { content: ''; position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; }
+            .panel-header::before { content: ''; position: absolute; top: 6px; left: 50%; transform: translateX(-50%); width: 35px; height: 4px; background: #cbd5e1; border-radius: 10px; }
         }
+
         /* Slider Container */
-        .slider-container { position: relative; width: 100%; height: 140px; margin-bottom: 16px; border-radius: var(--radius-md); overflow: hidden; background: #f1f5f9; border: 1px solid var(--border); }
+        .slider-container { position: relative; width: 100%; height: 130px; margin-bottom: 12px; border-radius: var(--radius-md); overflow: hidden; background: #f1f5f9; border: 1px solid var(--border); }
         .slider-images { display: flex; transition: transform 0.3s ease-in-out; height: 100%; }
         .slider-images img { width: 100%; height: 100%; object-fit: cover; flex-shrink: 0; cursor: pointer; }
-        .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 10px; transition: 0.2s; }
+        .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 9px; transition: 0.2s; }
         .slider-btn:hover { background: rgba(0,0,0,0.8); }
-        .slider-btn.prev { left: 8px; }
-        .slider-btn.next { right: 8px; }
-        .slider-indicators { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; }
-        .indicator { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); }
+        .slider-btn.prev { left: 6px; }
+        .slider-btn.next { right: 6px; }
+        .slider-indicators { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; }
+        .indicator { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.5); }
         .indicator.active { background: white; }
         
         /* Lightbox Overlay */
@@ -437,7 +430,7 @@
         
         <aside id="sidebar">
             <div class="sidebar-nav">
-                <h3 style="margin-top:0; font-size:14px; font-weight:700; color:var(--text-main); margin-bottom:15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+                <h3 style="margin-top:0; font-size:13px; font-weight:700; color:var(--text-main); margin-bottom:12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
                     <i class="fas fa-link" style="color: var(--primary); margin-right: 6px;"></i> Menu Utama
                 </h3>
                 <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column;">
@@ -478,30 +471,35 @@
 
                 <div id="table-container">
                     <div class="table-header-box">
-                        <div class="th-top-row">
-                            <h2 style="cursor: pointer; user-select: none;" onclick="toggleTable()" title="Klik untuk sembunyikan/luaskan tabel">
-                                <i class="fas fa-table" style="margin-right: 6px; color:var(--text-muted);"></i> Data Koperasi
-                                <i id="table-toggle-icon" class="fas fa-chevron-down" style="margin-left: 8px; font-size: 14px; color: var(--primary);"></i>
+                        <!-- Baris Judul dan Tombol Toggle (Dibuat Flex Space-Between Mutlak) -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px dashed var(--border); padding-bottom: 8px; margin-bottom: 4px;">
+                            <h2 style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-main);">
+                                <i class="fas fa-table" style="margin-right: 4px; color:var(--text-muted);"></i> Data Koperasi
                             </h2>
-                            <div class="table-controls">
-                                <span style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Tampilkan:</span>
-                                <select id="itemsPerPage" class="filter-select" style="width: auto; padding: 4px 10px; margin-right: 6px; border-radius: 6px;" onchange="changeItemsPerPage()">
-                                    <option value="10">10 Baris</option>
-                                    <option value="20">20 Baris</option>
-                                    <option value="50">50 Baris</option>
-                                    <option value="100">100 Baris</option>
-                                    <option value="all" selected>Semua Data</option>
-                                </select>
-                                <div class="col-toggle-wrapper">
-                                    <button class="btn-action" onclick="toggleColMenu()">
-                                        <i class="fas fa-columns"></i> Kolom <i class="fas fa-caret-down" style="margin-left:4px;"></i>
-                                    </button>
-                                    <div id="col-menu" class="col-toggle-menu"></div>
-                                </div>
-                                <button class="btn-action btn-export" onclick="exportToExcel()">
-                                    <i class="fas fa-file-excel"></i> Ekspor Excel
+                            <button class="btn-action" style="padding: 4px 10px; background: #e2e8f0; margin: 0;" onclick="toggleTable()" title="Tampilkan/Sembunyikan Tabel">
+                                <i id="table-toggle-icon" class="fas fa-chevron-down" style="color: var(--primary);"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Area Kontrol Tabel -->
+                        <div class="table-controls">
+                            <span style="font-size: 10px; font-weight: 600; color: var(--text-muted);">Tampilkan:</span>
+                            <select id="itemsPerPage" class="filter-select" style="width: auto; padding: 3px 8px; margin-right: 6px; border-radius: 6px;" onchange="changeItemsPerPage()">
+                                <option value="10">10 Baris</option>
+                                <option value="20">20 Baris</option>
+                                <option value="50">50 Baris</option>
+                                <option value="100">100 Baris</option>
+                                <option value="all" selected>Semua Data</option>
+                            </select>
+                            <div class="col-toggle-wrapper">
+                                <button class="btn-action" onclick="toggleColMenu()">
+                                    <i class="fas fa-columns"></i> Kolom <i class="fas fa-caret-down" style="margin-left:4px;"></i>
                                 </button>
+                                <div id="col-menu" class="col-toggle-menu"></div>
                             </div>
+                            <button class="btn-action btn-export" onclick="exportToExcel()">
+                                <i class="fas fa-file-excel"></i> Ekspor Excel
+                            </button>
                         </div>
                         
                         <div class="th-search-row">
@@ -516,7 +514,7 @@
                                 <option value="">Semua Kecamatan</option>
                             </select>
                             <button class="adv-search-toggle" onclick="toggleAdvSearch()">
-                                <i class="fas fa-sliders-h"></i> <span>Kategori (Lanjut)</span> <i class="fas fa-chevron-down" id="adv-search-icon"></i>
+                                <i class="fas fa-sliders-h"></i> <span>Kategori</span> <i class="fas fa-chevron-down" id="adv-search-icon"></i>
                             </button>
                         </div>
 
