@@ -311,6 +311,13 @@
         }
         .leaflet-tooltip-left:before, .leaflet-tooltip-right:before, .leaflet-tooltip-top:before, .leaflet-tooltip-bottom:before { border-top-color: rgba(30, 41, 59, 0.95); }
 
+        /* Lokasi Pengguna & Floating Controls */
+        .map-floating-buttons { position: absolute; top: 10px; left: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
+        .map-btn { background: white; border: 2px solid rgba(0,0,0,0.1); color: var(--text-main); width: 34px; height: 34px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); transition: all 0.2s; }
+        .map-btn:hover { background: #f8fafc; color: var(--primary); }
+        .custom-user-dot { margin: 0; padding: 0; }
+        .custom-user-dot .blue-dot { background-color: #3b82f6; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); }
+
         .custom-map-label { pointer-events: none; overflow: visible !important; }
         .custom-map-label div {
             position: absolute;
@@ -452,6 +459,17 @@
             <div id="view-peta">
                 <div id="map-container">
                     <main id="map"></main>
+                    
+                    <!-- Tombol Floating Peta -->
+                    <div class="map-floating-buttons">
+                        <button class="map-btn" onclick="locateUser()" title="Tampilkan Lokasi Saya">
+                            <i class="fas fa-location-crosshairs"></i>
+                        </button>
+                        <button class="map-btn" id="admin-locate-btn" onclick="checkLocationAccuracy()" title="Cek Keakurasian Lokasi (Khusus Admin)" style="display:none;">
+                            <i class="fas fa-satellite"></i>
+                        </button>
+                    </div>
+
                     <div id="info-panel">
                         <div class="panel-header" id="panel-header">
                             <h3 id="panel-title">Detail Koperasi</h3>
@@ -614,6 +632,8 @@
         let currentMapData = []; 
         let lastSelectedMarker = null;
         let tempEditMarker = null;
+        let userMarker = null;
+        let userCircle = null;
         let chartInstances = {};
         const defaultNoImage = "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg";
 
@@ -679,6 +699,7 @@
         if (urlParams.get('edit') === 'true') {
             canEdit = true;
             document.getElementById('admin-badge').style.display = 'inline-block';
+            if (document.getElementById('admin-locate-btn')) document.getElementById('admin-locate-btn').style.display = 'flex';
         }
 
         function toggleSidebar() {
@@ -913,6 +934,80 @@
             });
         }
         function handleSort(colId) { if (sortCol === colId) { sortAsc = !sortAsc; } else { sortCol = colId; sortAsc = true; } applySort(); currentPage = 1; renderTable(); }
+
+        // --- FITUR LOKASI PENGGUNA (Deteksi dan Cek Akurasi) ---
+        function locateUser() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        showUserLocation(lat, lng, position.coords.accuracy);
+                        leafletMap.flyTo([lat, lng], 15, { duration: 1.5 });
+                    },
+                    (error) => { alert("Gagal mendeteksi lokasi: " + error.message); },
+                    { enableHighAccuracy: false }
+                );
+            } else {
+                alert("Fitur Geolocation tidak didukung oleh browser Anda.");
+            }
+        }
+
+        function checkLocationAccuracy() {
+            if (!canEdit) return;
+            document.getElementById('loader-text').innerText = "Mengukur akurasi tinggi GPS...";
+            document.getElementById('loader').style.display = 'flex';
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        document.getElementById('loader').style.display = 'none';
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const acc = position.coords.accuracy;
+                        
+                        showUserLocation(lat, lng, acc);
+                        leafletMap.flyTo([lat, lng], 18, { duration: 1.5 });
+                        
+                        alert(`Akurasi lokasi GPS saat ini: ±${Math.round(acc)} meter.`);
+                        
+                        // Auto-fill jika sedang dalam Mode Edit
+                        if (isEditMode && document.getElementById('edit-lat')) {
+                            document.getElementById('edit-lat').value = lat.toFixed(7);
+                            document.getElementById('edit-lng').value = lng.toFixed(7);
+                            if (tempEditMarker) leafletMap.removeLayer(tempEditMarker);
+                            tempEditMarker = L.marker([lat, lng]).addTo(leafletMap);
+                        }
+                    },
+                    (error) => {
+                        document.getElementById('loader').style.display = 'none';
+                        alert("Gagal mendeteksi lokasi akurat: " + error.message);
+                    },
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                );
+            } else {
+                document.getElementById('loader').style.display = 'none';
+                alert("Geolocation tidak didukung oleh browser Anda.");
+            }
+        }
+
+        function showUserLocation(lat, lng, accuracy) {
+            if (userMarker) leafletMap.removeLayer(userMarker);
+            if (userCircle) leafletMap.removeLayer(userCircle);
+
+            // Radius Akurasi (Lingkaran biru transparan)
+            userCircle = L.circle([lat, lng], { radius: accuracy, color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.15, weight: 1 }).addTo(leafletMap);
+            
+            // Titik Biru Pengguna
+            const dotIcon = L.divIcon({
+                className: 'custom-user-dot',
+                html: '<div class="blue-dot"></div>',
+                iconSize: [14, 14],
+                iconAnchor: [7, 7]
+            });
+            userMarker = L.marker([lat, lng], { icon: dotIcon, zIndexOffset: 1000 }).addTo(leafletMap);
+            userMarker.bindPopup("<b>Lokasi Anda Saat Ini</b>").openPopup();
+        }
 
         function renderAllMapMarkers(dataToRender) {
             markersLayer.clearLayers(); labelsLayer.clearLayers(); allMarkers = [];
