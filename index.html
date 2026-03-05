@@ -89,6 +89,10 @@
             display: none; margin-left: 10px; box-shadow: 0 0 10px rgba(245, 158, 11, 0.4); letter-spacing: 1px;
         }
 
+		#link-database {
+			display:none;
+		}
+
         #layout { display: flex; flex: 1; position: relative; overflow: hidden; }
 
         #sidebar {
@@ -353,7 +357,7 @@
                     <!-- Perubahan di sini: Menggunakan href untuk navigasi URL statis Github/Vercel -->
                     <li><a href="/" id="link-peta" class="sidebar-link active"><i class="fas fa-map-marked-alt"></i> Peta Persebaran</a></li>
                     <li><a href="statistik.html" id="link-statistik" class="sidebar-link"><i class="fas fa-chart-line"></i> Dashboard Statistik</a></li>
-                    <li><a href="#" class="sidebar-link"><i class="fas fa-database"></i> Kelola Basis Data</a></li>
+                    <li><a href="https://docs.google.com/spreadsheets/d/14XjnK5a38pkK682P48K60zAjwwFbT5MDQcsHvxBkEW4/edit?usp=sharing" target="_blank" rel="noopener noreferrer" id="link-database" class="sidebar-link"><i class="fas fa-database"></i> Kelola Basis Data</a></li>
                 </ul>
             </div>
             
@@ -490,6 +494,7 @@
         if (urlParams.get('edit') === 'true') {
             canEdit = true;
             document.getElementById('admin-badge').style.display = 'inline-block';
+			document.getElementById('link-database').style.display = 'inline-block';
 			document.getElementById('link-peta').href = '?edit=true';
 			document.getElementById('link-statistik').href = 'statistik.html?edit=true';
             if (document.getElementById('admin-locate-btn')) document.getElementById('admin-locate-btn').style.display = 'flex';
