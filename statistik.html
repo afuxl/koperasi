@@ -85,11 +85,7 @@
             border-radius: 20px; font-weight: 700; font-size: 9px; 
             display: none; margin-left: 10px; box-shadow: 0 0 10px rgba(245, 158, 11, 0.4); letter-spacing: 1px;
         }
-		
-		#link-database {
-			display:none;
-		}
-		
+
         #layout { display: flex; flex: 1; position: relative; overflow: hidden; }
 
         #sidebar {
@@ -117,6 +113,26 @@
         #content-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
         #view-statistik { flex: 1; display: flex; flex-direction: column; padding: 24px; gap: 20px; overflow-y: auto; background-color: var(--bg-body); }
 
+        /* Filter Row Styles */
+        .stat-filter-row {
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            background: var(--surface); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+        }
+        .stat-filter-row h3 { margin: 0; font-size: 14px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        
+        .filter-select { 
+            flex: 1; min-width: 180px; max-width: 300px; padding: 8px 16px; border-radius: 8px; 
+            border: 1px solid var(--border); font-size: 13px; font-family: 'Inter';
+            background-color: var(--bg-light); outline: none; cursor: pointer; transition: 0.3s; margin: 0;
+        }
+        .filter-select:focus { border-color: var(--primary); background-color: #fff; box-shadow: 0 0 0 3px rgba(211,47,47,0.1); }
+        
+        .btn-reset-filter {
+            background-color: #e2e8f0; color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; 
+            font-weight: 600; font-size: 12px; font-family: 'Inter'; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
+        }
+        .btn-reset-filter:hover { background-color: #cbd5e1; color: var(--primary); }
+
         /* KOMPONEN VIEW STATISTIK */
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
         .kpi-card { background: var(--surface); padding: 16px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); transition: transform 0.3s ease; }
@@ -128,7 +144,7 @@
         .icon-orange { background: linear-gradient(135deg, #f59e0b, #b45309); }
         .kpi-details { display: flex; flex-direction: column; }
         .kpi-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-        .kpi-value { font-size: 24px; font-weight: 800; color: var(--text-main); line-height: 1; }
+        .kpi-value { font-size: 24px; font-weight: 800; color: var(--text-main); line-height: 1; transition: all 0.3s ease; }
 
         .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
         .chart-card { background: var(--surface); padding: 16px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border); display: flex; flex-direction: column; }
@@ -154,6 +170,10 @@
                 height: 100%; width: 280px; max-width: 85vw; box-shadow: 5px 0 25px rgba(0,0,0,0.1); margin-left: 0 !important;
             }
             #sidebar.open { transform: translateX(0); }
+            
+            .stat-filter-row { flex-direction: column; align-items: stretch; }
+            .filter-select { max-width: none; }
+            .btn-reset-filter { align-self: flex-start; }
         }
     </style>
 </head>
@@ -189,9 +209,9 @@
                     <i class="fas fa-link" style="color: var(--primary); margin-right: 6px;"></i> Menu Utama
                 </h3>
                 <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column;">
-                    <li><a href="/" id="link-peta" class="sidebar-link"><i class="fas fa-map-marked-alt"></i> Peta Persebaran</a></li>
+                    <li><a href="index.html" id="link-peta" class="sidebar-link"><i class="fas fa-map-marked-alt"></i> Peta Persebaran</a></li>
                     <li><a href="statistik.html" id="link-statistik" class="sidebar-link active"><i class="fas fa-chart-line"></i> Dashboard Statistik</a></li>
-                    <li><a href="https://docs.google.com/spreadsheets/d/14XjnK5a38pkK682P48K60zAjwwFbT5MDQcsHvxBkEW4/edit?usp=sharing" target="_blank" rel="noopener noreferrer" id="link-database" class="sidebar-link"><i class="fas fa-database"></i>Kelola Basis Data</a></li>
+                    <li><a href="#" class="sidebar-link"><i class="fas fa-database"></i> Kelola Basis Data</a></li>
                 </ul>
             </div>
             
@@ -204,6 +224,21 @@
 
         <div id="content-wrapper">
             <div id="view-statistik">
+                
+                <!-- Filter Wilayah untuk Statistik -->
+                <div class="stat-filter-row">
+                    <h3><i class="fas fa-filter" style="color: var(--primary);"></i> Filter Wilayah:</h3>
+                    <select id="statFilterKabupaten" class="filter-select" onchange="updateKecamatanDropdown(); handleStatFilter();">
+                        <option value="">Semua Kabupaten/Kota</option>
+                    </select>
+                    <select id="statFilterKecamatan" class="filter-select" onchange="handleStatFilter();">
+                        <option value="">Semua Kecamatan</option>
+                    </select>
+                    <button class="btn-reset-filter" onclick="resetStatFilter()">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                </div>
+
                 <div class="kpi-grid">
                     <div class="kpi-card">
                         <div class="kpi-icon icon-blue"><i class="fas fa-building"></i></div>
@@ -265,6 +300,8 @@
         const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzc96HHN04_Bd6DrkPXA5ww65-qqmu9v8--8rvlBQTHaqS9TSSEu-cjMMD7RBTwJpwL/exec";
         
         let chartInstances = {};
+        let rawData = []; // Menyimpan semua data asli
+        let currentFilteredData = []; // Menyimpan data yang telah difilter untuk render statistik
         
         // --- PENGATURAN CHART.JS ---
         Chart.defaults.font.family = "'Inter', sans-serif";
@@ -277,9 +314,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('edit') === 'true') {
             document.getElementById('admin-badge').style.display = 'inline-block';
-			document.getElementById('link-database').style.display = 'inline-block';
-            document.getElementById('link-peta').href = '/?edit=true';
-			document.getElementById('link-statistik').href = 'statistik.html?edit=true';
+            document.getElementById('link-peta').href = 'index.html?edit=true';
         }
 
         function toggleSidebar() {
@@ -308,7 +343,12 @@
                 const res = await response.json();
 
                 if (res.success) {
-                    processDataAndRenderCharts(res.data);
+                    rawData = res.data;
+                    currentFilteredData = [...rawData];
+                    
+                    populateKabupatenDropdown();
+                    processDataAndRenderCharts(currentFilteredData);
+                    
                     document.getElementById('loader').style.display = 'none';
                 } else {
                     document.getElementById('loader').style.display = 'none'; 
@@ -319,6 +359,57 @@
                 console.error("Fetch error: ", error);
                 alert("Gagal mengambil data dari server. Pastikan URL Web App sudah benar dan memiliki akses CORS yang sesuai.");
             }
+        }
+
+        // --- FUNGSI FILTER STATISTIK ---
+        function populateKabupatenDropdown() { 
+            const sel = document.getElementById('statFilterKabupaten'); 
+            const list = [...new Set(rawData.map(i => i.kabupaten))].filter(Boolean).sort();
+            sel.innerHTML = '<option value="">Semua Kabupaten/Kota</option>'; 
+            list.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = k; sel.appendChild(opt); });
+        }
+        
+        function updateKecamatanDropdown() { 
+            const kab = document.getElementById('statFilterKabupaten').value; 
+            const sel = document.getElementById('statFilterKecamatan'); 
+            sel.innerHTML = '<option value="">Semua Kecamatan</option>';
+            if (kab) { 
+                const list = [...new Set(rawData.filter(i => i.kabupaten === kab).map(i => i.kecamatan))].filter(Boolean).sort(); 
+                list.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = k; sel.appendChild(opt); }); 
+            }
+        }
+
+        function handleStatFilter() {
+            const kab = document.getElementById('statFilterKabupaten').value;
+            const kec = document.getElementById('statFilterKecamatan').value;
+
+            currentFilteredData = rawData.filter(i => {
+                const matchKab = (kab === "" || i.kabupaten === kab);
+                const matchKec = (kec === "" || i.kecamatan === kec);
+                return matchKab && matchKec;
+            });
+
+            processDataAndRenderCharts(currentFilteredData);
+        }
+
+        function resetStatFilter() {
+            document.getElementById('statFilterKabupaten').value = '';
+            updateKecamatanDropdown(); // Reset kecamatan dropdown
+            handleStatFilter();
+        }
+
+        // Animasi angka untuk KPI
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
         }
 
         function processDataAndRenderCharts(dataArray) {
@@ -335,14 +426,35 @@
                 const ratString = String(item.rat);
                 if (ratString.includes(String(tahunSekarang)) || ratString.includes(String(tahunSekarang - 1))) countRatTerbaru++;
 
-                const kab = item.kabupaten || "Tidak Diketahui"; kabCountMap[kab] = (kabCountMap[kab] || 0) + 1;
+                // Hanya hitung sebaran kabupaten jika tidak memfilter spesifik satu kabupaten
+                const filterKab = document.getElementById('statFilterKabupaten').value;
+                if(filterKab === "") {
+                    const kab = item.kabupaten || "Tidak Diketahui"; kabCountMap[kab] = (kabCountMap[kab] || 0) + 1;
+                } else {
+                    // Jika satu kabupaten terpilih, grafik bar menampilkan sebaran kecamatan
+                    const kec = item.kecamatan || "Tidak Diketahui"; kabCountMap[kec] = (kabCountMap[kec] || 0) + 1;
+                }
+                
                 const statusLabel = isAktif ? "Aktif" : "Tidak Aktif"; statusCountMap[statusLabel] = (statusCountMap[statusLabel] || 0) + 1;
                 const kesehatan = item.kesehatan && item.kesehatan !== "-" ? item.kesehatan : "Belum Dinilai"; kesehatanCountMap[kesehatan] = (kesehatanCountMap[kesehatan] || 0) + 1;
             });
 
-            document.getElementById('kpi-total').innerText = totalKoperasi; document.getElementById('kpi-aktif').innerText = countAktif;
-            document.getElementById('kpi-nonaktif').innerText = countNonAktif; document.getElementById('kpi-rat').innerText = countRatTerbaru;
+            // Update KPI with Animation
+            animateValue(document.getElementById('kpi-total'), parseInt(document.getElementById('kpi-total').innerText) || 0, totalKoperasi, 500);
+            animateValue(document.getElementById('kpi-aktif'), parseInt(document.getElementById('kpi-aktif').innerText) || 0, countAktif, 500);
+            animateValue(document.getElementById('kpi-nonaktif'), parseInt(document.getElementById('kpi-nonaktif').innerText) || 0, countNonAktif, 500);
+            animateValue(document.getElementById('kpi-rat'), parseInt(document.getElementById('kpi-rat').innerText) || 0, countRatTerbaru, 500);
+            
             document.getElementById('total-info').innerHTML = `<i class="fas fa-chart-pie"></i> ${totalKoperasi} Data Terekap`;
+
+            // Ubah judul chart bar jika sedang memfilter kabupaten
+            const filterKab = document.getElementById('statFilterKabupaten').value;
+            const barChartHeader = document.querySelector('#barChartWilayah').closest('.chart-card').querySelector('.chart-header');
+            if(filterKab) {
+                barChartHeader.innerHTML = `<i class="fas fa-chart-bar" style="color: var(--primary);"></i> Sebaran Koperasi di ${filterKab} (Per Kecamatan)`;
+            } else {
+                barChartHeader.innerHTML = `<i class="fas fa-chart-bar" style="color: var(--primary);"></i> Sebaran Koperasi Berdasarkan Kabupaten/Kota`;
+            }
 
             renderBarChartWilayah(kabCountMap); renderDoughnutChartStatus(statusCountMap); renderPieChartKesehatan(kesehatanCountMap);
         }
