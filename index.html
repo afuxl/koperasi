@@ -431,8 +431,11 @@
                         <select id="filterKabupaten" class="filter-select" onchange="document.getElementById('searchInput').value=''; toggleClearBtn(); updateKecamatanDropdown(); handleSearch(); fitMapToFilteredBounds();">
                             <option value="">Semua Kabupaten/Kota</option>
                         </select>
-                        <select id="filterKecamatan" class="filter-select" onchange="document.getElementById('searchInput').value=''; toggleClearBtn(); handleSearch(); fitMapToFilteredBounds();">
+                        <select id="filterKecamatan" class="filter-select" onchange="document.getElementById('searchInput').value=''; toggleClearBtn(); updateDesaDropdown(); handleSearch(); fitMapToFilteredBounds();">
                             <option value="">Semua Kecamatan</option>
+                        </select>
+                        <select id="filterDesa" class="filter-select" onchange="document.getElementById('searchInput').value=''; toggleClearBtn(); handleSearch(); fitMapToFilteredBounds();">
+                            <option value="">Semua Kelurahan/Desa</option>
                         </select>
                         <button class="adv-search-toggle" onclick="toggleAdvSearch()">
                             <i class="fas fa-sliders-h"></i> <span>Kategori</span> <i class="fas fa-chevron-down" id="adv-search-icon"></i>
@@ -476,12 +479,12 @@
         let lastSelectedMarker = null, tempEditMarker = null, userMarker = null, userCircle = null;
         const defaultNoImage = "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg";
 
-        // --- TAMBAHAN VARIABEL GLOBAL UNTUK GEOJSON BATA WILAYAH ---
+        // --- TAMBAHAN VARIABEL GLOBAL UNTUK GEOJSON BATAS WILAYAH KECAMATAN ---
         let geoJsonLayer = null;
-        let currentGeoJsonData = null;
-        let currentLoadedKabupaten = "";
-        // Base URL menggunakan raw file dari repositori yang Anda berikan
-        const GEOJSON_BASE_URL = "https://koperasi-sultra.vercel.app/sultra.geojson"; 
+        let boundaryData = null;
+        let boundaryGroup = null; // Menampung layer batas untuk overlay
+        // Asumsi file tersimpan sebagai kecamatan.geojson pada direktori aplikasi
+        const GEOJSON_URL = "https://koperasi-sultra.vercel.app/kecamatan.geojson"; 
 
         let currentPage = 1, itemsPerPage = 'all', sortCol = null, sortAsc = true, dynamicHeadersList = []; 
         
@@ -506,57 +509,46 @@
             if (document.getElementById('admin-locate-btn')) document.getElementById('admin-locate-btn').style.display = 'flex';
         }
 
-        // --- FUNGSI BARU UNTUK MEMUAT & MENAMPILKAN DATA GEOJSON DINAMIS ---
-        async function loadAndDisplayBoundary(kabupaten, kecamatan) {
-            if (!kabupaten) {
-                if (geoJsonLayer) leafletMap.removeLayer(geoJsonLayer);
-                geoJsonLayer = null;
-                currentGeoJsonData = null;
-                currentLoadedKabupaten = "";
-                return;
-            }
-
-            // Memuat file baru hanya jika kabupaten yang dipilih berubah
-            if (kabupaten !== currentLoadedKabupaten) {
-                try {
-                    // Format nama file: di-uppercase dan spasi di-encode
-                    // Catatan: Pastikan teks di filter Kabupaten/Kota sama persis dengan nama file (misal: "KOTA KENDARI" atau "KABUPATEN MUNA")
-                    const fileName = encodeURIComponent(kabupaten.toUpperCase()) + ".geojson";
-                    const response = await fetch(GEOJSON_BASE_URL + fileName);
-                    
-                    if (response.ok) {
-                        currentGeoJsonData = await response.json();
-                        currentLoadedKabupaten = kabupaten;
-                    } else {
-                        console.warn("GeoJSON tidak ditemukan untuk:", kabupaten);
-                        currentGeoJsonData = null;
-                        currentLoadedKabupaten = kabupaten; // Tetap set agar tidak memicu fetch berulang saat error
-                    }
-                } catch (error) {
-                    console.warn("Gagal memuat GeoJSON:", error);
-                    currentGeoJsonData = null;
+        // --- FUNGSI BARU UNTUK MEMUAT DATA GEOJSON ---
+        async function loadBoundaryData() {
+            try {
+                const response = await fetch(GEOJSON_URL);
+                if (response.ok) {
+                    boundaryData = await response.json();
                 }
+            } catch (error) {
+                console.warn("Gagal memuat GeoJSON kecamatan:", error);
             }
-
-            renderBoundaryLayer(kecamatan);
         }
 
-        function renderBoundaryLayer(kecamatan) {
-            if (geoJsonLayer) {
-                leafletMap.removeLayer(geoJsonLayer);
+        // --- FUNGSI UNTUK MEMPERBARUI LAYER POLIGON BERDASARKAN FILTER ---
+        function updateBoundaryLayer(kabupaten, kecamatan) {
+            if (boundaryGroup) {
+                boundaryGroup.clearLayers();
                 geoJsonLayer = null;
             }
 
-            if (!currentGeoJsonData) return;
+            if (!boundaryData) return;
+            if (!kabupaten && !kecamatan) return; // Sembunyikan poligon jika reset filter
 
-            geoJsonLayer = L.geoJSON(currentGeoJsonData, {
+            // Ambil daftar kecamatan yang valid jika hanya Kabupaten yang dipilih
+            let validKecamatanList = [];
+            if (kabupaten && !kecamatan) {
+                validKecamatanList = [...new Set(rawData.filter(i => i.kabupaten === kabupaten).map(i => String(i.kecamatan).toUpperCase()))];
+            }
+
+            geoJsonLayer = L.geoJSON(boundaryData, {
                 filter: function(feature) {
-                    // Jika kecamatan tidak dipilih, tampilkan seluruh poligon dalam file kabupaten ini
-                    if (!kecamatan) return true;
-                    
-                    // Cek properti standar yang biasa digunakan untuk nama kecamatan pada file GeoJSON Indonesia
-                    const propKec = feature.properties.nm_kecamatan || feature.properties.WADMKC || feature.properties.KECAMATAN || feature.properties.kecamatan || feature.properties.NAMOBJ || feature.properties.NAME_3 || feature.properties.NAME_2;
-                    return propKec && propKec.toUpperCase() === kecamatan.toUpperCase();
+                    // Cek nama kecamatan pada properti GeoJSON
+                    const propKec = feature.properties.nm_kecamatan || feature.properties.WADMKC || feature.properties.KECAMATAN || feature.properties.kecamatan || feature.properties.NAMOBJ;
+                    if (!propKec) return false;
+
+                    if (kecamatan !== "") {
+                        return propKec.toUpperCase() === kecamatan.toUpperCase();
+                    } else if (kabupaten !== "" && validKecamatanList.length > 0) {
+                        return validKecamatanList.includes(propKec.toUpperCase());
+                    }
+                    return false;
                 },
                 style: function(feature) {
                     return {
@@ -566,11 +558,13 @@
                         fillOpacity: 0.1,
                         dashArray: '5, 5'
                     };
-                }
-            }).addTo(leafletMap);
+                },
+                // Tambahkan opsi ini agar poligon tidak mencegat event klik pada marker
+                interactive: false
+            }).addTo(boundaryGroup);
 
-            // Fokus zoom ke area poligon yang difilter
-            if (geoJsonLayer.getBounds().isValid()) {
+            // Fokus zoom ke area poligon yang difilter (hanya jika layer aktif ditampilkan)
+            if (geoJsonLayer.getBounds().isValid() && leafletMap.hasLayer(boundaryGroup)) {
                 leafletMap.fitBounds(geoJsonLayer.getBounds(), { padding: [50, 50], duration: 1 });
             }
         }
@@ -604,8 +598,7 @@
 
         function fitMapToFilteredBounds() {
             setTimeout(() => {
-                // Tambahan: Lewati proses fit bounds marker jika layer poligon sedang digambar untuk menghindari bentrok animasi zoom
-                if (geoJsonLayer && leafletMap.hasLayer(geoJsonLayer)) return; 
+                if (geoJsonLayer && leafletMap.hasLayer(boundaryGroup)) return; 
 
                 if (currentMapData.length === 0) return;
                 let bounds = L.latLngBounds(); let hasValidCoords = false;
@@ -701,16 +694,32 @@
             const esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri' });
             
             leafletMap = L.map('map', { zoomControl: false, layers: [osm] }).setView([-4.0, 122.5], 8); 
-            L.control.layers({ "Open Street Map": osm, "Google Satellite": satellite, "Google Terrain": googleTerrain, "ESRI": esri }, null, {position: 'bottomleft'}).addTo(leafletMap); 
+
+            boundaryGroup = L.featureGroup().addTo(leafletMap);
+            markersLayer = L.featureGroup().addTo(leafletMap); 
+            labelsLayer = L.featureGroup().addTo(leafletMap);
+
+            const baseMaps = {
+                "Open Street Map": osm,
+                "Google Satellite": satellite,
+                "Google Terrain": googleTerrain,
+                "ESRI": esri
+            };
+
+            const overlayMaps = {
+                "Batas Wilayah (Kecamatan)": boundaryGroup
+            };
+
+            L.control.layers(baseMaps, overlayMaps, {position: 'bottomleft'}).addTo(leafletMap); 
             L.control.zoom({ position: 'bottomright' }).addTo(leafletMap);
 
-            markersLayer = L.featureGroup().addTo(leafletMap); labelsLayer = L.featureGroup().addTo(leafletMap);
             leafletMap.on('zoomend', function() { if (leafletMap.getZoom() > 13.5) { if (!leafletMap.hasLayer(labelsLayer)) leafletMap.addLayer(labelsLayer); } else { if (leafletMap.hasLayer(labelsLayer)) leafletMap.removeLayer(labelsLayer); } });
             
             makeDraggable(document.getElementById("info-panel"));
             leafletMap.on('click', onMapClickForPin);
             initResizer(); 
 
+            loadBoundaryData();
             loadDataFromServer();
         }
 
@@ -818,7 +827,7 @@
                 
                 if (hasCoords) {
                     const marker = L.circleMarker([latVal, lngVal], { radius: 7, fillColor: baseColor, color: "white", weight: 2, fillOpacity: 1 });
-                    marker.bindTooltip(`<b>${item.nama}</b><br><small style="color: #cbd5e1; font-weight:400;">Kec. ${item.kecamatan}</small>`, { className: 'leaflet-tooltip-koperasi', direction: 'top', offset: [0, -5] });
+                    marker.bindTooltip(`<b>${item.nama}</b><br><small style="color: #cbd5e1; font-weight:400;">Desa ${item.desa}</small>`, { className: 'leaflet-tooltip-koperasi', direction: 'top', offset: [0, -5] });
                     marker.on('click', () => selectItem(item, marker));
                     markersLayer.addLayer(marker); allMarkers.push({ marker, data: item, baseColor });
 
@@ -1099,26 +1108,47 @@
         function updateKecamatanDropdown() { 
             const kab = document.getElementById('filterKabupaten').value; const sel = document.getElementById('filterKecamatan'); sel.innerHTML = '<option value="">Semua Kecamatan</option>';
             if (kab) { const list = [...new Set(rawData.filter(i => i.kabupaten === kab).map(i => i.kecamatan))].filter(Boolean).sort(); list.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = k; sel.appendChild(opt); }); }
+            updateDesaDropdown();
+        }
+
+        function updateDesaDropdown() {
+            const kec = document.getElementById('filterKecamatan').value; 
+            const selDesa = document.getElementById('filterDesa'); 
+            selDesa.innerHTML = '<option value="">Semua Kelurahan/Desa</option>';
+            if (kec) { 
+                const list = [...new Set(rawData.filter(i => i.kecamatan === kec).map(i => i.desa))].filter(Boolean).sort(); 
+                list.forEach(d => { const opt = document.createElement('option'); opt.value = d; opt.text = d; selDesa.appendChild(opt); }); 
+            }
         }
         
         function handleSearch() { 
-            const q = document.getElementById('searchInput').value.toLowerCase(); const kab = document.getElementById('filterKabupaten').value; const kec = document.getElementById('filterKecamatan').value;
-            const checkedStatus = Array.from(document.querySelectorAll('.cb-status:checked')).map(cb => cb.value); const checkedGerai = Array.from(document.querySelectorAll('.cb-gerai:checked')).map(cb => cb.value);
-            const checkedRat = Array.from(document.querySelectorAll('.cb-rat:checked')).map(cb => cb.value); const checkedKesehatan = Array.from(document.querySelectorAll('.cb-kesehatan:checked')).map(cb => cb.value);
+            const q = document.getElementById('searchInput').value.toLowerCase(); 
+            const kab = document.getElementById('filterKabupaten').value; 
+            const kec = document.getElementById('filterKecamatan').value;
+            const desa = document.getElementById('filterDesa').value;
+            
+            const checkedStatus = Array.from(document.querySelectorAll('.cb-status:checked')).map(cb => cb.value); 
+            const checkedGerai = Array.from(document.querySelectorAll('.cb-gerai:checked')).map(cb => cb.value);
+            const checkedRat = Array.from(document.querySelectorAll('.cb-rat:checked')).map(cb => cb.value); 
+            const checkedKesehatan = Array.from(document.querySelectorAll('.cb-kesehatan:checked')).map(cb => cb.value);
             
             currentMapData = rawData.filter(i => {
-                const matchKab = (kab === "" || i.kabupaten === kab); const matchKec = (kec === "" || i.kecamatan === kec);
-                const matchStatus = checkedStatus.length === 0 || checkedStatus.includes(String(i.status).trim()); const matchGerai = checkedGerai.length === 0 || checkedGerai.includes(String(i.gerai).trim());
-                const matchRat = checkedRat.length === 0 || checkedRat.includes(String(i.rat).trim()); const matchKesehatan = checkedKesehatan.length === 0 || checkedKesehatan.includes(String(i.kesehatan).trim());
-                return matchKab && matchKec && matchStatus && matchGerai && matchRat && matchKesehatan;
+                const matchKab = (kab === "" || i.kabupaten === kab); 
+                const matchKec = (kec === "" || i.kecamatan === kec);
+                const matchDesa = (desa === "" || i.desa === desa);
+                const matchStatus = checkedStatus.length === 0 || checkedStatus.includes(String(i.status).trim()); 
+                const matchGerai = checkedGerai.length === 0 || checkedGerai.includes(String(i.gerai).trim());
+                const matchRat = checkedRat.length === 0 || checkedRat.includes(String(i.rat).trim()); 
+                const matchKesehatan = checkedKesehatan.length === 0 || checkedKesehatan.includes(String(i.kesehatan).trim());
+                return matchKab && matchKec && matchDesa && matchStatus && matchGerai && matchRat && matchKesehatan;
             });
 
             currentFilteredData = currentMapData.filter(i => { return (String(i.nama || "").toLowerCase().includes(q) || String(i.desa || "").toLowerCase().includes(q) || String(i.nik || "").toLowerCase().includes(q) || String(i.pengurus || "").toLowerCase().includes(q)); });
             
             renderData();
 
-            // --- Panggil update layer poligon sesuai filter ---
-            loadAndDisplayBoundary(kab, kec);
+            // Memperbarui layer poligon cukup dengan informasi kabupaten dan kecamatan
+            updateBoundaryLayer(kab, kec);
         }
         
         window.onload = initMap;
