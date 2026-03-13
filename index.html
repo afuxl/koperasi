@@ -244,8 +244,9 @@
         .page-btn:hover:not(:disabled) { background: #e2e8f0; }
         .page-btn:disabled { background: #f1f5f9; color: #cbd5e1; cursor: not-allowed; }
 
+        /* PERBAIKAN: Melebarkan area judul agar nama panjang bisa muat */
         #info-panel {
-            position: absolute; top: 10px; right: 10px; width: 300px;
+            position: absolute; top: 10px; right: 10px; width: 340px; /* Diperlebar sedikit */
             background: rgba(255, 255, 255, 0.95); border-radius: var(--radius-lg); 
             box-shadow: var(--shadow-lg); z-index: 2000; display: none; flex-direction: column;
             max-height: calc(100% - 20px); border: 1px solid rgba(255,255,255,0.8); overflow: hidden;
@@ -257,7 +258,7 @@
         .panel-header { background: transparent; color: var(--text-main); padding: 10px 14px; cursor: grab; display: flex; justify-content: space-between; align-items: flex-start; min-height: 45px; box-sizing: border-box; border-bottom: 1px solid var(--border); }
         .panel-header:active { cursor: grabbing; }
         .panel-header h3 { margin: 0; font-size: 13px; font-weight: 700; line-height: 1.4; padding-right: 10px; flex: 1; }
-        .panel-controls { display: flex; gap: 4px; align-items: center; margin-top: -2px; }
+        .panel-controls { display: flex; gap: 4px; align-items: center; margin-top: -2px; flex-shrink: 0; }
         .panel-controls i { cursor: pointer; font-size: 11px; color: var(--text-muted); background: #f1f5f9; padding: 6px; border-radius: 50%; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
         .panel-controls i:hover { background: var(--primary); color: white; transform: scale(1.05); }
 
@@ -462,7 +463,6 @@
                     <div class="adv-search-panel" id="adv-search-panel">
                         <div class="filter-category"><span>Status Operasional</span><div id="cb-group-status" class="checkbox-group"></div></div>
                         <div class="filter-category"><span>Unit Gerai</span><div id="cb-group-gerai" class="checkbox-group"></div></div>
-                        <div class="filter-category"><span>Riwayat RAT (Tahun)</span><div id="cb-group-rat" class="checkbox-group"></div></div>
                         <div class="filter-category"><span>Tingkat Kesehatan</span><div id="cb-group-kesehatan" class="checkbox-group"></div></div>
                         <button class="btn-cancel" onclick="resetAdvSearch()"><i class="fas fa-undo-alt"></i> Bersihkan Filter Kategori</button>
                     </div>
@@ -505,12 +505,14 @@
 
         let currentPage = 1, itemsPerPage = 'all', sortCol = null, sortAsc = true, dynamicHeadersList = []; 
         
+        // PERBAIKAN: Menambahkan kolom 'kode_pos' agar tampil
         let tableColumnsConfig = [
             { id: 'no', label: 'No', default: true }, { id: 'nama', label: 'Nama Koperasi', default: true }, { id: 'status', label: 'Status', default: true },
             { id: 'alamat', label: 'Alamat', default: false }, { id: 'desa', label: 'Desa/Kel', default: true }, { id: 'kecamatan', label: 'Kecamatan', default: true },
-            { id: 'kabupaten', label: 'Kab/Kota', default: true }, { id: 'nik', label: 'NIK', default: false }, { id: 'ahu', label: 'SK AHU', default: false },
-            { id: 'pengurus', label: 'Pengurus', default: false }, { id: 'sektor usaha', label: 'Sektor Usaha', default: false }, { id: 'gerai', label: 'Unit Gerai', default: false },
-            { id: 'rat', label: 'RAT Terakhir', default: false }, { id: 'kesehatan', label: 'Kesehatan', default: false }, { id: 'tahun pendirian', label: 'Tahun Pendirian', default: false },
+            { id: 'kabupaten', label: 'Kab/Kota', default: true }, { id: 'kode_pos', label: 'Kode Pos', default: false }, { id: 'nik', label: 'NIK', default: false }, { id: 'ahu', label: 'SK AHU', default: false },
+            { id: 'pengurus', label: 'Pengurus', default: false }, { id: 'pengawas', label: 'Pengawas', default: false }, { id: 'jumlah anggota', label: 'Jumlah Anggota', default: false },
+            { id: 'sektor usaha', label: 'Sektor Usaha', default: false }, { id: 'gerai', label: 'Unit Gerai', default: false },
+            { id: 'kesehatan', label: 'Kesehatan', default: false }, { id: 'tahun pendirian', label: 'Tahun Pendirian', default: false },
             { id: 'lat', label: 'Latitude', default: false }, { id: 'lng', label: 'Longitude', default: false }
         ];
         let visibleCols = tableColumnsConfig.filter(c => c.default).map(c => c.id);
@@ -522,7 +524,6 @@
             document.getElementById('admin-badge').style.display = 'inline-block';
             document.getElementById('menu-db-container').style.display = 'block';
             
-            // Perbarui URL link dengan parameter khusus edit
             document.getElementById('link-peta').href = 'index.html?edit=true';
             document.getElementById('link-statistik').href = 'statistik.html?edit=true';
             document.getElementById('link-database').href = 'database.html?edit=true';
@@ -636,8 +637,8 @@
             const dataToExport = currentFilteredData.map((i, index) => {
                 let rowObj = {
                     "No": index + 1, "Nama Koperasi": i.nama || "-", "Status": i.status || "-", "Kabupaten/Kota": i.kabupaten || "-", "Kecamatan": i.kecamatan || "-",
-                    "Desa/Kelurahan": i.desa || "-", "NIK": i.nik || "-", "NIB": i.nib || "-", "Pengurus": i.pengurus || "-", "Unit Gerai": i.gerai || "-",
-                    "RAT Terakhir": i.rat || "-", "Kesehatan": i.kesehatan || "-", "Latitude": i.lat || "-", "Longitude": i.lng || "-"
+                    "Desa/Kelurahan": i.desa || "-", "Kode Pos": i.kode_pos || "-", "NIK": i.nik || "-", "Pengurus": i.pengurus || "-", "Pengawas": i.pengawas || "-", "Jumlah Anggota": i['jumlah anggota'] || "-", "Unit Gerai": i.gerai || "-",
+                    "Kesehatan": i.kesehatan || "-", "Latitude": i.lat || "-", "Longitude": i.lng || "-"
                 };
                 dynamicHeadersList.forEach(header => { rowObj[header] = i[header] || "-"; });
                 return rowObj;
@@ -689,7 +690,7 @@
         function toggleAdvSearch() { const p = document.getElementById('adv-search-panel'); const i = document.getElementById('adv-search-icon'); p.classList.toggle('active'); i.className = p.classList.contains('active') ? 'fas fa-chevron-up' : 'fas fa-chevron-down'; }
 
         function populateAdvancedFilters() {
-            const categories = [ { id: 'cb-group-status', key: 'status' }, { id: 'cb-group-gerai', key: 'gerai' }, { id: 'cb-group-rat', key: 'rat' }, { id: 'cb-group-kesehatan', key: 'kesehatan' } ];
+            const categories = [ { id: 'cb-group-status', key: 'status' }, { id: 'cb-group-gerai', key: 'gerai' }, { id: 'cb-group-kesehatan', key: 'kesehatan' } ];
             categories.forEach(cat => {
                 const container = document.getElementById(cat.id); if (!container) return; container.innerHTML = '';
                 const uniqueValues = [...new Set(rawData.map(i => String(i[cat.key]).trim()))].filter(v => v !== '' && v !== '-' && v !== 'undefined' && v !== 'null').sort();
@@ -958,11 +959,12 @@
             const latVal = parseFloat(item.lat); const lngVal = parseFloat(item.lng); const hasCoords = !isNaN(latVal) && !isNaN(lngVal);
         
             let dynamicHtml = '';
-            const knownHeaders = ['id', 'no', 'nama', 'alamat', 'desa', 'kecamatan', 'kabupaten', 'nik', 'lat', 'lng', 'status', 'pengurus', 'gerai', 'rat', 'kesehatan', 'tahun pendirian', 'ahu', 'sektor usaha', 'foto'];
+            const standardHeaders = ['id', 'nama', 'alamat', 'desa', 'kecamatan', 'kabupaten', 'nik', 'lat', 'lng', 'status', 'kode_pos', 'pengurus', 'pengawas', 'gerai', 'kesehatan', 'tahun pendirian', 'jenis koperasi', 'jumlah anggota', 'ahu', 'sektor usaha', 'foto', 'url'];
+            
             if (dynamicHeadersList && dynamicHeadersList.length > 0) {
                 let hasDynamic = false;
                 dynamicHeadersList.forEach(header => { 
-                    if (!knownHeaders.includes(header.toLowerCase().trim())) { const val = item[header] || '-'; dynamicHtml += `<div class="info-row"><label>${header}</label><span>${val}</span></div>`; hasDynamic = true; }
+                    if (!standardHeaders.includes(header.toLowerCase().trim())) { const val = item[header] || '-'; dynamicHtml += `<div class="info-row"><label>${header}</label><span>${val}</span></div>`; hasDynamic = true; }
                 });
                 if (hasDynamic) { dynamicHtml = '<hr style="border:0; border-top:1px dashed var(--border); margin:15px 0;"><div style="margin-bottom:10px;"><label style="font-size:11px; font-weight:700; color:var(--primary);">INFORMASI LAINNYA</label></div>' + dynamicHtml; }
             }
@@ -975,13 +977,15 @@
                     <hr style="border:0; border-top:1px dashed var(--border); margin:15px 0;">
                     <div class="info-row"><label>Nomor Induk Koperasi (NIK)</label><span>${item.nik || '-'}</span></div>
                     <div class="info-row"><label>SK AHU</label><span>${item['ahu'] || item.sk_ahu || '-'}</span></div>
+                    <div class="info-row"><label>Jenis Koperasi</label><span>${item['jenis koperasi'] || '-'}</span></div>
                     <hr style="border:0; border-top:1px dashed var(--border); margin:15px 0;">
                     <div style="margin-bottom:10px;"><label style="font-size:11px; font-weight:700; color:var(--primary);">INFORMASI TAMBAHAN</label></div>
                     <div class="info-row"><label>Tahun Pendirian</label><span>${item['tahun pendirian'] || '-'}</span></div>
                     <div class="info-row"><label>Nama Pengurus</label><span>${item.pengurus || '-'}</span></div>
+                    <div class="info-row"><label>Nama Pengawas</label><span>${item.pengawas || '-'}</span></div>
+                    <div class="info-row"><label>Jumlah Anggota</label><span>${item['jumlah anggota'] || '-'}</span></div>
                     <div class="info-row"><label>Sektor Usaha</label><span>${item['sektor usaha'] || '-'}</span></div>
                     <div class="info-row"><label>Unit Gerai Usaha</label><span>${item.gerai || '-'}</span></div>
-                    <div class="info-row"><label>Riwayat RAT</label><span>${item.rat || '-'}</span></div>
                     <div class="info-row"><label>Penilaian Kesehatan</label><span>${item.kesehatan || '-'}</span></div>
                     ${dynamicHtml}
                     <div class="info-row" style="margin-top: 15px;"><label>Navigasi Peta</label>
@@ -997,12 +1001,12 @@
             const content = document.getElementById("panel-content"); const panel = document.getElementById("info-panel");
             panel.classList.remove('minimized'); document.getElementById("minimize-btn").className = "fas fa-chevron-down";
         
-            let dynamicEditHtml = ''; const knownHeaders = ['id', 'no', 'nama', 'alamat', 'desa', 'kecamatan', 'kabupaten', 'nik', 'lat', 'lng', 'status', 'pengurus', 'gerai', 'rat', 'kesehatan', 'tahun pendirian', 'ahu', 'sektor usaha', 'foto'];
+            let dynamicEditHtml = ''; const standardHeaders = ['id', 'nama', 'alamat', 'desa', 'kecamatan', 'kabupaten', 'nik', 'lat', 'lng', 'status', 'kode_pos', 'pengurus', 'pengawas', 'gerai', 'kesehatan', 'tahun pendirian', 'jenis koperasi', 'jumlah anggota', 'ahu', 'sektor usaha', 'foto', 'url'];
             
             if (dynamicHeadersList && dynamicHeadersList.length > 0) {
                 let hasDynamic = false;
                 dynamicHeadersList.forEach(header => {
-                    if (!knownHeaders.includes(header.toLowerCase().trim())) {
+                    if (!standardHeaders.includes(header.toLowerCase().trim())) {
                         const val = currentItem[header] === '-' ? '' : (currentItem[header] || ''); const safeId = 'edit-dyn-' + header.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
                         dynamicEditHtml += `<div class="info-row"><label>${header}</label><input type="text" id="${safeId}" data-header="${header}" class="edit-input dynamic-input-field" value="${val}"></div>`; hasDynamic = true;
                     }
@@ -1019,22 +1023,30 @@
                     <div class="info-row"><label>Status Koperasi</label>
                         <select id="edit-status" data-header="status" class="edit-input dynamic-input-field"><option value="Aktif" ${isAktif ? 'selected' : ''}>Aktif</option><option value="Tidak Aktif" ${!isAktif ? 'selected' : ''}>Tidak Aktif</option></select>
                     </div>
+                    <div class="info-row"><label>URL</label><input type="text" id="edit-url" data-header="url" class="edit-input dynamic-input-field" value="${currentItem.url === '-' ? '' : (currentItem.url || '')}"></div>
+                    
                     <hr style="border:0; border-top:1px dashed var(--border); margin:15px 0;">
+                    
                     <div class="info-row"><label>Alamat Lengkap</label><input type="text" id="edit-alamat" data-header="alamat" class="edit-input dynamic-input-field" value="${currentItem.alamat === '-' ? '' : (currentItem.alamat || '')}"></div>
                     <div style="display:flex; gap:12px"><div class="info-row" style="flex:1"><label>Desa/Kel</label><input type="text" id="edit-desa" data-header="desa" class="edit-input dynamic-input-field" value="${currentItem.desa === '-' ? '' : (currentItem.desa || '')}"></div><div class="info-row" style="flex:1"><label>Kecamatan</label><input type="text" id="edit-kecamatan" data-header="kecamatan" class="edit-input dynamic-input-field" value="${currentItem.kecamatan === '-' ? '' : (currentItem.kecamatan || '')}"></div></div>
-                    <div class="info-row"><label>Kab/Kota</label><input type="text" id="edit-kabupaten" data-header="kabupaten" class="edit-input dynamic-input-field" value="${currentItem.kabupaten === '-' ? '' : (currentItem.kabupaten || '')}"></div>
+                    <div style="display:flex; gap:12px"><div class="info-row" style="flex:1"><label>Kab/Kota</label><input type="text" id="edit-kabupaten" data-header="kabupaten" class="edit-input dynamic-input-field" value="${currentItem.kabupaten === '-' ? '' : (currentItem.kabupaten || '')}"></div><div class="info-row" style="flex:1"><label>Kode Pos</label><input type="text" id="edit-kode_pos" data-header="kode_pos" class="edit-input dynamic-input-field" value="${currentItem['kode_pos'] === '-' ? '' : (currentItem['kode_pos'] || '')}"></div></div>
                     <div style="display:flex; gap:12px"><div class="info-row" style="flex:1"><label>Latitude (Y)</label><input type="text" id="edit-lat" data-header="lat" class="edit-input dynamic-input-field" value="${currentItem.lat || ''}"></div><div class="info-row" style="flex:1"><label>Longitude (X)</label><input type="text" id="edit-lng" data-header="lng" class="edit-input dynamic-input-field" value="${currentItem.lng || ''}"></div></div>
+                    
                     <hr style="border:0; border-top:1px dashed var(--border); margin:15px 0;">
+                    
                     <div class="info-row"><label>NIK</label><input type="text" id="edit-nik" data-header="nik" class="edit-input dynamic-input-field" value="${currentItem.nik === '-' ? '' : (currentItem.nik || '')}"></div>
                     <div class="info-row"><label>SK AHU</label><input type="text" id="edit-sk_ahu" data-header="ahu" class="edit-input dynamic-input-field" value="${currentItem['ahu'] === '-' ? '' : (currentItem['ahu'] || '')}"></div>
+                    <div class="info-row"><label>Jenis Koperasi</label><input type="text" id="edit-jenis_koperasi" data-header="jenis koperasi" class="edit-input dynamic-input-field" value="${currentItem['jenis koperasi'] === '-' ? '' : (currentItem['jenis koperasi'] || '')}"></div>
                     <div class="info-row"><label>Tahun Pendirian</label><input type="text" id="edit-tahun_pendirian" data-header="tahun pendirian" class="edit-input dynamic-input-field" value="${currentItem['tahun pendirian'] === '-' ? '' : (currentItem['tahun pendirian'] || '')}"></div>
                     <div class="info-row"><label>Nama Pengurus</label><input type="text" id="edit-pengurus" data-header="pengurus" class="edit-input dynamic-input-field" value="${currentItem.pengurus === '-' ? '' : (currentItem.pengurus || '')}"></div>
+                    <div class="info-row"><label>Nama Pengawas</label><input type="text" id="edit-pengawas" data-header="pengawas" class="edit-input dynamic-input-field" value="${currentItem.pengawas === '-' ? '' : (currentItem.pengawas || '')}"></div>
+                    <div class="info-row"><label>Jumlah Anggota</label><input type="text" id="edit-jumlah_anggota" data-header="jumlah anggota" class="edit-input dynamic-input-field" value="${currentItem['jumlah anggota'] === '-' ? '' : (currentItem['jumlah anggota'] || '')}"></div>
                     <div class="info-row"><label>Sektor Usaha</label><input type="text" id="edit-sektor_usaha" data-header="sektor usaha" class="edit-input dynamic-input-field" value="${currentItem['sektor usaha'] === '-' ? '' : (currentItem['sektor usaha'] || '')}"></div>
                     <div class="info-row"><label>Unit Gerai</label><input type="text" id="edit-gerai" data-header="gerai" class="edit-input dynamic-input-field" value="${currentItem.gerai === '-' ? '' : (currentItem.gerai || '')}"></div>
-                    <div class="info-row"><label>RAT Terakhir</label><input type="text" id="edit-rat" data-header="rat" class="edit-input dynamic-input-field" value="${currentItem.rat === '-' ? '' : (currentItem.rat || '')}"></div>
                     <div class="info-row"><label>Tingkat Kesehatan</label><input type="text" id="edit-kesehatan" data-header="kesehatan" class="edit-input dynamic-input-field" value="${currentItem.kesehatan === '-' ? '' : (currentItem.kesehatan || '')}"></div>
-                    <div class="info-row"><label>Unggah Gambar Baru (Bisa Lebih Dari 1)</label><input type="file" id="upload-foto" accept="image/*" multiple style="font-size: 11px; padding: 8px 0;"><button class="btn-action" style="margin-top: 4px; width: fit-content; background: #e2e8f0;" onclick="uploadImagesToServer()"><i class="fas fa-cloud-upload-alt"></i> Mulai Unggah</button><div id="upload-status" style="font-size: 11px; font-weight: 600; color: var(--primary); margin-top: 6px;"></div></div>
-                    <div class="info-row"><label>Tautan URL Foto (Pisahkan dengan koma)</label><textarea id="edit-foto" data-header="foto" class="edit-input dynamic-input-field" style="resize:vertical; height:60px;">${currentItem.foto === '-' ? '' : currentItem.foto}</textarea></div>
+                    
+                    <div class="info-row"><label>Unggah Gambar Baru</label><input type="file" id="upload-foto" accept="image/*" multiple style="font-size: 11px; padding: 8px 0;"><button class="btn-action" style="margin-top: 4px; width: fit-content; background: #e2e8f0;" onclick="uploadImagesToServer()"><i class="fas fa-cloud-upload-alt"></i> Mulai Unggah</button><div id="upload-status" style="font-size: 11px; font-weight: 600; color: var(--primary); margin-top: 6px;"></div></div>
+                    <div class="info-row"><label>Tautan URL Foto (Pisahkan koma)</label><textarea id="edit-foto" data-header="foto" class="edit-input dynamic-input-field" style="resize:vertical; height:60px;">${currentItem.foto === '-' ? '' : currentItem.foto}</textarea></div>
                     ${dynamicEditHtml}
                     <button class="btn-save" onclick="saveData()"><i class="fas fa-cloud-arrow-up"></i> Terapkan Pembaruan</button>
                     <button class="btn-cancel" onclick="showInfoPanel(currentItem)">Batalkan</button>
@@ -1089,7 +1101,7 @@
                 id: currentItem.id 
             };
 
-            const standardHeaders = ['id', 'nama', 'alamat', 'kabupaten', 'kecamatan', 'desa', 'status', 'nik', 'ahu', 'pengurus', 'lat', 'lng', 'foto', 'gerai', 'rat', 'kesehatan', 'tahun pendirian', 'sektor usaha'];
+            const standardHeaders = ['id', 'nama', 'alamat', 'desa', 'kecamatan', 'kabupaten', 'nik', 'lat', 'lng', 'status', 'kode_pos', 'pengurus', 'pengawas', 'gerai', 'kesehatan', 'tahun pendirian', 'jenis koperasi', 'jumlah anggota', 'ahu', 'sektor usaha', 'foto', 'url'];
             payloadData.dynamicFields = {};
 
             document.querySelectorAll('.dynamic-input-field').forEach(input => { 
@@ -1201,7 +1213,6 @@
             
             const checkedStatus = Array.from(document.querySelectorAll('.cb-status:checked')).map(cb => cb.value); 
             const checkedGerai = Array.from(document.querySelectorAll('.cb-gerai:checked')).map(cb => cb.value);
-            const checkedRat = Array.from(document.querySelectorAll('.cb-rat:checked')).map(cb => cb.value); 
             const checkedKesehatan = Array.from(document.querySelectorAll('.cb-kesehatan:checked')).map(cb => cb.value);
             
             currentMapData = rawData.filter(i => {
@@ -1210,9 +1221,8 @@
                 const matchDesa = (desa === "" || i.desa === desa);
                 const matchStatus = checkedStatus.length === 0 || checkedStatus.includes(String(i.status).trim()); 
                 const matchGerai = checkedGerai.length === 0 || checkedGerai.includes(String(i.gerai).trim());
-                const matchRat = checkedRat.length === 0 || checkedRat.includes(String(i.rat).trim()); 
                 const matchKesehatan = checkedKesehatan.length === 0 || checkedKesehatan.includes(String(i.kesehatan).trim());
-                return matchKab && matchKec && matchDesa && matchStatus && matchGerai && matchRat && matchKesehatan;
+                return matchKab && matchKec && matchDesa && matchStatus && matchGerai && matchKesehatan;
             });
 
             currentFilteredData = currentMapData.filter(i => { return (String(i.nama || "").toLowerCase().includes(q) || String(i.desa || "").toLowerCase().includes(q) || String(i.nik || "").toLowerCase().includes(q) || String(i.pengurus || "").toLowerCase().includes(q)); });
