@@ -66,6 +66,10 @@
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
+        /* Menyembunyikan panah bawaan di <details> browser */
+        summary { list-style: none; }
+        summary::-webkit-details-marker { display: none; }
+
         /* Header Minimalis */
         header {
             background: var(--primary-gradient); 
@@ -254,24 +258,18 @@
 
     </div>
 
-    <!-- MODAL FORM UNTUK KELOLA BASIS DATA (POP-UP & Peta Mini) -->
+    <!-- MODAL FORM UNTUK KELOLA BASIS DATA (POP-UP) -->
     <div id="db-modal-overlay" class="fixed inset-0 bg-slate-900/70 z-[9900] hidden items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
                 <h3 id="db-modal-title" class="font-bold text-lg text-slate-800"></h3>
                 <button onclick="closeDbModal()" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
             </div>
-            <div class="flex-1 overflow-hidden flex flex-col md:flex-row">
-                <!-- Map Area (Peta Mini) -->
-                <div class="w-full md:w-1/2 h-64 md:h-auto min-h-[300px] border-b md:border-b-0 md:border-r border-slate-200 relative" id="mini-map-container">
-                    <div class="absolute top-2 left-2 z-[1000] bg-white/90 p-2 rounded text-xs font-semibold shadow backdrop-blur text-primary"><i class="fas fa-crosshairs"></i> Klik peta untuk set koordinat</div>
-                    <div id="mini-map" class="w-full h-full z-10"></div>
-                </div>
-                <!-- Form Area -->
-                <div class="w-full md:w-1/2 p-6 overflow-y-auto space-y-4 bg-slate-50/50" id="db-modal-form-content">
-                    <!-- Form fields generated here -->
-                </div>
+            
+            <div class="flex-1 overflow-y-auto p-6 bg-slate-50/50 flex flex-col gap-6" id="db-modal-form-content">
+                <!-- Form fields akan digenerate di sini -->
             </div>
+            
             <div class="p-4 border-t bg-slate-50 flex justify-end gap-3">
                 <button onclick="closeDbModal()" class="px-5 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors">Batal</button>
                 <button onclick="saveDbModalData()" class="px-5 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg text-xs font-semibold hover:shadow-lg transition-all"><i class="fas fa-save mr-1"></i> Simpan Data</button>
@@ -304,7 +302,7 @@
                 <!-- Loader API -->
                 <div id="api-loading" class="hidden flex-col items-center justify-center py-12">
                     <i class="fas fa-circle-notch fa-spin fa-3x text-blue-600 mb-4"></i>
-                    <p class="text-sm text-slate-600 font-semibold animate-pulse">Menarik & Memproses Dekripsi Data...</p>
+                    <p class="text-sm text-slate-600 font-semibold animate-pulse">Menarik & Memproses Data...</p>
                 </div>
 
                 <!-- Results Area -->
@@ -357,7 +355,7 @@
                         </div>
                     </div>
 
-                    <!-- Container Tabel Dinamis -->
+                    <!-- Container Tabel Dinamis (Expandable) -->
                     <div id="api-tables-wrapper" class="flex flex-col gap-5">
                         <!-- Tables rendered here dynamically -->
                     </div>
@@ -374,6 +372,9 @@
         let rawData = [], currentItem = null, dynamicHeadersList = []; 
         let miniMap = null, miniMarker = null;
         let canEdit = true; 
+        
+        // Definisi lengkap header yang ada di Spreadsheet
+        const standardHeaders = ['id', 'nama', 'alamat', 'desa', 'kecamatan', 'kabupaten', 'nik', 'lat', 'lng', 'status', 'kode_pos', 'pengurus', 'pengawas', 'gerai', 'kesehatan', 'tahun pendirian', 'jenis koperasi', 'jumlah anggota', 'ahu', 'sektor usaha', 'foto', 'url'];
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -400,7 +401,6 @@
                     miniMarker = L.marker([lat, lng]).addTo(miniMap);
                 });
             }
-            setTimeout(() => { miniMap.invalidateSize(); }, 300);
         }
 
         async function loadDataFromServer() {
@@ -438,8 +438,9 @@
                 const baseColor = isAktif ? "var(--aktif)" : "var(--non-aktif)";
                 
                 let slug = "";
-                if (item.url && item.url !== "-") {
-                    let urlStr = String(item.url).trim().split('?')[0];
+                let urlVal = item.url || item.link || "-";
+                if (urlVal && urlVal !== "-") {
+                    let urlStr = String(urlVal).trim().split('?')[0];
                     if (urlStr.endsWith('/')) urlStr = urlStr.slice(0, -1);
                     const parts = urlStr.split('/');
                     slug = parts[parts.length - 1];
@@ -447,7 +448,7 @@
 
                 let namaKoperasiHtml = `<span style="font-weight:600;">${item.nama || '-'}</span>`;
                 if (slug) {
-                    namaKoperasiHtml = `<span onclick="fetchApiDirectly('${slug}')" class="font-semibold cursor-pointer hover:text-primary transition-colors border-b border-dashed border-slate-300" title="Klik untuk menarik data otomatis dari API Kemenkop">${item.nama || '-'}</span>`;
+                    namaKoperasiHtml = `<span onclick="fetchApiDirectly('${slug}', '${item.id}')" class="font-semibold cursor-pointer hover:text-slate-600 transition-colors border-b border-dotted border-slate-400" title="Klik untuk melihat data Kemenkop">${item.nama || '-'}</span>`;
                 }
                 
                 const tr = document.createElement('tr');
@@ -474,60 +475,95 @@
             document.getElementById('db-modal-title').innerHTML = isNew ? '<i class="fas fa-plus-circle text-primary mr-2"></i> Tambah Koperasi Baru' : '<i class="fas fa-edit text-primary mr-2"></i> Edit Data Koperasi';
             
             let dynamicEditHtml = '';
-            const knownHeaders = ['id', 'no', 'nama', 'alamat', 'desa', 'kecamatan', 'kabupaten', 'nik', 'lat', 'lng', 'status', 'pengurus', 'gerai', 'rat', 'kesehatan', 'tahun pendirian', 'ahu', 'sektor usaha', 'foto'];
-            
             if (dynamicHeadersList && dynamicHeadersList.length > 0) {
                 dynamicHeadersList.forEach(header => {
-                    if (!knownHeaders.includes(header.toLowerCase().trim())) {
+                    if (!standardHeaders.includes(header.toLowerCase().trim())) {
                         const val = currentItem[header] === '-' ? '' : (currentItem[header] || ''); 
                         const safeId = 'modal-dyn-' + header.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
                         dynamicEditHtml += `<div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">${header}</label><input type="text" id="${safeId}" data-header="${header}" class="edit-input modal-dynamic-input-field bg-white" value="${val}"></div>`;
                     }
                 });
-                if (dynamicEditHtml) { dynamicEditHtml = '<div class="col-span-full border-t border-dashed border-slate-300 my-2 pt-3"><label class="text-[10px] font-bold text-primary tracking-wide mb-2 block">UBAH INFORMASI LAINNYA</label><div class="grid grid-cols-1 md:grid-cols-2 gap-3">' + dynamicEditHtml + '</div></div>'; }
             }
             
             const isAktif = String(currentItem.status || "").toLowerCase().includes("aktif") && !String(currentItem.status || "").toLowerCase().includes("tidak");
             
             const content = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="col-span-full flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Nama Koperasi</label><input type="text" id="modal-edit-nama" data-header="nama" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.nama || ''}"></div>
-                    <div class="col-span-full flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Status Koperasi</label>
-                        <select id="modal-edit-status" data-header="status" class="edit-input modal-dynamic-input-field bg-white"><option value="Aktif" ${isAktif ? 'selected' : ''}>Aktif</option><option value="Tidak Aktif" ${!isAktif ? 'selected' : ''}>Tidak Aktif</option></select>
-                    </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     
-                    <div class="col-span-full border-t border-dashed border-slate-300 my-1"></div>
-                    
-                    <div class="col-span-full flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Alamat Lengkap</label><input type="text" id="modal-edit-alamat" data-header="alamat" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.alamat === '-' ? '' : (currentItem.alamat || '')}"></div>
-                    <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Desa/Kel</label><input type="text" id="modal-edit-desa" data-header="desa" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.desa === '-' ? '' : (currentItem.desa || '')}"></div>
-                    <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Kecamatan</label><input type="text" id="modal-edit-kecamatan" data-header="kecamatan" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.kecamatan === '-' ? '' : (currentItem.kecamatan || '')}"></div>
-                    <div class="col-span-full flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Kab/Kota</label><input type="text" id="modal-edit-kabupaten" data-header="kabupaten" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.kabupaten === '-' ? '' : (currentItem.kabupaten || '')}"></div>
-                    
-                    <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Latitude (Y)</label><input type="text" id="modal-edit-lat" data-header="lat" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.lat || ''}"></div>
-                    <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Longitude (X)</label><input type="text" id="modal-edit-lng" data-header="lng" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.lng || ''}"></div>
-                    
-                    <div class="col-span-full border-t border-dashed border-slate-300 my-1"></div>
-                    
-                    <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">NIK</label><input type="text" id="modal-edit-nik" data-header="nik" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.nik === '-' ? '' : (currentItem.nik || '')}"></div>
-                    <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">SK AHU</label><input type="text" id="modal-edit-sk_ahu" data-header="ahu" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem['ahu'] === '-' ? '' : (currentItem['ahu'] || '')}"></div>
-                    <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Tahun Pendirian</label><input type="text" id="modal-edit-tahun_pendirian" data-header="tahun pendirian" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem['tahun pendirian'] === '-' ? '' : (currentItem['tahun pendirian'] || '')}"></div>
-                    <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Nama Pengurus</label><input type="text" id="modal-edit-pengurus" data-header="pengurus" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.pengurus === '-' ? '' : (currentItem.pengurus || '')}"></div>
-                    <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Sektor Usaha</label><input type="text" id="modal-edit-sektor_usaha" data-header="sektor usaha" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem['sektor usaha'] === '-' ? '' : (currentItem['sektor usaha'] || '')}"></div>
-                    <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Unit Gerai</label><input type="text" id="modal-edit-gerai" data-header="gerai" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.gerai === '-' ? '' : (currentItem.gerai || '')}"></div>
-                    <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">RAT Terakhir</label><input type="text" id="modal-edit-rat" data-header="rat" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.rat === '-' ? '' : (currentItem.rat || '')}"></div>
-                    <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Tingkat Kesehatan</label><input type="text" id="modal-edit-kesehatan" data-header="kesehatan" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.kesehatan === '-' ? '' : (currentItem.kesehatan || '')}"></div>
-                    
-                    <div class="col-span-full border-t border-dashed border-slate-300 my-1 pt-2">
-                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 block">Unggah Gambar Baru</label>
-                        <div class="flex gap-2 items-center">
-                            <input type="file" id="modal-upload-foto" accept="image/*" multiple class="text-[10px] flex-1 border border-slate-200 rounded p-1">
-                            <button class="btn-action bg-slate-200" onclick="uploadImagesToModal()"><i class="fas fa-cloud-upload-alt"></i> Unggah</button>
+                    <!-- INFORMASI UTAMA -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4">
+                        <h4 class="font-bold text-[12px] text-blue-600 uppercase border-b border-slate-100 pb-2"><i class="fas fa-info-circle mr-1"></i> Informasi Utama</h4>
+                        
+                        <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Nama Koperasi</label><input type="text" id="modal-edit-nama" data-header="nama" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.nama || ''}"></div>
+                        <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">URL Sistem Koperasi (Untuk sinkronisasi)</label><input type="text" id="modal-edit-url" data-header="url" placeholder="Contoh: https://simkopdes.go.id/wua-wua" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.url === '-' ? '' : (currentItem.url || '')}"></div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">NIK</label><input type="text" id="modal-edit-nik" data-header="nik" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.nik === '-' ? '' : (currentItem.nik || '')}"></div>
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Status Koperasi</label>
+                                <select id="modal-edit-status" data-header="status" class="edit-input modal-dynamic-input-field bg-white"><option value="Aktif" ${isAktif ? 'selected' : ''}>Aktif</option><option value="Tidak Aktif" ${!isAktif ? 'selected' : ''}>Tidak Aktif</option></select>
+                            </div>
                         </div>
-                        <div id="modal-upload-status" class="text-[10px] font-semibold text-primary mt-1"></div>
+
+                        <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Alamat Lengkap</label><input type="text" id="modal-edit-alamat" data-header="alamat" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.alamat === '-' ? '' : (currentItem.alamat || '')}"></div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Desa/Kel</label><input type="text" id="modal-edit-desa" data-header="desa" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.desa === '-' ? '' : (currentItem.desa || '')}"></div>
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Kecamatan</label><input type="text" id="modal-edit-kecamatan" data-header="kecamatan" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.kecamatan === '-' ? '' : (currentItem.kecamatan || '')}"></div>
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Kab/Kota</label><input type="text" id="modal-edit-kabupaten" data-header="kabupaten" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.kabupaten === '-' ? '' : (currentItem.kabupaten || '')}"></div>
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Kode Pos</label><input type="text" id="modal-edit-kode_pos" data-header="kode_pos" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.kode_pos === '-' ? '' : (currentItem.kode_pos || '')}"></div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">SK AHU</label><input type="text" id="modal-edit-sk_ahu" data-header="ahu" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem['ahu'] === '-' ? '' : (currentItem['ahu'] || '')}"></div>
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Tahun Pendirian</label><input type="text" id="modal-edit-tahun_pendirian" data-header="tahun pendirian" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem['tahun pendirian'] === '-' ? '' : (currentItem['tahun pendirian'] || '')}"></div>
+                        </div>
+                        
+                        <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Jenis Koperasi</label><input type="text" id="modal-edit-jenis" data-header="jenis koperasi" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem['jenis koperasi'] === '-' ? '' : (currentItem['jenis koperasi'] || '')}"></div>
+
+                        <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Nama Pengurus</label><input type="text" id="modal-edit-pengurus" data-header="pengurus" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.pengurus === '-' ? '' : (currentItem.pengurus || '')}"></div>
+                        <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Nama Pengawas</label><input type="text" id="modal-edit-pengawas" data-header="pengawas" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.pengawas === '-' ? '' : (currentItem.pengawas || '')}"></div>
+                        <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Jumlah Anggota</label><input type="text" id="modal-edit-jumlah_anggota" data-header="jumlah anggota" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem['jumlah anggota'] === '-' ? '' : (currentItem['jumlah anggota'] || '')}"></div>
                     </div>
-                    <div class="col-span-full flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Tautan URL Foto (Pisahkan dengan koma)</label><textarea id="modal-edit-foto" data-header="foto" class="edit-input modal-dynamic-input-field bg-white" style="resize:vertical; height:50px;">${currentItem.foto === '-' ? '' : currentItem.foto}</textarea></div>
-                    
-                    ${dynamicEditHtml}
+
+                    <!-- INFORMASI TAMBAHAN & PETA -->
+                    <div class="flex flex-col gap-6">
+                        
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4">
+                            <h4 class="font-bold text-[12px] text-green-600 uppercase border-b border-slate-100 pb-2"><i class="fas fa-list-alt mr-1"></i> Informasi Tambahan</h4>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Unit Gerai Usaha</label><input type="text" id="modal-edit-gerai" data-header="gerai" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.gerai === '-' ? '' : (currentItem.gerai || '')}"></div>
+                                <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Tingkat Kesehatan</label><input type="text" id="modal-edit-kesehatan" data-header="kesehatan" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.kesehatan === '-' ? '' : (currentItem.kesehatan || '')}"></div>
+                            </div>
+                            
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Sektor Usaha</label><input type="text" id="modal-edit-sektor_usaha" data-header="sektor usaha" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem['sektor usaha'] === '-' ? '' : (currentItem['sektor usaha'] || '')}"></div>
+
+                            ${dynamicEditHtml ? `<div class="mt-2 border-t border-dashed border-slate-200 pt-4"><h5 class="text-[10px] font-bold text-primary tracking-wide mb-3">KOLOM LAINNYA (DARI SPREADSHEET)</h5><div class="grid grid-cols-2 gap-4">${dynamicEditHtml}</div></div>` : ''}
+
+                            <div class="mt-2 border-t border-dashed border-slate-200 pt-4">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 block">Unggah Gambar Baru</label>
+                                <div class="flex gap-2 items-center">
+                                    <input type="file" id="modal-upload-foto" accept="image/*" multiple class="text-[10px] flex-1 border border-slate-200 rounded p-1">
+                                    <button class="btn-action bg-slate-200" onclick="uploadImagesToModal()"><i class="fas fa-cloud-upload-alt"></i> Unggah</button>
+                                </div>
+                                <div id="modal-upload-status" class="text-[10px] font-semibold text-primary mt-1"></div>
+                            </div>
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Tautan URL Foto (Pisahkan dengan koma)</label><textarea id="modal-edit-foto" data-header="foto" class="edit-input modal-dynamic-input-field bg-white" style="resize:vertical; height:50px;">${currentItem.foto === '-' ? '' : currentItem.foto}</textarea></div>
+                        </div>
+
+                        <!-- MAP SECTION -->
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4 relative">
+                            <h4 class="font-bold text-[12px] text-red-600 uppercase border-b border-slate-100 pb-2"><i class="fas fa-map-marker-alt mr-1"></i> Titik Lokasi Peta</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Latitude (Y)</label><input type="text" id="modal-edit-lat" data-header="lat" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.lat || ''}"></div>
+                                <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Longitude (X)</label><input type="text" id="modal-edit-lng" data-header="lng" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.lng || ''}"></div>
+                            </div>
+                            <div class="w-full h-48 rounded-lg border border-slate-300 relative z-10" id="mini-map"></div>
+                            <div class="absolute bottom-6 right-6 z-[1000] bg-white/90 px-3 py-1.5 rounded-full text-[10px] font-bold shadow backdrop-blur text-primary border border-red-200 pointer-events-none"><i class="fas fa-crosshairs"></i> Klik peta untuk set</div>
+                        </div>
+
+                    </div>
+
                 </div>
             `;
             document.getElementById('db-modal-form-content').innerHTML = content;
@@ -542,6 +578,11 @@
                 miniMap.setView([-4.0, 122.5], 8);
                 if(miniMarker) miniMap.removeLayer(miniMarker);
             }
+            
+            // PERBAIKAN: Invalidating size to ensure map renders correctly in modal
+            setTimeout(() => {
+               if(miniMap) miniMap.invalidateSize();
+            }, 300);
         }
 
         function closeDbModal() {
@@ -614,8 +655,8 @@
             currentItem = { 
                 id: newId, 
                 nama: '', status: 'Aktif', alamat: '', desa: '', kecamatan: '', kabupaten: '', 
-                nik: '', lat: '', lng: '', 'ahu': '', 'tahun pendirian': '', pengurus: '', 
-                'sektor usaha': '', gerai: '', rat: '', kesehatan: '', foto: '' 
+                nik: '', lat: '', lng: '', 'ahu': '', 'tahun pendirian': '', pengurus: '', 'pengawas': '', 'jumlah anggota': '', 'kode_pos': '',
+                'sektor usaha': '', 'jenis koperasi': '', gerai: '', kesehatan: '', foto: '', url: '' 
             };
             
             showDatabaseModal(true);
@@ -650,7 +691,6 @@
                 id: currentItem.id 
             };
 
-            const standardHeaders = ['id', 'nama', 'alamat', 'kabupaten', 'kecamatan', 'desa', 'status', 'nik', 'ahu', 'pengurus', 'lat', 'lng', 'foto', 'gerai', 'rat', 'kesehatan', 'tahun pendirian', 'sektor usaha'];
             payloadData.dynamicFields = {};
 
             document.querySelectorAll('.modal-dynamic-input-field').forEach(input => { 
@@ -728,6 +768,7 @@
         const IV_STR_API = "HIYa12MVEqtZIiBG"; 
         let apiMap = null, apiMarker = null;
         let apiRawData = null; 
+        let apiTargetId = null; 
 
         function openApiModal() {
             document.getElementById('api-modal-overlay').classList.remove('hidden');
@@ -741,7 +782,8 @@
             document.getElementById('api-modal-overlay').classList.remove('flex');
         }
 
-        async function fetchApiDirectly(slug) {
+        async function fetchApiDirectly(slug, sourceId) {
+            apiTargetId = sourceId;
             openApiModal();
             showApiLoader(true);
             try {
@@ -751,6 +793,7 @@
                 processApiData(data);
             } catch (err) {
                 Swal.fire({icon: 'error', title: 'Gagal Menarik Data', text: err.message});
+                closeApiModal();
             } finally {
                 showApiLoader(false);
             }
@@ -771,7 +814,6 @@
             try {
                 let finalData;
                 
-                // Cek jika butuh dekripsi
                 if (inputObj && typeof inputObj.data === "string") {
                     const b64 = inputObj.data.replace(/\\\//g,"/");
                     const key = CryptoJS.SHA256(PASS_API);
@@ -793,6 +835,7 @@
                 renderApiUI(finalData);
             } catch (e) {
                 Swal.fire({icon: 'error', title: 'Gagal Memproses Data', text: e.message});
+                closeApiModal();
             }
         }
 
@@ -810,7 +853,7 @@
             if(data.province?.name) locParts.push(data.province.name);
             document.getElementById('api-res-loc-text').textContent = locParts.join(", ") || "Lokasi tidak diketahui";
 
-            // Info Umum KV
+            // Info Umum (Format Lama)
             const safeText = v => (v === null || v === undefined || v === "") ? "-" : String(v);
             const kvInfo = [
                 ["Nama Koperasi", data.name], ["NIK", data.nik], ["Alamat", data.address],
@@ -867,7 +910,7 @@
                 `).join('');
             }
 
-            // Render Multiple Tables dynamically
+            // Render Multiple Tables dynamically with Collapsible/Expandable logic
             const tablesContainer = document.getElementById('api-tables-wrapper');
             tablesContainer.innerHTML = '';
             
@@ -877,20 +920,32 @@
                 { title: 'Managements (Pengurus & Pengawas)', data: toArr(data.managements), icon: 'fa-users' },
                 { title: 'Members (Anggota)', data: toArr(data.members), icon: 'fa-id-card' },
                 { title: 'Outlets (Gerai Usaha)', data: toArr(data.outlets), icon: 'fa-store' },
-                { title: 'Potentials', data: toArr(data.potentials), icon: 'fa-chart-line' },
+                { title: 'Potentials (Potensi Desa)', data: toArr(data.potentials), icon: 'fa-chart-line' },
                 { title: 'KLU/S', data: toArr(data.klus), icon: 'fa-layer-group' },
                 { title: 'KLU Types', data: toArr(data.klu_types), icon: 'fa-tags' },
                 { title: 'Member Stats (Statistik Mingguan)', data: toArr(data.member_stats), icon: 'fa-chart-bar' },
+                { title: 'Development Reports', data: toArr(data.development_reports), icon: 'fa-hard-hat' },
                 { title: 'Merged Villages', data: toArr(data.merged_villages), icon: 'fa-map-signs' },
                 { title: 'News', data: toArr(data.news), icon: 'fa-newspaper' },
             ];
 
             tablesDef.forEach(tb => {
-                const box = document.createElement('div');
-                box.className = 'bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col';
+                const box = document.createElement('details');
+                box.className = 'bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden group';
+                
+                // Terbuka otomatis jika data ada dan <= 5 baris
+                if (tb.data.length > 0 && tb.data.length <= 5) {
+                    box.open = true;
+                }
                 
                 let countBadge = tb.data.length > 0 ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px] ml-2 font-bold">${tb.data.length} data</span>` : '';
-                let headerHtml = `<h3 class="font-bold text-[13px] text-slate-800 p-4 border-b border-slate-100 flex items-center bg-slate-50"><i class="fas ${tb.icon} text-slate-400 mr-2"></i> ${tb.title} ${countBadge}</h3>`;
+                
+                let headerHtml = `
+                    <summary class="font-bold text-[13px] text-slate-800 p-4 flex items-center justify-between bg-slate-50 cursor-pointer outline-none hover:bg-slate-100 transition-colors select-none group-open:border-b border-slate-200">
+                        <div class="flex items-center"><i class="fas ${tb.icon} text-slate-400 mr-2"></i> ${tb.title} ${countBadge}</div>
+                        <i class="fas fa-chevron-down text-slate-400 transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                `;
                 
                 let bodyHtml = '';
                 if (tb.data.length === 0) {
@@ -908,7 +963,7 @@
                         return `<tr class="hover:bg-slate-50 transition-colors">${tds}</tr>`;
                     }).join('');
                     
-                    bodyHtml = `<div class="overflow-x-auto custom-scrollbar"><table class="w-full text-left border-collapse"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
+                    bodyHtml = `<div class="overflow-x-auto custom-scrollbar max-h-96"><table class="w-full text-left border-collapse"><thead><tr class="sticky top-0 shadow-sm z-10">${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
                 }
 
                 box.innerHTML = headerHtml + bodyHtml;
@@ -917,63 +972,51 @@
         }
 
         function useApiDataForForm() {
-            if (!apiRawData) return;
+            if (!apiRawData || !apiTargetId) return;
             closeApiModal();
 
-            // Mencegah duplikasi ID
-            let maxId = 0;
-            if (rawData.length > 0) {
-                rawData.forEach(item => {
-                    if (item.id) {
-                        const numStr = item.id.toString().replace(/[^0-9]/g, '');
-                        if (numStr) {
-                            const num = parseInt(numStr, 10);
-                            if (num > maxId) maxId = num;
-                        }
-                    }
-                });
+            // Referensi item yang diklik saat ini
+            let existingItem = rawData.find(i => i.id == apiTargetId);
+            
+            if (!existingItem) {
+                Swal.fire('Error', 'Data referensi tidak ditemukan!', 'error');
+                return;
             }
 
-            // Ekstraksi data terkait dari API untuk diisi ke Form
+            // ==============================================================
+            // HANYA MENGAMBIL 5 DATA SPESIFIK SESUAI REQUEST:
+            // Kode Pos, Pengurus, Pengawas, Jumlah Anggota, Gerai
+            // ==============================================================
+            
             let pengurusStr = "";
+            let pengawasStr = "";
             if (apiRawData.managements && apiRawData.managements.length > 0) {
-                pengurusStr = apiRawData.managements.map(m => m.name || m.nama || m.employee_name).filter(Boolean).join(", ");
+                pengurusStr = apiRawData.managements.filter(m => m.status && m.status.toUpperCase() === 'PENGURUS').map(m => m.name || m.nama || m.employee_name).filter(Boolean).join(", ");
+                pengawasStr = apiRawData.managements.filter(m => m.status && m.status.toUpperCase() === 'PENGAWAS').map(m => m.name || m.nama || m.employee_name).filter(Boolean).join(", ");
             }
 
-            let sektorStr = "";
-            if (apiRawData.klu_types && apiRawData.klu_types.length > 0) {
-                sektorStr = apiRawData.klu_types.map(k => k.name).filter(Boolean).join(", ");
-            }
+            let jumlahAnggota = apiRawData.members ? apiRawData.members.length.toString() : '0';
+            let jumlahGerai = apiRawData.outlets ? apiRawData.outlets.length.toString() : '0';
+            let kodePos = apiRawData.postal_code || '';
 
-            currentItem = { 
-                id: "row_" + (maxId + 1), 
-                nama: apiRawData.name || '', 
-                status: 'Aktif', 
-                alamat: apiRawData.address || '', 
-                desa: apiRawData.village?.name || '', 
-                kecamatan: apiRawData.subdistrict?.name || '', 
-                kabupaten: apiRawData.district?.name || '', 
-                nik: apiRawData.nik || '', 
-                lat: apiRawData.latitude || '', 
-                lng: apiRawData.longitude || '', 
-                'ahu': apiRawData.sk_number || '', 
-                'tahun pendirian': '', 
-                pengurus: pengurusStr || '', 
-                'sektor usaha': sektorStr || '', 
-                gerai: apiRawData.outlets ? apiRawData.outlets.length.toString() : '0', 
-                rat: '', 
-                kesehatan: '', 
-                foto: apiRawData.logo_file || apiRawData.banner_file || '' 
-            };
+            // Clone data untuk dijadikan source modal form
+            currentItem = { ...existingItem };
+            
+            // Timpa 5 Kolom Target
+            currentItem['kode_pos'] = kodePos || currentItem['kode_pos'];
+            currentItem['pengurus'] = pengurusStr || currentItem['pengurus'];
+            currentItem['pengawas'] = pengawasStr || currentItem['pengawas'];
+            currentItem['jumlah anggota'] = jumlahAnggota;
+            currentItem['gerai'] = jumlahGerai;
 
-            // Tampilkan Modal Form dengan data pre-filled
-            showDatabaseModal(true);
+            // Buka Modal Form dengan data yang telah dioverwrite
+            showDatabaseModal(false);
             
             Swal.fire({
-                icon: 'info', 
-                title: 'Data Berhasil Diisi', 
-                text: 'Data dari API telah dipetakan ke dalam form. Silakan lengkapi sisa kolom dan Simpan.', 
-                timer: 3500, 
+                icon: 'success', 
+                title: 'Data Tersalin', 
+                text: 'Kode Pos, Pengurus, Pengawas, Jumlah Anggota, dan Gerai berhasil ditarik dari API ke dalam Form. Silakan Simpan!', 
+                timer: 4000, 
                 showConfirmButton: false
             });
         }
