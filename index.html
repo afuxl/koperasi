@@ -8,7 +8,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Framework Tailwind CSS & SweetAlert2 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- Konfigurasi Tailwind untuk menyelaraskan dengan warna CSS Anda -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#d32f2f',
+              aktif: '#10b981',
+              nonAktif: '#ef4444',
+              highlight: '#f59e0b',
+            }
+          }
+        }
+      }
+    </script>
+
     <style>
         :root {
             /* Palette Merah Putih Modern */
@@ -87,10 +108,6 @@
             background: var(--highlight); color: #fff; padding: 3px 10px; 
             border-radius: 20px; font-weight: 700; font-size: 9px; 
             display: none; margin-left: 10px; box-shadow: 0 0 10px rgba(245, 158, 11, 0.4); letter-spacing: 1px;
-        }
-
-        #link-database {
-            display:none;
         }
 
         #layout { display: flex; flex: 1; position: relative; overflow: hidden; }
@@ -318,7 +335,7 @@
         }
     </style>
 </head>
-<body>
+<body class="bg-slate-200">
     <div id="lightbox-overlay" onclick="closeLightbox()">
         <button class="lightbox-close"><i class="fas fa-times"></i></button>
         <img id="lightbox-img" src="" alt="Fullscreen Image" onclick="event.stopPropagation()">
@@ -354,9 +371,9 @@
                     <i class="fas fa-link" style="color: var(--primary); margin-right: 6px;"></i> Menu Utama
                 </h3>
                 <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column;">
-                    <li><a href="/" id="link-peta" class="sidebar-link active"><i class="fas fa-map-marked-alt"></i> Peta Persebaran</a></li>
+                    <li><a href="index.html" id="link-peta" class="sidebar-link active"><i class="fas fa-map-marked-alt"></i> Peta Persebaran</a></li>
                     <li><a href="statistik.html" id="link-statistik" class="sidebar-link"><i class="fas fa-chart-line"></i> Dashboard Statistik</a></li>
-                    <li><a href="https://docs.google.com/spreadsheets/d/14XjnK5a38pkK682P48K60zAjwwFbT5MDQcsHvxBkEW4/edit?usp=sharing" target="_blank" rel="noopener noreferrer" id="link-database" class="sidebar-link"><i class="fas fa-database"></i> Kelola Basis Data</a></li>
+                    <li id="menu-db-container" style="display:none;"><a href="database.html" id="link-database" class="sidebar-link"><i class="fas fa-database"></i> Kelola Basis Data</a></li>
                 </ul>
             </div>
             
@@ -503,9 +520,12 @@
         if (urlParams.get('edit') === 'true') {
             canEdit = true;
             document.getElementById('admin-badge').style.display = 'inline-block';
-            document.getElementById('link-database').style.display = 'inline-block';
-            document.getElementById('link-peta').href = '?edit=true';
+            document.getElementById('menu-db-container').style.display = 'block';
+            
+            // Perbarui URL link dengan parameter khusus edit
+            document.getElementById('link-peta').href = 'index.html?edit=true';
             document.getElementById('link-statistik').href = 'statistik.html?edit=true';
+            document.getElementById('link-database').href = 'database.html?edit=true';
             if (document.getElementById('admin-locate-btn')) document.getElementById('admin-locate-btn').style.display = 'flex';
         }
 
@@ -611,8 +631,8 @@
         }
 
         function exportToExcel() {
-            if (currentFilteredData.length === 0) { alert("Tidak ada data untuk diekspor!"); return; }
-            if (typeof XLSX === 'undefined') { alert("Pustaka export Excel sedang dimuat, coba beberapa saat lagi."); return; }
+            if (currentFilteredData.length === 0) { Swal.fire({icon: 'warning', title: 'Perhatian', text: 'Tidak ada data untuk diekspor!'}); return; }
+            if (typeof XLSX === 'undefined') { Swal.fire({icon: 'info', title: 'Memuat', text: 'Pustaka export Excel sedang dimuat, coba beberapa saat lagi.'}); return; }
             const dataToExport = currentFilteredData.map((i, index) => {
                 let rowObj = {
                     "No": index + 1, "Nama Koperasi": i.nama || "-", "Status": i.status || "-", "Kabupaten/Kota": i.kabupaten || "-", "Kecamatan": i.kecamatan || "-",
@@ -725,7 +745,7 @@
 
         function onMapClickForPin(e) {
             if (!isEditMode || !canEdit) return;
-            document.getElementById('edit-lat').value = e.latlng.lat.toFixed(7); document.getElementById('edit-lng').value = e.latlng.lng.toFixed(7);
+            document.getElementById('edit-lat').value = e.latlng.lat.toFixed(8); document.getElementById('edit-lng').value = e.latlng.lng.toFixed(8);
             if (tempEditMarker) leafletMap.removeLayer(tempEditMarker);
             tempEditMarker = L.marker(e.latlng).addTo(leafletMap);
         }
@@ -743,10 +763,12 @@
                     handleSearch(); fitMapToAllMarkers();
                     document.getElementById('loader').style.display = 'none';
                 } else {
-                    document.getElementById('loader').style.display = 'none'; alert("Gagal memuat data: " + res.message);
+                    document.getElementById('loader').style.display = 'none'; 
+                    Swal.fire({icon: 'error', title: 'Gagal', text: "Gagal memuat data: " + res.message});
                 }
             } catch (error) {
-                document.getElementById('loader').style.display = 'none'; console.error("Fetch error: ", error); alert("Gagal mengambil data dari server. Pastikan URL Web App sudah benar.");
+                document.getElementById('loader').style.display = 'none'; console.error("Fetch error: ", error); 
+                Swal.fire({icon: 'error', title: 'Gagal', text: "Gagal mengambil data dari server. Pastikan URL Web App sudah benar."});
             }
         }
 
@@ -785,9 +807,9 @@
                         const lat = position.coords.latitude; const lng = position.coords.longitude;
                         showUserLocation(lat, lng, position.coords.accuracy); leafletMap.flyTo([lat, lng], 15, { duration: 1.5 });
                     },
-                    (error) => { alert("Gagal mendeteksi lokasi: " + error.message); }, { enableHighAccuracy: false }
+                    (error) => { Swal.fire({icon: 'error', title: 'Gagal', text: "Gagal mendeteksi lokasi: " + error.message}); }, { enableHighAccuracy: false }
                 );
-            } else { alert("Fitur Geolocation tidak didukung oleh browser Anda."); }
+            } else { Swal.fire({icon: 'warning', title: 'Perhatian', text: "Fitur Geolocation tidak didukung oleh browser Anda."}); }
         }
 
         function checkLocationAccuracy() {
@@ -799,16 +821,16 @@
                         document.getElementById('loader').style.display = 'none';
                         const lat = position.coords.latitude; const lng = position.coords.longitude; const acc = position.coords.accuracy;
                         showUserLocation(lat, lng, acc); leafletMap.flyTo([lat, lng], 18, { duration: 1.5 });
-                        alert(`Akurasi lokasi GPS saat ini: ±${Math.round(acc)} meter.`);
+                        Swal.fire({icon: 'success', title: 'Berhasil', text: `Akurasi lokasi GPS saat ini: ±${Math.round(acc)} meter.`});
                         if (isEditMode && document.getElementById('edit-lat')) {
-                            document.getElementById('edit-lat').value = lat.toFixed(7); document.getElementById('edit-lng').value = lng.toFixed(7);
+                            document.getElementById('edit-lat').value = lat.toFixed(8); document.getElementById('edit-lng').value = lng.toFixed(8);
                             if (tempEditMarker) leafletMap.removeLayer(tempEditMarker);
                             tempEditMarker = L.marker([lat, lng]).addTo(leafletMap);
                         }
                     },
-                    (error) => { document.getElementById('loader').style.display = 'none'; alert("Gagal mendeteksi lokasi akurat: " + error.message); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                    (error) => { document.getElementById('loader').style.display = 'none'; Swal.fire({icon: 'error', title: 'Gagal', text: "Gagal mendeteksi lokasi akurat: " + error.message}); }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
                 );
-            } else { document.getElementById('loader').style.display = 'none'; alert("Geolocation tidak didukung oleh browser Anda."); }
+            } else { document.getElementById('loader').style.display = 'none'; Swal.fire({icon: 'warning', title: 'Perhatian', text: "Geolocation tidak didukung oleh browser Anda."}); }
         }
 
         function showUserLocation(lat, lng, accuracy) {
@@ -969,6 +991,7 @@
             panel.style.display = 'flex';
         }
         
+        // Form Edit jika diakses dari Main Map (Inline Edit Mode)
         function toggleEditMode() {
             if (!canEdit) return; isEditMode = true; leafletMap.getContainer().classList.add('picking-location');
             const content = document.getElementById("panel-content"); const panel = document.getElementById("info-panel");
@@ -992,7 +1015,7 @@
             content.innerHTML = `
                 <div class="detail-only">
                     <div class="hint-box"><i class="fas fa-crosshairs"></i> Klik peta untuk ubah koordinat lokasi.</div>
-                    <div class="info-row"><label>Nama Instansi Koperasi</label><input type="text" id="edit-nama" data-header="nama" class="edit-input dynamic-input-field" value="${currentItem.nama || ''}"></div>
+                    <div class="info-row"><label>Nama Koperasi</label><input type="text" id="edit-nama" data-header="nama" class="edit-input dynamic-input-field" value="${currentItem.nama || ''}"></div>
                     <div class="info-row"><label>Status Koperasi</label>
                         <select id="edit-status" data-header="status" class="edit-input dynamic-input-field"><option value="Aktif" ${isAktif ? 'selected' : ''}>Aktif</option><option value="Tidak Aktif" ${!isAktif ? 'selected' : ''}>Tidak Aktif</option></select>
                     </div>
@@ -1003,7 +1026,7 @@
                     <div style="display:flex; gap:12px"><div class="info-row" style="flex:1"><label>Latitude (Y)</label><input type="text" id="edit-lat" data-header="lat" class="edit-input dynamic-input-field" value="${currentItem.lat || ''}"></div><div class="info-row" style="flex:1"><label>Longitude (X)</label><input type="text" id="edit-lng" data-header="lng" class="edit-input dynamic-input-field" value="${currentItem.lng || ''}"></div></div>
                     <hr style="border:0; border-top:1px dashed var(--border); margin:15px 0;">
                     <div class="info-row"><label>NIK</label><input type="text" id="edit-nik" data-header="nik" class="edit-input dynamic-input-field" value="${currentItem.nik === '-' ? '' : (currentItem.nik || '')}"></div>
-                    <div class="info-row"><label>SK AHU</label><input type="text" id="edit-sk_ahu" data-header="SK AHU" class="edit-input dynamic-input-field" value="${currentItem['ahu'] === '-' ? '' : (currentItem['ahu'] || '')}"></div>
+                    <div class="info-row"><label>SK AHU</label><input type="text" id="edit-sk_ahu" data-header="ahu" class="edit-input dynamic-input-field" value="${currentItem['ahu'] === '-' ? '' : (currentItem['ahu'] || '')}"></div>
                     <div class="info-row"><label>Tahun Pendirian</label><input type="text" id="edit-tahun_pendirian" data-header="tahun pendirian" class="edit-input dynamic-input-field" value="${currentItem['tahun pendirian'] === '-' ? '' : (currentItem['tahun pendirian'] || '')}"></div>
                     <div class="info-row"><label>Nama Pengurus</label><input type="text" id="edit-pengurus" data-header="pengurus" class="edit-input dynamic-input-field" value="${currentItem.pengurus === '-' ? '' : (currentItem.pengurus || '')}"></div>
                     <div class="info-row"><label>Sektor Usaha</label><input type="text" id="edit-sektor_usaha" data-header="sektor usaha" class="edit-input dynamic-input-field" value="${currentItem['sektor usaha'] === '-' ? '' : (currentItem['sektor usaha'] || '')}"></div>
@@ -1029,6 +1052,7 @@
         function openLightbox(imgSrc) { document.getElementById("lightbox-img").src = imgSrc; document.getElementById("lightbox-overlay").style.display = "flex"; }
         function closeLightbox() { document.getElementById("lightbox-overlay").style.display = "none"; document.getElementById("lightbox-img").src = ""; }
         
+        // Unggah Gambar di Panel Peta Utama
         async function uploadImagesToServer() {
             const fileInput = document.getElementById('upload-foto'); const statusText = document.getElementById('upload-status'); const fotoUrlField = document.getElementById('edit-foto');
             if (fileInput.files.length === 0) { statusText.innerText = "Pilih file gambar terlebih dahulu."; return; }
@@ -1041,8 +1065,8 @@
                     const response = await fetch(GAS_WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow', body: JSON.stringify(payload) });
                     const res = await response.json();
                     if (res.success) { uploadedUrls.push(res.url); statusText.innerText = `Mengunggah ${i + 1} dari ${fileInput.files.length} gambar...`; } 
-                    else { alert(`Gagal mengunggah ${file.name}: ${res.message}`); }
-                } catch (err) { console.error(err); alert(`Koneksi terputus saat mengunggah ${file.name}`); }
+                    else { Swal.fire({icon: 'error', title: 'Gagal', text: `Gagal mengunggah ${file.name}: ${res.message}`}); }
+                } catch (err) { console.error(err); Swal.fire({icon: 'error', title: 'Terputus', text: `Koneksi terputus saat mengunggah ${file.name}`}); }
             }
             if (uploadedUrls.length > 0) {
                 statusText.innerText = "Berhasil diunggah!"; statusText.style.color = "var(--aktif)";
@@ -1057,35 +1081,83 @@
             else { p.classList.add('minimized'); btn.className = "fas fa-chevron-up"; }
         }
 
+        // Simpan Data dari Main Map Info Panel
         async function saveData() {
             if (!canEdit) return; 
-            let payloadData = { id: currentItem.id };
+            
+            let payloadData = { 
+                id: currentItem.id 
+            };
+
+            const standardHeaders = ['id', 'nama', 'alamat', 'kabupaten', 'kecamatan', 'desa', 'status', 'nik', 'ahu', 'pengurus', 'lat', 'lng', 'foto', 'gerai', 'rat', 'kesehatan', 'tahun pendirian', 'sektor usaha'];
+            payloadData.dynamicFields = {};
+
             document.querySelectorAll('.dynamic-input-field').forEach(input => { 
                 const headerName = input.getAttribute('data-header'); 
-                if (headerName) { payloadData[headerName] = input.value; }
+                if (headerName) { 
+                    if (standardHeaders.includes(headerName.toLowerCase())) {
+                        payloadData[headerName] = input.value; 
+                    } else {
+                        payloadData.dynamicFields[headerName] = input.value;
+                    }
+                }
             });
-            const localUpdateData = { ...payloadData };
+
+            // LOGIKA PEMFORMATAN KOORDINAT DI SISI CLIENT
+            if (payloadData.lat) {
+                let cleanLat = payloadData.lat.replace(/,/g, '.').replace(/[^\d.-]/g, '');
+                let parts = cleanLat.split('.');
+                if(parts.length > 2) cleanLat = parts[0] + '.' + parts.slice(1).join('');
+                payloadData.lat = cleanLat;
+            }
+            if (payloadData.lng) {
+                let cleanLng = payloadData.lng.replace(/,/g, '.').replace(/[^\d.-]/g, '');
+                let parts = cleanLng.split('.');
+                if(parts.length > 2) cleanLng = parts[0] + '.' + parts.slice(1).join('');
+                payloadData.lng = cleanLng;
+            }
+
+            const localUpdateData = { ...payloadData, ...payloadData.dynamicFields };
+            delete localUpdateData.dynamicFields;
+
             document.getElementById('loader-text').innerText = "Menyinkronkan perubahan ke Cloud..."; document.getElementById('loader').style.display = 'flex';
             
             try {
                 const response = await fetch(GAS_WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow', body: JSON.stringify({ action: 'saveKoperasiData', data: payloadData }) });
                 const res = await response.json();
                 if (res && res.success) { 
-                    updateLocalData(localUpdateData); document.getElementById('loader').style.display = 'none'; 
-                    renderData();
-                    const updatedItem = rawData.find(item => item.id === currentItem.id);
+                    if (res.newId) {
+                        localUpdateData.id = res.newId;
+                        currentItem.id = res.newId;
+                    }
+                    
+                    updateLocalData(localUpdateData); 
+                    document.getElementById('loader').style.display = 'none'; 
+                    
+                    const updatedItem = rawData.find(item => item.id === localUpdateData.id);
                     if(updatedItem) showInfoPanel(updatedItem);
-                } else { document.getElementById('loader').style.display = 'none'; alert("Gagal sinkronisasi data: " + (res.message || "Unknown error")); }
-            } catch (error) { document.getElementById('loader').style.display = 'none'; console.error("Fetch error:", error); alert("Koneksi gagal: Gagal mengirim data ke server."); }
+                    Swal.fire({icon: 'success', title: 'Berhasil', text: 'Data berhasil disimpan!', timer: 1500, showConfirmButton: false});
+                } else { document.getElementById('loader').style.display = 'none'; Swal.fire({icon: 'error', title: 'Gagal', text: "Gagal sinkronisasi data: " + (res.message || "Unknown error")}); }
+            } catch (error) { document.getElementById('loader').style.display = 'none'; console.error("Fetch error:", error); Swal.fire({icon: 'error', title: 'Gagal', text: "Koneksi gagal: Gagal mengirim data ke server."}); }
         }
         
         function updateLocalData(newData) {
+            let isNew = true;
             const mergeData = (item) => {
                 if (item.id === newData.id) {
+                    isNew = false;
                     Object.keys(newData).forEach(key => { item[key] = (newData[key] !== "" && newData[key] !== null && newData[key] !== undefined) ? newData[key] : "-"; });
                 }
             };
-            rawData.forEach(mergeData); currentMapData.forEach(mergeData); currentFilteredData.forEach(mergeData);
+            rawData.forEach(mergeData); 
+            
+            if (isNew) {
+                let itemToAdd = {};
+                Object.keys(newData).forEach(key => { itemToAdd[key] = (newData[key] !== "" && newData[key] !== null && newData[key] !== undefined) ? newData[key] : "-"; });
+                rawData.push(itemToAdd);
+            }
+
+            handleSearch();
         }
 
         function makeDraggable(el) {
