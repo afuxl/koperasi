@@ -975,10 +975,39 @@
                 const baseColor = isAktif ? "var(--aktif)" : "var(--non-aktif)";
                 
                 if (hasCoords) {
-                    const marker = L.circleMarker([latVal, lngVal], { radius: 7, fillColor: baseColor, color: "white", weight: 2, fillOpacity: 1 });
+                    // --- PERUBAHAN: LOGO CUSTOM MARKER ---
+                    // Ganti URL di bawah ini dengan URL logo asli Anda (disarankan format PNG transparan atau SVG)
+                    const logoUrl = "/kopkel128.png"; // Contoh ikon building
+                    
+                    const customIcon = L.divIcon({
+                        className: 'custom-logo-marker', // Class dihapus agar tidak kena style bawaan leaflet
+                        html: `
+                            <div style="
+                                width: 34px; height: 34px; 
+                                background: white; 
+                                border-radius: 50%; 
+                                border: 3px solid ${baseColor}; /* Warna Hijau/Merah dinamis */
+                                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                                display: flex; align-items: center; justify-content: center;
+                                overflow: hidden;
+                                transition: all 0.3s ease;
+                            ">
+                                <img src="${logoUrl}" style="width: 20px; height: 20px; object-fit: contain;">
+                            </div>
+                        `,
+                        iconSize: [34, 34],
+                        iconAnchor: [17, 17], // Titik jangkar tepat di tengah marker
+                        tooltipAnchor: [0, -20]
+                    });
+                
+                    const marker = L.marker([latVal, lngVal], { icon: customIcon });
+                    
                     marker.bindTooltip(`<b>${item.nama}</b><br><small style="color: #cbd5e1; font-weight:400;">Desa ${item.desa}</small>`, { className: 'leaflet-tooltip-koperasi', direction: 'top', offset: [0, -5] });
+                    // -------------------------------------
+                
                     marker.on('click', () => selectItem(item, marker));
-                    markersLayer.addLayer(marker); allMarkers.push({ marker, data: item, baseColor });
+                    markersLayer.addLayer(marker); 
+                    allMarkers.push({ marker, data: item, baseColor });
 
                     const labelMarker = L.marker([latVal, lngVal], {
                         icon: L.divIcon({ className: 'custom-map-label', html: `<div>${item.nama}</div>`, iconSize: [0, 0], iconAnchor: [0, 0] }), interactive: false 
@@ -1047,10 +1076,33 @@
         }
 
         function selectItem(item, marker) {
-            if (lastSelectedMarker) { const mData = allMarkers.find(m => m.marker === lastSelectedMarker); if(mData) lastSelectedMarker.setStyle({ radius: 7, fillColor: mData.baseColor, color: "white", weight: 2 }); }
-            if (marker) { marker.setStyle({ radius: 10, fillColor: "var(--highlight)", color: "#fff", weight: 3 }); lastSelectedMarker = marker; }
+            // Reset style marker sebelumnya
+            if (lastSelectedMarker) { 
+                const mData = allMarkers.find(m => m.marker === lastSelectedMarker); 
+                if(mData) {
+                    // Kembalikan ke border standar
+                    const divEl = lastSelectedMarker.getElement().querySelector('div');
+                    if(divEl) {
+                        divEl.style.border = `3px solid ${mData.baseColor}`;
+                        divEl.style.transform = "scale(1)";
+                    }
+                } 
+            }
+            
+            // Set style marker yang baru diklik (Efek membesar dan warna kuning highlight)
+            if (marker) { 
+                const divEl = marker.getElement().querySelector('div');
+                if(divEl) {
+                    divEl.style.border = "3px solid var(--highlight)";
+                    divEl.style.transform = "scale(1.2)";
+                }
+                lastSelectedMarker = marker; 
+            }
+            
             document.querySelectorAll('.data-table tr').forEach(el => el.classList.remove('selected'));
-            const rowEl = document.getElementById(`row-${item.id}`); if (rowEl) { rowEl.classList.add('selected'); }
+            const rowEl = document.getElementById(`row-${item.id}`); 
+            if (rowEl) { rowEl.classList.add('selected'); }
+            
             showInfoPanel(item);
         }
 
