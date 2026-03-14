@@ -289,7 +289,7 @@
 
     </div>
 
-    <!-- MODAL FORM UNTUK KELOLA BASIS DATA (POP-UP & Peta Mini) -->
+    <!-- MODAL FORM UNTUK KELOLA BASIS DATA (POP-UP) -->
     <div id="db-modal-overlay" class="fixed inset-0 bg-slate-900/70 z-[9900] hidden items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
@@ -569,6 +569,14 @@
         }
 
         function showDatabaseModal(isNew) {
+            // PERBAIKAN: Hapus instance peta lama sebelum me-render ulang innerHTML
+            if (miniMap !== null) {
+                miniMap.off();
+                miniMap.remove();
+                miniMap = null;
+                miniMarker = null;
+            }
+
             document.getElementById('db-modal-overlay').classList.remove('hidden');
             document.getElementById('db-modal-overlay').classList.add('flex');
             document.getElementById('db-modal-title').innerHTML = isNew ? '<i class="fas fa-plus-circle text-primary mr-2"></i> Tambah Koperasi Baru' : '<i class="fas fa-edit text-primary mr-2"></i> Edit Data Koperasi';
