@@ -618,8 +618,24 @@
         function toggleTable() {
             const viewPeta = document.getElementById('content-wrapper');
             const icon = document.getElementById('table-toggle-icon');
+            const topPanel = document.getElementById('map-container');
+            const bottomPanel = document.getElementById('table-container');
+
             viewPeta.classList.toggle('table-collapsed');
             icon.className = viewPeta.classList.contains('table-collapsed') ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+            
+            // Perbaikan: Hapus inline style saat diciutkan agar class CSS berfungsi
+            if (viewPeta.classList.contains('table-collapsed')) {
+                topPanel.dataset.oldFlex = topPanel.style.flex;
+                bottomPanel.dataset.oldFlex = bottomPanel.style.flex;
+                topPanel.style.flex = '';
+                bottomPanel.style.flex = '';
+            } else {
+                // Kembalikan ukuran hasil drag sebelumnya saat dibentangkan
+                if (topPanel.dataset.oldFlex) topPanel.style.flex = topPanel.dataset.oldFlex;
+                if (bottomPanel.dataset.oldFlex) bottomPanel.style.flex = bottomPanel.dataset.oldFlex;
+            }
+
             setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 300);
         }
 
