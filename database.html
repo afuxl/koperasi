@@ -161,6 +161,15 @@
         #loader { position: fixed; inset: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
         #loader i { text-shadow: 0 4px 12px rgba(211,47,47,0.3); }
 
+        /* Search input styling untuk database.html */
+        .db-search-input {
+            padding: 6px 28px 6px 12px; border: 1px solid var(--border); 
+            border-radius: 30px; outline: none; font-family: 'Inter'; font-size: 11px;
+            background-color: var(--surface); transition: all 0.3s ease; box-sizing: border-box;
+            width: 250px;
+        }
+        .db-search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1); }
+        
         @media (max-width: 992px) {
             header { padding: 6px 10px; flex-wrap: wrap; gap: 6px; justify-content: center;}
             .header-brand h1 { font-size: 0.85rem; text-align: center; }
@@ -168,6 +177,10 @@
             
             #sidebar { position: absolute; left: 0; top: 0; transform: translateX(-100%); height: 100%; width: 280px; max-width: 85vw; box-shadow: 5px 0 25px rgba(0,0,0,0.1); margin-left: 0 !important; }
             #sidebar.open { transform: translateX(0); }
+            
+            .db-search-input { width: 100%; }
+            .header-controls { flex-direction: column; align-items: stretch !important; gap: 10px; }
+            .action-buttons { justify-content: flex-start; }
         }
     </style>
 </head>
@@ -222,14 +235,24 @@
 
         <!-- Container Database Management -->
         <div id="content-wrapper" class="flex-1 flex flex-col p-4 md:p-6 gap-4 bg-slate-100 overflow-y-auto relative">
-            <div style="background: var(--surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); padding: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; flex-shrink: 0;">
-                <h2 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--text-main);">
-                    <i class="fas fa-server" style="color: var(--primary); margin-right: 8px;"></i> Manajemen Data Koperasi
-                </h2>
-                <div class="flex gap-2 flex-wrap">
-                    <button class="btn-action hover:-translate-y-0.5 transition-transform" style="background: var(--primary); color: white; padding: 8px 16px; font-size: 12px; border-radius: 30px; box-shadow: 0 4px 12px rgba(211,47,47,0.2);" onclick="addNewKoperasi()">
-                        <i class="fas fa-plus"></i> Tambah Koperasi Baru
-                    </button>
+            <div style="background: var(--surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); padding: 15px; flex-shrink: 0;">
+                <div class="flex justify-between items-center flex-wrap gap-4 header-controls">
+                    <h2 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--text-main);" class="whitespace-nowrap">
+                        <i class="fas fa-server" style="color: var(--primary); margin-right: 8px;"></i> Manajemen Data Koperasi
+                    </h2>
+                    
+                    <div class="flex items-center gap-3 flex-wrap flex-1 justify-end action-buttons">
+                        <!-- Search Bar -->
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="text" id="dbSearchInput" class="db-search-input pl-8" placeholder="Cari koperasi, NIK, desa..." oninput="handleDbSearch()">
+                            <i class="fas fa-times absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs cursor-pointer hover:text-red-500 hidden" id="clearDbSearchBtn" onclick="clearDbSearch()"></i>
+                        </div>
+                        
+                        <button class="btn-action hover:-translate-y-0.5 transition-transform whitespace-nowrap" style="background: var(--primary); color: white; padding: 8px 16px; font-size: 12px; border-radius: 30px; box-shadow: 0 4px 12px rgba(211,47,47,0.2);" onclick="addNewKoperasi()">
+                            <i class="fas fa-plus"></i> Tambah Koperasi Baru
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -251,6 +274,10 @@
                         <!-- Diisi via Javascript -->
                     </tbody>
                 </table>
+                <div id="no-results-msg" class="hidden p-8 text-center text-slate-500 italic flex-col items-center gap-2">
+                    <i class="fas fa-search text-2xl text-slate-300"></i>
+                    <p>Tidak ada data koperasi yang cocok dengan pencarian.</p>
+                </div>
             </div>
 
             <div style="text-align: center; padding: 10px; background: var(--surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); flex-shrink: 0;">
@@ -262,7 +289,7 @@
 
     </div>
 
-    <!-- MODAL FORM UNTUK KELOLA BASIS DATA (POP-UP) -->
+    <!-- MODAL FORM UNTUK KELOLA BASIS DATA (POP-UP & Peta Mini) -->
     <div id="db-modal-overlay" class="fixed inset-0 bg-slate-900/70 z-[9900] hidden items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
@@ -323,19 +350,27 @@
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <!-- Info Umum -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                        <!-- Info Utama -->
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                            <h3 class="font-bold text-[13px] border-b pb-2 mb-3 text-slate-800 flex items-center gap-2"><i class="fas fa-info-circle text-blue-500"></i> Informasi Umum</h3>
-                            <div id="api-res-kv" class="grid grid-cols-[130px_1fr] gap-x-3 gap-y-2.5 text-[11px]">
-                                <!-- KV Items -->
+                            <h3 class="font-bold text-[13px] border-b pb-2 mb-3 text-slate-800 flex items-center gap-2"><i class="fas fa-info-circle text-blue-500"></i> Informasi Utama</h3>
+                            <div id="api-res-kv-main" class="grid grid-cols-[100px_1fr] gap-x-2 gap-y-2.5 text-[11px]">
+                                <!-- KV Items Main -->
+                            </div>
+                        </div>
+
+                        <!-- Info Tambahan -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                            <h3 class="font-bold text-[13px] border-b pb-2 mb-3 text-slate-800 flex items-center gap-2"><i class="fas fa-list-alt text-green-500"></i> Informasi Tambahan</h3>
+                            <div id="api-res-kv-add" class="grid grid-cols-[100px_1fr] gap-x-2 gap-y-2.5 text-[11px]">
+                                <!-- KV Items Additional -->
                             </div>
                         </div>
                         
                         <!-- Peta Lokasi -->
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col">
                             <h3 class="font-bold text-[13px] border-b pb-2 mb-3 text-slate-800 flex items-center gap-2"><i class="fas fa-map text-red-500"></i> Peta Lokasi</h3>
-                            <div id="api-map" class="w-full h-48 md:h-56 rounded-lg border border-slate-200 z-10 flex-1 relative bg-slate-50"></div>
+                            <div id="api-map" class="w-full min-h-[160px] h-48 lg:h-full rounded-lg border border-slate-200 z-10 flex-1 relative bg-slate-50"></div>
                             <div id="api-map-hint" class="text-[10px] text-slate-500 mt-2 font-mono bg-slate-100 p-1.5 rounded inline-block w-fit"></div>
                         </div>
                     </div>
@@ -373,7 +408,7 @@
         // --- KONFIGURASI URL GOOGLE APPS SCRIPT WEB APP ---
         const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzc96HHN04_Bd6DrkPXA5ww65-qqmu9v8--8rvlBQTHaqS9TSSEu-cjMMD7RBTwJpwL/exec";
         
-        let rawData = [], currentItem = null, dynamicHeadersList = []; 
+        let rawData = [], filteredDbData = [], currentItem = null, dynamicHeadersList = []; 
         let miniMap = null, miniMarker = null;
         let canEdit = true; 
         
@@ -385,7 +420,6 @@
         if (isAdmin) {
             canEdit = true;
             document.getElementById('admin-badge').style.display = 'inline-block';
-            document.getElementById('menu-db-container').style.display = 'block';
         } else {
             // Perlindungan Frontend: tendang kembali jika bukan admin
             window.location.href = 'login.html';
@@ -431,6 +465,7 @@
                 const res = await response.json();
                 if (res.success) {
                     rawData = res.data;
+                    filteredDbData = [...rawData];
                     dynamicHeadersList = res.dynamicHeaders || [];
                     document.getElementById('total-info').innerHTML = `<i class="fas fa-database"></i> Total ${rawData.length} Data`;
                     renderDatabaseTable();
@@ -445,16 +480,58 @@
             }
         }
 
+        // FUNGSI PENCARIAN PADA TABEL DATABASE
+        function handleDbSearch() {
+            const q = document.getElementById('dbSearchInput').value.toLowerCase();
+            const clearBtn = document.getElementById('clearDbSearchBtn');
+            const noResultsMsg = document.getElementById('no-results-msg');
+            const tbody = document.getElementById('db-table-body');
+            
+            if (q.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            filteredDbData = rawData.filter(i => {
+                return (
+                    String(i.nama || "").toLowerCase().includes(q) || 
+                    String(i.desa || "").toLowerCase().includes(q) || 
+                    String(i.nik || "").toLowerCase().includes(q) || 
+                    String(i.kecamatan || "").toLowerCase().includes(q)
+                );
+            });
+
+            if (filteredDbData.length === 0) {
+                tbody.innerHTML = '';
+                noResultsMsg.classList.remove('hidden');
+                noResultsMsg.classList.add('flex');
+            } else {
+                noResultsMsg.classList.add('hidden');
+                noResultsMsg.classList.remove('flex');
+                renderDatabaseTable();
+            }
+        }
+
+        function clearDbSearch() {
+            document.getElementById('dbSearchInput').value = '';
+            document.getElementById('clearDbSearchBtn').classList.add('hidden');
+            document.getElementById('no-results-msg').classList.add('hidden');
+            filteredDbData = [...rawData];
+            renderDatabaseTable();
+            document.getElementById('dbSearchInput').focus();
+        }
+
         function renderDatabaseTable() {
             const tbody = document.getElementById('db-table-body');
             tbody.innerHTML = '';
             
-            if(rawData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-muted);"><i>Data tidak tersedia.</i></td></tr>`;
+            if(filteredDbData.length === 0) {
+                // Di handle oleh fungsi search
                 return;
             }
 
-            rawData.forEach((item, index) => {
+            filteredDbData.forEach((item, index) => {
                 const isAktif = String(item.status || "").toLowerCase().includes("aktif") && !String(item.status || "").toLowerCase().includes("tidak");
                 const baseColor = isAktif ? "var(--aktif)" : "var(--non-aktif)";
                 
@@ -467,9 +544,10 @@
                     slug = parts[parts.length - 1];
                 }
 
+                // Nama koperasi sebagai teks biasa dan trigger modal API
                 let namaKoperasiHtml = `<span style="font-weight:600;">${item.nama || '-'}</span>`;
                 if (slug) {
-                    namaKoperasiHtml = `<span onclick="fetchApiDirectly('${slug}', '${item.id}')" class="font-semibold cursor-pointer hover:text-slate-600 transition-colors border-b border-dotted border-slate-400" title="Klik untuk melihat data Kemenkop">${item.nama || '-'}</span>`;
+                    namaKoperasiHtml = `<span onclick="fetchApiDirectly('${slug}', '${item.id}')" class="font-semibold cursor-pointer hover:text-slate-600 transition-colors border-b border-dotted border-slate-400" title="Klik untuk menarik data otomatis dari API Kemenkop">${item.nama || '-'}</span>`;
                 }
                 
                 const tr = document.createElement('tr');
@@ -504,6 +582,7 @@
                         dynamicEditHtml += `<div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">${header}</label><input type="text" id="${safeId}" data-header="${header}" class="edit-input modal-dynamic-input-field bg-white" value="${val}"></div>`;
                     }
                 });
+                if (dynamicEditHtml) { dynamicEditHtml = '<div class="col-span-full border-t border-dashed border-slate-300 my-2 pt-3"><label class="text-[10px] font-bold text-primary tracking-wide mb-2 block">UBAH INFORMASI LAINNYA</label><div class="grid grid-cols-1 md:grid-cols-2 gap-3">' + dynamicEditHtml + '</div></div>'; }
             }
             
             const isAktif = String(currentItem.status || "").toLowerCase().includes("aktif") && !String(currentItem.status || "").toLowerCase().includes("tidak");
@@ -644,6 +723,7 @@
                 const res = await response.json();
                 if(res.success) {
                     rawData = rawData.filter(i => i.id != id);
+                    filteredDbData = filteredDbData.filter(i => i.id != id);
                     renderDatabaseTable();
                     Swal.fire({icon: 'success', title: 'Berhasil', text: 'Data berhasil dihapus.', timer: 1500, showConfirmButton: false});
                 } else {
@@ -775,6 +855,13 @@
                 let itemToAdd = {};
                 Object.keys(newData).forEach(key => { itemToAdd[key] = (newData[key] !== "" && newData[key] !== null && newData[key] !== undefined) ? newData[key] : "-"; });
                 rawData.push(itemToAdd);
+            }
+
+            // Update filtered data if no search is active, else maintain the view
+            if (document.getElementById('dbSearchInput').value.length === 0) {
+                filteredDbData = [...rawData];
+            } else {
+                handleDbSearch();
             }
 
             renderDatabaseTable();
