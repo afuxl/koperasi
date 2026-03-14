@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Admin - Koperasi Merah Putih</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Framework Tailwind CSS & SweetAlert2 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#d32f2f',
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen font-[Inter] p-4">
+    
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+        <!-- Header / Banner -->
+        <div class="bg-gradient-to-br from-red-600 to-red-800 p-8 text-center relative">
+            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg relative z-10">
+                <i class="fas fa-shield-alt text-2xl text-red-700"></i>
+            </div>
+            <h2 class="text-white text-2xl font-bold tracking-wide relative z-10">Login Admin</h2>
+            <p class="text-red-100 text-sm mt-1 relative z-10">Dashboard Koperasi Merah Putih</p>
+            
+            <!-- Hiasan Background -->
+            <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+        </div>
+        
+        <!-- Form Area -->
+        <div class="p-8">
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-5">
+                    <label class="block text-slate-600 text-xs font-bold uppercase tracking-wide mb-2">Username</label>
+                    <div class="relative">
+                        <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="username" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-200 transition-all text-sm" placeholder="Masukkan username" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-slate-600 text-xs font-bold uppercase tracking-wide mb-2">Password</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="password" id="password" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-red-500 focus:bg-white focus:ring-2 focus:ring-red-200 transition-all text-sm" placeholder="Masukkan password" required>
+                    </div>
+                </div>
+                
+                <button type="submit" id="btn-login" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
+                    <i class="fas fa-sign-in-alt"></i> Masuk Sistem
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <a href="index.html" class="text-sm text-slate-500 hover:text-red-600 transition-colors font-medium flex items-center justify-center gap-1">
+                    <i class="fas fa-arrow-left text-xs"></i> Kembali ke Halaman Utama
+                </a>
+            </div>
+        </div>
+        
+        <!-- Catatan Info (Opsional, hapus saat live) -->
+        <div class="bg-slate-50 p-4 border-t border-slate-100 text-center text-xs text-slate-500">
+            <p>Sistem ini dilindungi dan hanya untuk pengurus/admin yang sah.</p>
+        </div>
+    </div>
+
+    <script>
+        // URL Backend Apps Script
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzc96HHN04_Bd6DrkPXA5ww65-qqmu9v8--8rvlBQTHaqS9TSSEu-cjMMD7RBTwJpwL/exec";
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const btnLogin = document.getElementById('btn-login');
+            
+            // Tampilkan status loading
+            btnLogin.disabled = true;
+            btnLogin.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Memverifikasi...';
+
+            try {
+                // Mengirim request ke Backend GAS
+                const response = await fetch(GAS_WEBAPP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ 
+                        action: 'loginAdmin', 
+                        username: user, 
+                        password: pass 
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Login Berhasil',
+                        text: 'Membuka kunci akses administrator...',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        // Redirect ke mode admin
+                        window.location.href = 'index.html?edit=true';
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Akses Ditolak',
+                        text: result.message || 'Username atau Password salah!'
+                    });
+                }
+            } catch (error) {
+                console.error('Login Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kesalahan Server',
+                    text: 'Tidak dapat menghubungi server. Periksa koneksi internet Anda.'
+                });
+            } finally {
+                // Kembalikan tombol ke kondisi semula jika gagal
+                btnLogin.disabled = false;
+                btnLogin.innerHTML = '<i class="fas fa-sign-in-alt"></i> Masuk Sistem';
+            }
+        }
+    </script>
+</body>
+</html>
