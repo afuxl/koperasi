@@ -203,9 +203,13 @@
                     <i class="fas fa-link" style="color: var(--primary); margin-right: 6px;"></i> Menu Utama
                 </h3>
                 <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column;">
-                    <li><a href="index.html?edit=true" id="link-peta" class="sidebar-link"><i class="fas fa-map-marked-alt"></i> Peta Persebaran</a></li>
-                    <li><a href="statistik.html?edit=true" id="link-statistik" class="sidebar-link"><i class="fas fa-chart-line"></i> Dashboard Statistik</a></li>
-                    <li id="menu-db-container"><a href="#" id="link-database" class="sidebar-link active"><i class="fas fa-database"></i> Kelola Basis Data</a></li>
+                    <li><a href="index.html" id="link-peta" class="sidebar-link"><i class="fas fa-map-marked-alt"></i> Peta Persebaran</a></li>
+                    <li><a href="statistik.html" id="link-statistik" class="sidebar-link"><i class="fas fa-chart-line"></i> Dashboard Statistik</a></li>
+                    <li id="menu-db-container"><a href="database.html" id="link-database" class="sidebar-link active"><i class="fas fa-database"></i> Kelola Basis Data</a></li>
+                    
+                    <!-- HANYA TOMBOL KELUAR KARENA INI HALAMAN PROTECTED -->
+                    <li style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border);"></li>
+                    <li id="menu-logout"><a href="#" onclick="logoutAdmin(); return false;" class="sidebar-link" style="color: #dc2626; font-weight: 700;"><i class="fas fa-sign-out-alt" style="color: #dc2626;"></i> Keluar Admin</a></li>
                 </ul>
             </div>
             
@@ -375,6 +379,23 @@
         
         // Definisi lengkap header yang ada di Spreadsheet
         const standardHeaders = ['id', 'nama', 'alamat', 'desa', 'kecamatan', 'kabupaten', 'nik', 'lat', 'lng', 'status', 'kode_pos', 'pengurus', 'pengawas', 'gerai', 'kesehatan', 'tahun pendirian', 'jenis koperasi', 'jumlah anggota', 'ahu', 'sektor usaha', 'foto', 'url'];
+
+        // VERIFIKASI MENGGUNAKAN LOCAL STORAGE
+        const isAdmin = localStorage.getItem('koperasi_admin_auth') === 'true';
+        if (isAdmin) {
+            canEdit = true;
+            document.getElementById('admin-badge').style.display = 'inline-block';
+            document.getElementById('menu-db-container').style.display = 'block';
+        } else {
+            // Perlindungan Frontend: tendang kembali jika bukan admin
+            window.location.href = 'login.html';
+        }
+        
+        // FUNGSI UNTUK LOGOUT
+        function logoutAdmin() {
+            localStorage.removeItem('koperasi_admin_auth');
+            window.location.href = 'index.html';
+        }
 
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
