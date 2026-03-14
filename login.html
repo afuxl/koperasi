@@ -76,6 +76,11 @@
     </div>
 
     <script>
+        // Cek jika sudah login sebelumnya, langsung arahkan ke index
+        if (localStorage.getItem('koperasi_admin_auth') === 'true') {
+            window.location.href = 'index.html';
+        }
+
         // URL Backend Apps Script
         const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzc96HHN04_Bd6DrkPXA5ww65-qqmu9v8--8rvlBQTHaqS9TSSEu-cjMMD7RBTwJpwL/exec";
 
@@ -105,6 +110,9 @@
                 const result = await response.json();
 
                 if (result.success) {
+                    // SET KREDENSIAL DI LOCALSTORAGE
+                    localStorage.setItem('koperasi_admin_auth', 'true');
+
                     Swal.fire({
                         icon: 'success',
                         title: 'Login Berhasil',
@@ -112,8 +120,8 @@
                         timer: 1500,
                         showConfirmButton: false
                     }).then(() => {
-                        // Redirect ke mode admin
-                        window.location.href = 'index.html?edit=true';
+                        // Redirect ke index secara normal (tanpa URL Parameter)
+                        window.location.href = 'index.html';
                     });
                 } else {
                     Swal.fire({
