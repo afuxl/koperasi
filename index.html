@@ -375,6 +375,11 @@
                     <li><a href="index.html" id="link-peta" class="sidebar-link active"><i class="fas fa-map-marked-alt"></i> Peta Persebaran</a></li>
                     <li><a href="statistik.html" id="link-statistik" class="sidebar-link"><i class="fas fa-chart-line"></i> Dashboard Statistik</a></li>
                     <li id="menu-db-container" style="display:none;"><a href="database.html" id="link-database" class="sidebar-link"><i class="fas fa-database"></i> Kelola Basis Data</a></li>
+                    
+                    <!-- MENU LOGIN / LOGOUT -->
+                    <li style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border);"></li>
+                    <li id="menu-login"><a href="login.html" class="sidebar-link"><i class="fas fa-sign-in-alt"></i> Login Admin</a></li>
+                    <li id="menu-logout" style="display:none;"><a href="#" onclick="logoutAdmin(); return false;" class="sidebar-link" style="color: #dc2626; font-weight: 700;"><i class="fas fa-sign-out-alt" style="color: #dc2626;"></i> Keluar Admin</a></li>
                 </ul>
             </div>
             
@@ -518,16 +523,24 @@
         let visibleCols = tableColumnsConfig.filter(c => c.default).map(c => c.id);
         let canEdit = false;
 
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('edit') === 'true') {
+        // VERIFIKASI MENGGUNAKAN LOCAL STORAGE
+        const isAdmin = localStorage.getItem('koperasi_admin_auth') === 'true';
+        if (isAdmin) {
             canEdit = true;
             document.getElementById('admin-badge').style.display = 'inline-block';
             document.getElementById('menu-db-container').style.display = 'block';
             
-            document.getElementById('link-peta').href = 'index.html?edit=true';
-            document.getElementById('link-statistik').href = 'statistik.html?edit=true';
-            document.getElementById('link-database').href = 'database.html?edit=true';
+            // Atur tombol menu sidebar
+            if (document.getElementById('menu-login')) document.getElementById('menu-login').style.display = 'none';
+            if (document.getElementById('menu-logout')) document.getElementById('menu-logout').style.display = 'block';
+            
             if (document.getElementById('admin-locate-btn')) document.getElementById('admin-locate-btn').style.display = 'flex';
+        }
+
+        // FUNGSI UNTUK LOGOUT
+        function logoutAdmin() {
+            localStorage.removeItem('koperasi_admin_auth');
+            window.location.href = 'index.html'; // Reload halaman sebagai guest
         }
 
         // --- FUNGSI BARU UNTUK MEMUAT DATA GEOJSON ---
