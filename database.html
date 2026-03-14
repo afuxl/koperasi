@@ -961,13 +961,43 @@
             if(data.province?.name) locParts.push(data.province.name);
             document.getElementById('api-res-loc-text').textContent = locParts.join(", ") || "Lokasi tidak diketahui";
 
-            // Info Umum (Format Lama)
+            // Ekstraksi data yang dibutuhkan
             const safeText = v => (v === null || v === undefined || v === "") ? "-" : String(v);
-            const kvInfo = [
-                ["Nama Koperasi", data.name], ["NIK", data.nik], ["Alamat", data.address],
-                ["Kode Pos", data.postal_code], ["No. SK", data.sk_number], ["Deskripsi", data.about]
+            
+            let pengurusList = [];
+            let pengawasList = [];
+            if(Array.isArray(data.managements)) {
+                pengurusList = data.managements.filter(m => m.status && m.status.toUpperCase() === 'PENGURUS').map(m => m.name);
+                pengawasList = data.managements.filter(m => m.status && m.status.toUpperCase() === 'PENGAWAS').map(m => m.name);
+            }
+
+            let sektorUsahaList = [];
+            if(Array.isArray(data.klu_types)) {
+                sektorUsahaList = data.klu_types.map(k => k.type || k.name);
+            }
+
+            // PERBAIKAN: Gunakan ID api-res-kv-main dan api-res-kv-add sesuai struktur HTML yang baru
+            const kvMain = [
+                ["Nama Koperasi", data.name],
+                ["NIK", data.nik],
+                ["Alamat Lengkap", data.address],
+                ["AHU", data.sk_number],
+                ["Tahun Pendirian", data.establishment_year || "-"], 
+                ["Kode Pos", data.postal_code],
+                ["Jumlah Anggota", Array.isArray(data.members) ? data.members.length : 0],
+                ["Pengurus", pengurusList.length > 0 ? pengurusList.join(', ') : "-"],
+                ["Pengawas", pengawasList.length > 0 ? pengawasList.join(', ') : "-"]
             ];
-            document.getElementById('api-res-kv').innerHTML = kvInfo.map(([k,v]) => `<b class="text-slate-500 font-bold">${k}</b><span class="text-slate-800 break-words">${safeText(v)}</span>`).join('');
+
+            const kvAdd = [
+                ["RAT", data.rat || "-"], 
+                ["Unit Gerai Usaha", Array.isArray(data.outlets) ? data.outlets.length : 0],
+                ["Penilaian Kesehatan", data.health_score || data.kesehatan || "-"], 
+                ["Sektor Usaha", sektorUsahaList.length > 0 ? sektorUsahaList.join(', ') : "-"]
+            ];
+
+            document.getElementById('api-res-kv-main').innerHTML = kvMain.map(([k,v]) => `<b class="text-slate-500 font-bold">${k}</b><span class="text-slate-800 break-words">${safeText(v)}</span>`).join('');
+            document.getElementById('api-res-kv-add').innerHTML = kvAdd.map(([k,v]) => `<b class="text-slate-500 font-bold">${k}</b><span class="text-slate-800 break-words">${safeText(v)}</span>`).join('');
 
             // Peta Lokasi
             const lat = parseFloat(data.latitude ?? data.lat);
