@@ -539,8 +539,72 @@
         let sortableInstance = null; // Untuk menyimpan instance SortableJS
         let canEdit = false;
 
-        // VERIFIKASI MENGGUNAKAN LOCAL STORAGE
-        const isAdmin = localStorage.getItem('koperasi_admin_auth') === 'true';
+        // ============================================================
+        // SESSION MANAGER - Durasi sesi 6 jam
+        // ============================================================
+        const SESSION_DURATION_MS = 6 * 60 * 60 * 1000; // 6 jam
+        let sessionCheckInterval = null;
+
+        function isSessionValid() {
+            const auth = localStorage.getItem('koperasi_admin_auth');
+            const loginTime = parseInt(localStorage.getItem('koperasi_admin_login_time') || '0', 10);
+            if (auth !== 'true' || !loginTime) return false;
+            return (Date.now() - loginTime) < SESSION_DURATION_MS;
+        }
+
+        function clearSession() {
+            localStorage.removeItem('koperasi_admin_auth');
+            localStorage.removeItem('koperasi_admin_login_time');
+        }
+
+        function getRemainingSessionTime() {
+            const loginTime = parseInt(localStorage.getItem('koperasi_admin_login_time') || '0', 10);
+            if (!loginTime) return 0;
+            return Math.max(0, SESSION_DURATION_MS - (Date.now() - loginTime));
+        }
+
+        function formatRemainingTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            return hours > 0 ? `${hours} jam ${minutes} menit` : `${minutes} menit`;
+        }
+
+        function handleSessionExpiredOnIndex() {
+            clearInterval(sessionCheckInterval);
+            clearSession();
+            // Reset tampilan ke mode guest tanpa redirect
+            canEdit = false;
+            const adminBadge = document.getElementById('admin-badge');
+            const menuDbContainer = document.getElementById('menu-db-container');
+            const menuLogin = document.getElementById('menu-login');
+            const menuLogout = document.getElementById('menu-logout');
+            const adminLocateBtn = document.getElementById('admin-locate-btn');
+            if (adminBadge) adminBadge.style.display = 'none';
+            if (menuDbContainer) menuDbContainer.style.display = 'none';
+            if (menuLogin) menuLogin.style.display = 'block';
+            if (menuLogout) menuLogout.style.display = 'none';
+            if (adminLocateBtn) adminLocateBtn.style.display = 'none';
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sesi Berakhir',
+                html: 'Sesi administrator Anda telah berakhir setelah <b>6 jam</b>.<br>Silakan login kembali jika diperlukan.',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#d32f2f',
+            });
+        }
+
+        function startSessionWatcher() {
+            sessionCheckInterval = setInterval(() => {
+                if (!isSessionValid()) {
+                    handleSessionExpiredOnIndex();
+                }
+            }, 30000);
+        }
+
+        // VERIFIKASI MENGGUNAKAN SESSION
+        const isAdmin = isSessionValid();
         if (isAdmin) {
             canEdit = true;
             document.getElementById('admin-badge').style.display = 'inline-block';
@@ -551,11 +615,17 @@
             if (document.getElementById('menu-logout')) document.getElementById('menu-logout').style.display = 'block';
             
             if (document.getElementById('admin-locate-btn')) document.getElementById('admin-locate-btn').style.display = 'flex';
+
+            startSessionWatcher();
+        } else {
+            // Bersihkan sesi kedaluwarsa jika ada
+            clearSession();
         }
 
         // FUNGSI UNTUK LOGOUT
         function logoutAdmin() {
-            localStorage.removeItem('koperasi_admin_auth');
+            clearInterval(sessionCheckInterval);
+            clearSession();
             window.location.href = 'index.html'; // Reload halaman sebagai guest
         }
 

@@ -76,9 +76,29 @@
     </div>
 
     <script>
-        // Cek jika sudah login sebelumnya, langsung arahkan ke index
-        if (localStorage.getItem('koperasi_admin_auth') === 'true') {
+        // ============================================================
+        // SESSION MANAGER - Durasi sesi 6 jam
+        // ============================================================
+        const SESSION_DURATION_MS = 6 * 60 * 60 * 1000; // 6 jam
+
+        function isSessionValid() {
+            const auth = localStorage.getItem('koperasi_admin_auth');
+            const loginTime = parseInt(localStorage.getItem('koperasi_admin_login_time') || '0', 10);
+            if (auth !== 'true' || !loginTime) return false;
+            return (Date.now() - loginTime) < SESSION_DURATION_MS;
+        }
+
+        function clearSession() {
+            localStorage.removeItem('koperasi_admin_auth');
+            localStorage.removeItem('koperasi_admin_login_time');
+        }
+
+        // Cek jika sudah login dan sesi masih aktif, langsung arahkan ke index
+        if (isSessionValid()) {
             window.location.href = 'index.html';
+        } else {
+            // Bersihkan sesi lama/kedaluwarsa
+            clearSession();
         }
 
         // URL Backend Apps Script
@@ -110,8 +130,9 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    // SET KREDENSIAL DI LOCALSTORAGE
+                    // SET KREDENSIAL DAN TIMESTAMP DI LOCALSTORAGE
                     localStorage.setItem('koperasi_admin_auth', 'true');
+                    localStorage.setItem('koperasi_admin_login_time', Date.now().toString());
 
                     Swal.fire({
                         icon: 'success',

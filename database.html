@@ -198,6 +198,7 @@
             <i class="fas fa-map-location-dot fa-2x"></i>
             <h1>Dashboard Koperasi Merah Putih</h1>
             <div id="admin-badge"><i class="fas fa-shield-alt"></i> ADMIN</div>
+            <div id="session-timer" title="Sesi otomatis berakhir setelah 6 jam" style="background:rgba(255,255,255,0.2); color:#fff; padding:3px 10px; border-radius:20px; font-size:9px; font-weight:600; margin-left:6px; letter-spacing:0.5px; display:none;"></div>
         </div>
         <div id="stats-panel" onclick="loadDataFromServer()" title="Klik untuk memuat ulang data dari server">
             <span id="total-info"><i class="fas fa-database"></i> Memuat Data...</span>
@@ -415,20 +416,100 @@
         // Definisi lengkap header yang ada di Spreadsheet
         const standardHeaders = ['id', 'nama', 'alamat', 'desa', 'kecamatan', 'kabupaten', 'nik', 'lat', 'lng', 'status', 'kode_pos', 'pengurus', 'pengawas', 'gerai', 'kesehatan', 'tahun pendirian', 'jenis koperasi', 'jumlah anggota', 'ahu', 'sektor usaha', 'foto', 'url'];
 
-        // VERIFIKASI MENGGUNAKAN LOCAL STORAGE
-        const isAdmin = localStorage.getItem('koperasi_admin_auth') === 'true';
-        if (isAdmin) {
+        // ============================================================
+        // SESSION MANAGER - Durasi sesi 6 jam
+        // ============================================================
+        const SESSION_DURATION_MS = 6 * 60 * 60 * 1000; // 6 jam
+        let sessionCheckInterval = null;
+
+        function isSessionValid() {
+            const auth = localStorage.getItem('koperasi_admin_auth');
+            const loginTime = parseInt(localStorage.getItem('koperasi_admin_login_time') || '0', 10);
+            if (auth !== 'true' || !loginTime) return false;
+            return (Date.now() - loginTime) < SESSION_DURATION_MS;
+        }
+
+        function clearSession() {
+            localStorage.removeItem('koperasi_admin_auth');
+            localStorage.removeItem('koperasi_admin_login_time');
+        }
+
+        function getRemainingSessionTime() {
+            const loginTime = parseInt(localStorage.getItem('koperasi_admin_login_time') || '0', 10);
+            if (!loginTime) return 0;
+            const remaining = SESSION_DURATION_MS - (Date.now() - loginTime);
+            return Math.max(0, remaining);
+        }
+
+        function formatRemainingTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            return hours > 0 ? `${hours} jam ${minutes} menit` : `${minutes} menit`;
+        }
+
+        function updateSessionBadge() {
+            const badge = document.getElementById('session-timer');
+            if (!badge) return;
+            if (isSessionValid()) {
+                badge.textContent = '⏱ ' + formatRemainingTime(getRemainingSessionTime());
+            }
+        }
+
+        function handleSessionExpired() {
+            clearInterval(sessionCheckInterval);
+            clearSession();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sesi Berakhir',
+                html: 'Sesi administrator Anda telah berakhir setelah <b>6 jam</b>.<br>Silakan login kembali untuk melanjutkan.',
+                confirmButtonText: 'Login Kembali',
+                confirmButtonColor: '#d32f2f',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then(() => {
+                window.location.href = 'login.html';
+            });
+        }
+
+        function startSessionWatcher() {
+            // Cek setiap 30 detik
+            sessionCheckInterval = setInterval(() => {
+                if (!isSessionValid()) {
+                    handleSessionExpired();
+                } else {
+                    updateSessionBadge();
+                }
+            }, 30000);
+            updateSessionBadge();
+        }
+
+        // VERIFIKASI SESI SAAT HALAMAN DIBUKA
+        if (isSessionValid()) {
             canEdit = true;
             document.getElementById('admin-badge').style.display = 'inline-block';
+            const timerBadge = document.getElementById('session-timer');
+            if (timerBadge) timerBadge.style.display = 'inline-block';
+            startSessionWatcher();
         } else {
-            // Perlindungan Frontend: tendang kembali jika bukan admin
+            // Sesi tidak valid / kedaluwarsa
+            clearSession();
             window.location.href = 'login.html';
         }
-        
+
         // FUNGSI UNTUK LOGOUT
         function logoutAdmin() {
-            localStorage.removeItem('koperasi_admin_auth');
-            window.location.href = 'index.html';
+            clearInterval(sessionCheckInterval);
+            clearSession();
+            Swal.fire({
+                icon: 'info',
+                title: 'Logout Berhasil',
+                text: 'Anda telah keluar dari sesi administrator.',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = 'index.html';
+            });
         }
 
         function toggleSidebar() {
