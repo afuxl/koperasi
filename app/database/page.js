@@ -34,6 +34,14 @@ export default function DatabasePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
+  // Column Visibility
+  const [visibleColumns, setVisibleColumns] = useState(['nama', 'status', 'kabupaten', 'kecamatan', 'desa']);
+  const [showColMenu, setShowColMenu] = useState(false);
+
+  const toggleColumn = (col) => {
+    setVisibleColumns(prev => prev.includes(col) ? prev.filter(c => c !== col) : [...prev, col]);
+  };
+
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
   const [isNewData, setIsNewData] = useState(false);
@@ -401,6 +409,25 @@ export default function DatabasePage() {
             </div>
             <div className="action-buttons" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <input type="text" className="db-search-input" placeholder="Cari nama, desa, kecamatan, NIK..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+              <div style={{ position: 'relative' }}>
+                <button className="btn-action" style={{ background: '#fff', color: '#475569', border: '1px solid #cbd5e1' }} onClick={() => setShowColMenu(!showColMenu)}>
+                  <i className="fas fa-columns" /> Pilih Kolom
+                </button>
+                {showColMenu && (
+                  <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 50, padding: 12, width: 250, maxHeight: 300, overflowY: 'auto' }}>
+                    <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Tampilkan Kolom</span>
+                      <i className="fas fa-times" style={{ cursor: 'pointer', color: '#94a3b8' }} onClick={() => setShowColMenu(false)} />
+                    </div>
+                    {allHeaders.map(h => (
+                      <label key={h} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, padding: '4px 0', cursor: 'pointer', borderBottom: '1px solid #f8fafc' }}>
+                        <input type="checkbox" checked={visibleColumns.includes(h)} onChange={() => toggleColumn(h)} style={{ accentColor: 'var(--primary)' }} />
+                        <span style={{ textTransform: 'capitalize' }}>{h.replace(/_/g, ' ')}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button className="btn-action" style={{ background: '#10b981', color: '#fff', border: 'none' }} onClick={openAddModal}><i className="fas fa-plus" /> Tambah Data</button>
               <button className="btn-action btn-export" onClick={exportToExcel}><i className="fas fa-file-excel" /> Ekspor</button>
             </div>
@@ -413,28 +440,34 @@ export default function DatabasePage() {
                 <thead>
                   <tr>
                     <th style={{ width: 50, textAlign: 'center' }}>No</th>
-                    <th>Nama Koperasi</th>
-                    <th>Status</th>
-                    <th>Kab/Kota</th>
-                    <th>Kecamatan</th>
-                    <th>Desa/Kel</th>
+                    {allHeaders.filter(h => visibleColumns.includes(h)).map(h => (
+                      <th key={h} style={{ textTransform: 'capitalize', whiteSpace: 'nowrap' }}>{h.replace(/_/g, ' ')}</th>
+                    ))}
                     <th style={{ width: 150, textAlign: 'center' }}>Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedData.length === 0 ? (
-                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: 30, color: 'var(--text-muted)' }}><i>Data tidak ditemukan.</i></td></tr>
+                    <tr><td colSpan={visibleColumns.length + 2} style={{ textAlign: 'center', padding: 30, color: 'var(--text-muted)' }}><i>Data tidak ditemukan.</i></td></tr>
                   ) : paginatedData.map((item, index) => {
                     const globalIdx = (currentPage - 1) * itemsPerPage + index + 1;
-                    const isAktif = String(item.status || '').toLowerCase().includes('aktif') && !String(item.status || '').toLowerCase().includes('tidak');
                     return (
                       <tr key={item.id}>
                         <td style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{globalIdx}</td>
-                        <td style={{ fontWeight: 600 }}>{item.nama || '-'}</td>
-                        <td><span className="status-badge" style={{ background: isAktif ? 'var(--aktif)' : 'var(--non-aktif)' }}>{item.status}</span></td>
-                        <td>{item.kabupaten || '-'}</td>
-                        <td>{item.kecamatan || '-'}</td>
-                        <td>{item.desa || '-'}</td>
+                        {allHeaders.filter(h => visibleColumns.includes(h)).map(h => {
+                          if (h === 'status') {
+                            const isAktif = String(item.status || '').toLowerCase().includes('aktif') && !String(item.status || '').toLowerCase().includes('tidak');
+                            return <td key={h}><span className="status-badge" style={{ background: isAktif ? 'var(--aktif)' : 'var(--non-aktif)' }}>{item.status}</span></td>;
+                          }
+                          if (h === 'nama') return <td key={h} style={{ fontWeight: 600 }}>{item.nama || '-'}</td>;
+                          
+                          // Handle long links/images gracefully
+                          if (h === 'foto' || h === 'url') {
+                             return <td key={h} style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={item[h]}>{item[h] || '-'}</td>;
+                          }
+                          
+                          return <td key={h}>{item[h] || '-'}</td>;
+                        })}
                         <td style={{ textAlign: 'center' }}>
                           <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
                             <button className="btn-action" style={{ fontSize: 9 }} onClick={() => openEditModal(item)} title="Edit"><i className="fas fa-pen" /> Edit</button>
