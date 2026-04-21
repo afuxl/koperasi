@@ -651,11 +651,36 @@ export default function HomePage() {
                   <i className="fas fa-table" style={{ marginRight: 4, color: 'var(--text-muted)' }} /> Data Koperasi
                   <i className={`fas fa-chevron-${tableCollapsed ? 'up' : 'down'}`} style={{ marginLeft: 8, fontSize: 14, color: 'var(--primary)' }} />
                 </h2>
-                <div className="table-controls">
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)' }}>Tampilkan:</span>
-                  <select className="filter-select" style={{ width: 'auto', padding: '3px 8px', marginRight: 6, borderRadius: 6 }} value={itemsPerPage} onChange={e => { setItemsPerPage(e.target.value); setCurrentPage(1); }}>
-                    <option value="10">10 Baris</option><option value="20">20 Baris</option><option value="50">50 Baris</option><option value="100">100 Baris</option><option value="all">Semua Data</option>
-                  </select>
+                <div className="table-controls" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)' }}>Tampilkan:</span>
+                    <select className="filter-select" style={{ width: 'auto', padding: '3px 8px', marginLeft: 4, borderRadius: 6 }} value={itemsPerPage} onChange={e => { setItemsPerPage(e.target.value); setCurrentPage(1); }}>
+                      <option value="10">10 Baris</option><option value="20">20 Baris</option><option value="50">50 Baris</option><option value="100">100 Baris</option><option value="all">Semua Data</option>
+                    </select>
+                  </div>
+                  
+                  <div style={{ position: 'relative' }}>
+                    <button className="btn-action" style={{ background: '#fff', color: '#475569', border: '1px solid #cbd5e1' }} onClick={() => setColMenuOpen(!colMenuOpen)}>
+                      <i className="fas fa-columns" /> Pilih Kolom
+                    </button>
+                    {colMenuOpen && (
+                      <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 50, padding: 12, width: 250, maxHeight: 300, overflowY: 'auto' }}>
+                        <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between' }}>
+                          <span>Tampilkan Kolom</span>
+                          <i className="fas fa-times" style={{ cursor: 'pointer', color: '#94a3b8' }} onClick={() => setColMenuOpen(false)} />
+                        </div>
+                        {tableColumnsConfig.filter(c => c.id !== 'no').map(col => (
+                          <label key={col.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, padding: '4px 0', cursor: 'pointer', borderBottom: '1px solid #f8fafc' }}>
+                            <input type="checkbox" checked={visibleCols.includes(col.id)} onChange={() => {
+                              setVisibleCols(prev => prev.includes(col.id) ? prev.filter(c => c !== col.id) : [...prev, col.id]);
+                            }} style={{ accentColor: 'var(--primary)' }} />
+                            <span>{col.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
                   <button className="btn-action btn-export" onClick={exportToExcel}><i className="fas fa-file-excel" /> Ekspor Excel</button>
                 </div>
               </div>
