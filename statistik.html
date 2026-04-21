@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dashboard Statistik Koperasi Merah Putih</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #d32f2f;
+            --primary-gradient: linear-gradient(135deg, #e53935, #b71c1c);
+            --aktif: #10b981;
+            --non-aktif: #ef4444;
+            --highlight: #f59e0b;
+            --sidebar-width: 280px;
+            --bg-body: #e2e8f0;
+            --bg-light: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #cbd5e1;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.12);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            overflow: hidden; display: flex; flex-direction: column;
+            background-color: var(--bg-body);
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        header {
+            background: var(--primary-gradient); 
+            color: white; 
+            padding: 6px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1001; 
+            box-shadow: var(--shadow-md);
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 10px; }
+        .header-brand h1 { margin: 0; font-size: 0.95rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+        .header-brand i.fa-2x { font-size: 1.4em; }
+
+        .menu-toggle-btn {
+            background: rgba(255, 255, 255, 0.2); border: none; color: white;
+            font-size: 16px; cursor: pointer; padding: 6px 10px; border-radius: 6px;
+            transition: all 0.2s ease; margin-right: 6px; display: flex; align-items: center; justify-content: center;
+        }
+        .menu-toggle-btn:hover { background: rgba(255, 255, 255, 0.4); transform: scale(1.05); }
+
+        #stats-panel { 
+            font-size: 11px; font-weight: 500; background: rgba(255,255,255,0.2);
+            padding: 4px 12px; border-radius: 20px; backdrop-filter: blur(5px); display: flex; align-items: center;
+            justify-content: center; position: relative; overflow: hidden; cursor: pointer; min-width: 150px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease;
+        }
+        #stats-panel:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        #total-info { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; display: flex; align-items: center; gap: 6px; }
+        #stats-panel:hover #total-info { transform: translateY(-25px); opacity: 0; }
+        .refresh-overlay {
+            position: absolute; inset: 0; background: var(--surface); color: var(--primary);
+            display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; 
+            transform: translateY(25px); opacity: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; border-radius: 20px;
+        }
+        #stats-panel:hover .refresh-overlay { transform: translateY(0); opacity: 1; }
+        .refresh-overlay i { transition: transform 0.5s ease; }
+        #stats-panel:hover .refresh-overlay i { transform: rotate(180deg); }
+
+        #admin-badge {
+            background: var(--highlight); color: #fff; padding: 3px 10px; 
+            border-radius: 20px; font-weight: 700; font-size: 9px; 
+            display: none; margin-left: 10px; box-shadow: 0 0 10px rgba(245, 158, 11, 0.4); letter-spacing: 1px;
+        }
+
+        #layout { display: flex; flex: 1; position: relative; overflow: hidden; }
+
+        #sidebar {
+            width: var(--sidebar-width); background: var(--surface); 
+            border-right: 1px solid var(--border); display: flex; flex-direction: column; 
+            transition: margin-left 0.3s ease, transform 0.3s ease; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+        #sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); }
+
+        .sidebar-nav { padding: 20px; flex: 1; overflow-y: auto; }
+        .sidebar-link {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 8px;
+            color: var(--text-main); text-decoration: none; font-size: 13px; font-weight: 500;
+            border-radius: var(--radius-md); transition: all 0.2s ease; border: 1px solid transparent; background: var(--bg-light);
+        }
+        .sidebar-link:hover { background: #fef2f2; border-color: var(--primary); color: var(--primary); transform: translateX(5px); }
+        .sidebar-link.active { background: #fef2f2; border-color: var(--primary); color: var(--primary); font-weight: 600; }
+        .sidebar-link i { font-size: 16px; width: 20px; text-align: center; color: var(--primary); }
+
+        .sidebar-footer {
+            padding: 15px 20px; background: var(--bg-light); border-top: 1px solid var(--border);
+            text-align: center; font-size: 11px; color: var(--text-muted); line-height: 1.6; flex-shrink: 0; letter-spacing: 0.3px;
+        }
+
+        #content-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        #view-statistik { flex: 1; display: flex; flex-direction: column; padding: 24px; gap: 20px; overflow-y: auto; background-color: var(--bg-body); }
+
+        /* Filter Row Styles */
+        .stat-filter-row {
+            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+            background: var(--surface); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+        }
+        .stat-filter-row h3 { margin: 0; font-size: 14px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        
+        .filter-select { 
+            flex: 1; min-width: 180px; max-width: 300px; padding: 8px 16px; border-radius: 8px; 
+            border: 1px solid var(--border); font-size: 13px; font-family: 'Inter';
+            background-color: var(--bg-light); outline: none; cursor: pointer; transition: 0.3s; margin: 0;
+        }
+        .filter-select:focus { border-color: var(--primary); background-color: #fff; box-shadow: 0 0 0 3px rgba(211,47,47,0.1); }
+        
+        .btn-reset-filter {
+            background-color: #e2e8f0; color: var(--text-main); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; 
+            font-weight: 600; font-size: 12px; font-family: 'Inter'; padding: 8px 16px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
+        }
+        .btn-reset-filter:hover { background-color: #cbd5e1; color: var(--primary); }
+
+        /* KOMPONEN VIEW STATISTIK */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        .kpi-card { background: var(--surface); padding: 16px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); transition: transform 0.3s ease; }
+        .kpi-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+        .kpi-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; color: white; flex-shrink: 0; }
+        .icon-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .icon-green { background: linear-gradient(135deg, #10b981, #047857); }
+        .icon-red { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+        .icon-orange { background: linear-gradient(135deg, #f59e0b, #b45309); }
+        .kpi-details { display: flex; flex-direction: column; }
+        .kpi-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .kpi-value { font-size: 24px; font-weight: 800; color: var(--text-main); line-height: 1; transition: all 0.3s ease; }
+
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+        .chart-card { background: var(--surface); padding: 16px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border); display: flex; flex-direction: column; }
+        .chart-header { font-size: 14px; font-weight: 700; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+        .chart-wrapper { position: relative; flex: 1; min-height: 250px; width: 100%; }
+
+        #loader {
+            position: fixed; inset: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999;
+        }
+        #loader i { text-shadow: 0 4px 12px rgba(211,47,47,0.3); }
+
+        @media (max-width: 992px) {
+            #view-statistik { padding: 12px; gap: 12px;}
+            .charts-grid { grid-template-columns: 1fr; }
+            header { padding: 6px 10px; flex-wrap: wrap; gap: 6px; justify-content: center;}
+            .header-brand h1 { font-size: 0.85rem; text-align: center; }
+            #stats-panel { font-size: 9px; padding: 4px 8px; min-width: 120px; }
+            .refresh-overlay { font-size: 9px; }
+            
+            #sidebar { 
+                position: absolute; left: 0; top: 0; transform: translateX(-100%); 
+                height: 100%; width: 280px; max-width: 85vw; box-shadow: 5px 0 25px rgba(0,0,0,0.1); margin-left: 0 !important;
+            }
+            #sidebar.open { transform: translateX(0); }
+            
+            .stat-filter-row { flex-direction: column; align-items: stretch; }
+            .filter-select { max-width: none; }
+            .btn-reset-filter { align-self: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div id="loader">
+        <i class="fas fa-circle-notch fa-spin fa-4x" style="color: var(--primary);"></i>
+        <p id="loader-text" style="margin-top: 20px; font-weight: 600; color: var(--text-main); font-size: 1.1rem; letter-spacing: 0.5px;">Memuat Data Statistik...</p>
+    </div>
+
+    <header>
+        <div class="header-brand">
+            <button class="menu-toggle-btn" onclick="toggleSidebar()" title="Toggle Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <i class="fas fa-chart-pie fa-2x"></i>
+            <h1>Statistik Koperasi Merah Putih</h1>
+            <div id="admin-badge"><i class="fas fa-shield-alt"></i> ADMIN</div>
+            <div id="session-timer" title="Sesi otomatis berakhir setelah 6 jam" style="background:rgba(255,255,255,0.2); color:#fff; padding:3px 10px; border-radius:20px; font-size:9px; font-weight:600; margin-left:6px; letter-spacing:0.5px; display:none;"></div>
+        </div>
+        <div id="stats-panel" onclick="loadDataFromServer()" title="Klik untuk memuat ulang data dari server">
+            <span id="total-info"><i class="fas fa-satellite-dish fa-spin"></i> Memuat...</span>
+            <div class="refresh-overlay">
+                <i class="fas fa-sync-alt"></i> Sinkronisasi
+            </div>
+        </div>
+    </header>
+
+    <div id="layout">
+        <div id="mobile-overlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.4); z-index:999;" onclick="toggleSidebar()"></div>
+        
+        <aside id="sidebar">
+            <div class="sidebar-nav">
+                <h3 style="margin-top:0; font-size:13px; font-weight:700; color:var(--text-main); margin-bottom:12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                    <i class="fas fa-link" style="color: var(--primary); margin-right: 6px;"></i> Menu Utama
+                </h3>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column;">
+                    <li><a href="index.html" id="link-peta" class="sidebar-link"><i class="fas fa-map-marked-alt"></i> Peta Persebaran</a></li>
+                    <li><a href="statistik.html" id="link-statistik" class="sidebar-link active"><i class="fas fa-chart-line"></i> Dashboard Statistik</a></li>
+                    <li id="menu-db-container" style="display:none;"><a href="database.html" id="link-database" class="sidebar-link"><i class="fas fa-database"></i> Kelola Basis Data</a></li>
+                    
+                    <!-- MENU LOGIN / LOGOUT -->
+                    <li style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border);"></li>
+                    <li id="menu-login"><a href="login.html" class="sidebar-link"><i class="fas fa-sign-in-alt"></i> Login Admin</a></li>
+                    <li id="menu-logout" style="display:none;"><a href="#" onclick="logoutAdmin(); return false;" class="sidebar-link" style="color: #dc2626; font-weight: 700;"><i class="fas fa-sign-out-alt" style="color: #dc2626;"></i> Keluar Admin</a></li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-footer">
+                created by <strong>@m45y</strong><br>
+                FOR LATSAR CPNS 2026<br>
+                GOL III, ANGKATAN I
+            </div>
+        </aside>
+
+        <div id="content-wrapper">
+            <div id="view-statistik">
+
+                <!-- Filter Wilayah untuk Statistik -->
+                <div class="stat-filter-row">
+                    <h3><i class="fas fa-filter" style="color: var(--primary);"></i> Filter Wilayah:</h3>
+                    <select id="statFilterKabupaten" class="filter-select" onchange="updateKecamatanDropdown(); handleStatFilter();">
+                        <option value="">Semua Kabupaten/Kota</option>
+                    </select>
+                    <select id="statFilterKecamatan" class="filter-select" onchange="handleStatFilter();">
+                        <option value="">Semua Kecamatan</option>
+                    </select>
+                    <button class="btn-reset-filter" onclick="resetStatFilter()">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon icon-blue"><i class="fas fa-building"></i></div>
+                        <div class="kpi-details">
+                            <span class="kpi-title">Total Koperasi</span>
+                            <span class="kpi-value" id="kpi-total">0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon icon-green"><i class="fas fa-check-circle"></i></div>
+                        <div class="kpi-details">
+                            <span class="kpi-title">Koperasi Aktif</span>
+                            <span class="kpi-value" id="kpi-aktif">0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon icon-red"><i class="fas fa-times-circle"></i></div>
+                        <div class="kpi-details">
+                            <span class="kpi-title">Tidak Aktif</span>
+                            <span class="kpi-value" id="kpi-nonaktif">0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon icon-orange"><i class="fas fa-file-signature"></i></div>
+                        <div class="kpi-details">
+                            <span class="kpi-title">Telah RAT (Tahun Terakhir)</span>
+                            <span class="kpi-value" id="kpi-rat">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card" style="grid-column: 1 / -1;">
+                        <div class="chart-header">
+                            <i class="fas fa-chart-bar" style="color: var(--primary);"></i> Sebaran Koperasi Berdasarkan Kabupaten/Kota
+                        </div>
+                        <div class="chart-wrapper"><canvas id="barChartWilayah"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <i class="fas fa-chart-doughnut" style="color: #10b981;"></i> Status Operasional
+                        </div>
+                        <div class="chart-wrapper"><canvas id="doughnutChartStatus"></canvas></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <i class="fas fa-heartbeat" style="color: #f59e0b;"></i> Tingkat Kesehatan Koperasi
+                        </div>
+                        <div class="chart-wrapper"><canvas id="pieChartKesehatan"></canvas></div>
+                    </div>
+                </div>
+                <div style="height: 40px; flex-shrink: 0;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- KONFIGURASI URL GOOGLE APPS SCRIPT WEB APP ---
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzc96HHN04_Bd6DrkPXA5ww65-qqmu9v8--8rvlBQTHaqS9TSSEu-cjMMD7RBTwJpwL/exec";
+        
+        let chartInstances = {};
+        let rawData = []; // Menyimpan semua data asli
+        let currentFilteredData = []; // Menyimpan data yang telah difilter untuk render statistik
+        
+        // --- PENGATURAN CHART.JS ---
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(30, 41, 59, 0.9)';
+        Chart.defaults.plugins.tooltip.padding = 10;
+        Chart.defaults.plugins.tooltip.cornerRadius = 8;
+
+        // ============================================================
+        // SESSION MANAGER - Durasi sesi 6 jam
+        // ============================================================
+        const SESSION_DURATION_MS = 6 * 60 * 60 * 1000; // 6 jam
+        let sessionCheckInterval = null;
+
+        function isSessionValid() {
+            const auth = localStorage.getItem('koperasi_admin_auth');
+            const loginTime = parseInt(localStorage.getItem('koperasi_admin_login_time') || '0', 10);
+            if (auth !== 'true' || !loginTime) return false;
+            return (Date.now() - loginTime) < SESSION_DURATION_MS;
+        }
+
+        function clearSession() {
+            localStorage.removeItem('koperasi_admin_auth');
+            localStorage.removeItem('koperasi_admin_login_time');
+        }
+
+        function getRemainingSessionTime() {
+            const loginTime = parseInt(localStorage.getItem('koperasi_admin_login_time') || '0', 10);
+            if (!loginTime) return 0;
+            return Math.max(0, SESSION_DURATION_MS - (Date.now() - loginTime));
+        }
+
+        function formatRemainingTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            return hours > 0 ? `${hours} jam ${minutes} menit` : `${minutes} menit`;
+        }
+
+        function updateSessionBadge() {
+            const badge = document.getElementById('session-timer');
+            if (!badge) return;
+            if (isSessionValid()) {
+                badge.textContent = '⏱ ' + formatRemainingTime(getRemainingSessionTime());
+            }
+        }
+
+        function handleSessionExpired() {
+            clearInterval(sessionCheckInterval);
+            clearSession();
+            // Reset ke tampilan guest
+            const adminBadge = document.getElementById('admin-badge');
+            const timerBadge = document.getElementById('session-timer');
+            const menuDbContainer = document.getElementById('menu-db-container');
+            const menuLogin = document.getElementById('menu-login');
+            const menuLogout = document.getElementById('menu-logout');
+            if (adminBadge) adminBadge.style.display = 'none';
+            if (timerBadge) timerBadge.style.display = 'none';
+            if (menuDbContainer) menuDbContainer.style.display = 'none';
+            if (menuLogin) menuLogin.style.display = 'block';
+            if (menuLogout) menuLogout.style.display = 'none';
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sesi Berakhir',
+                html: 'Sesi administrator Anda telah berakhir setelah <b>6 jam</b>.<br>Silakan login kembali jika diperlukan.',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#d32f2f',
+            });
+        }
+
+        function startSessionWatcher() {
+            sessionCheckInterval = setInterval(() => {
+                if (!isSessionValid()) {
+                    handleSessionExpired();
+                } else {
+                    updateSessionBadge();
+                }
+            }, 30000);
+            updateSessionBadge();
+        }
+
+        // VERIFIKASI MENGGUNAKAN SESSION
+        const isAdmin = isSessionValid();
+        if (isAdmin) {
+            document.getElementById('admin-badge').style.display = 'inline-block';
+            const timerBadge = document.getElementById('session-timer');
+            if (timerBadge) timerBadge.style.display = 'inline-block';
+            document.getElementById('menu-db-container').style.display = 'block';
+            
+            if (document.getElementById('menu-login')) document.getElementById('menu-login').style.display = 'none';
+            if (document.getElementById('menu-logout')) document.getElementById('menu-logout').style.display = 'block';
+
+            startSessionWatcher();
+        } else {
+            clearSession();
+        }
+        
+        // FUNGSI UNTUK LOGOUT
+        function logoutAdmin() {
+            clearInterval(sessionCheckInterval);
+            clearSession();
+            window.location.href = 'index.html';
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            if (window.innerWidth <= 992) {
+                sidebar.classList.toggle('open');
+                overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+            } else {
+                sidebar.classList.toggle('collapsed');
+                setTimeout(() => {
+                    Object.values(chartInstances).forEach(c => c.resize());
+                }, 300);
+            }
+        }
+
+        async function loadDataFromServer() {
+            document.getElementById('loader').style.display = 'flex';
+            
+            try {
+                const response = await fetch(`${GAS_WEBAPP_URL}?action=getMapData`, {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+                
+                const res = await response.json();
+
+                if (res.success) {
+                    rawData = res.data;
+                    currentFilteredData = [...rawData];
+                    
+                    populateKabupatenDropdown();
+                    processDataAndRenderCharts(currentFilteredData);
+                    
+                    document.getElementById('loader').style.display = 'none';
+                } else {
+                    document.getElementById('loader').style.display = 'none'; 
+                    alert("Gagal memuat data: " + res.message);
+                }
+            } catch (error) {
+                document.getElementById('loader').style.display = 'none';
+                console.error("Fetch error: ", error);
+                alert("Gagal mengambil data dari server. Pastikan URL Web App sudah benar dan memiliki akses CORS yang sesuai.");
+            }
+        }
+
+        // --- FUNGSI FILTER STATISTIK ---
+        function populateKabupatenDropdown() { 
+            const sel = document.getElementById('statFilterKabupaten'); 
+            const list = [...new Set(rawData.map(i => i.kabupaten))].filter(Boolean).sort();
+            sel.innerHTML = '<option value="">Semua Kabupaten/Kota</option>'; 
+            list.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = k; sel.appendChild(opt); });
+        }
+        
+        function updateKecamatanDropdown() { 
+            const kab = document.getElementById('statFilterKabupaten').value; 
+            const sel = document.getElementById('statFilterKecamatan'); 
+            sel.innerHTML = '<option value="">Semua Kecamatan</option>';
+            if (kab) { 
+                const list = [...new Set(rawData.filter(i => i.kabupaten === kab).map(i => i.kecamatan))].filter(Boolean).sort(); 
+                list.forEach(k => { const opt = document.createElement('option'); opt.value = k; opt.text = k; sel.appendChild(opt); }); 
+            }
+        }
+
+        function handleStatFilter() {
+            const kab = document.getElementById('statFilterKabupaten').value;
+            const kec = document.getElementById('statFilterKecamatan').value;
+
+            currentFilteredData = rawData.filter(i => {
+                const matchKab = (kab === "" || i.kabupaten === kab);
+                const matchKec = (kec === "" || i.kecamatan === kec);
+                return matchKab && matchKec;
+            });
+
+            processDataAndRenderCharts(currentFilteredData);
+        }
+
+        function resetStatFilter() {
+            document.getElementById('statFilterKabupaten').value = '';
+            updateKecamatanDropdown(); // Reset kecamatan dropdown
+            handleStatFilter();
+        }
+
+        // Animasi angka untuk KPI
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function processDataAndRenderCharts(dataArray) {
+            const totalKoperasi = dataArray.length;
+            let countAktif = 0, countNonAktif = 0, countRatTerbaru = 0;
+            const kabCountMap = {}, statusCountMap = {}, kesehatanCountMap = {};
+            const tahunSekarang = new Date().getFullYear();
+
+            dataArray.forEach(item => {
+                const statusLcase = String(item.status || "").toLowerCase().trim();
+                const isAktif = statusLcase.includes("aktif") && !statusLcase.includes("tidak");
+                if (isAktif) countAktif++; else countNonAktif++;
+
+                const ratString = String(item.rat);
+                if (ratString.includes(String(tahunSekarang)) || ratString.includes(String(tahunSekarang - 1))) countRatTerbaru++;
+
+                // Hanya hitung sebaran kabupaten jika tidak memfilter spesifik satu kabupaten
+                const filterKab = document.getElementById('statFilterKabupaten').value;
+                if(filterKab === "") {
+                    const kab = item.kabupaten || "Tidak Diketahui"; kabCountMap[kab] = (kabCountMap[kab] || 0) + 1;
+                } else {
+                    // Jika satu kabupaten terpilih, grafik bar menampilkan sebaran kecamatan
+                    const kec = item.kecamatan || "Tidak Diketahui"; kabCountMap[kec] = (kabCountMap[kec] || 0) + 1;
+                }
+                
+                const statusLabel = isAktif ? "Aktif" : "Tidak Aktif"; statusCountMap[statusLabel] = (statusCountMap[statusLabel] || 0) + 1;
+                const kesehatan = item.kesehatan && item.kesehatan !== "-" ? item.kesehatan : "Belum Dinilai"; kesehatanCountMap[kesehatan] = (kesehatanCountMap[kesehatan] || 0) + 1;
+            });
+
+            // Update KPI with Animation
+            animateValue(document.getElementById('kpi-total'), parseInt(document.getElementById('kpi-total').innerText) || 0, totalKoperasi, 500);
+            animateValue(document.getElementById('kpi-aktif'), parseInt(document.getElementById('kpi-aktif').innerText) || 0, countAktif, 500);
+            animateValue(document.getElementById('kpi-nonaktif'), parseInt(document.getElementById('kpi-nonaktif').innerText) || 0, countNonAktif, 500);
+            animateValue(document.getElementById('kpi-rat'), parseInt(document.getElementById('kpi-rat').innerText) || 0, countRatTerbaru, 500);
+            
+            document.getElementById('total-info').innerHTML = `<i class="fas fa-chart-pie"></i> ${totalKoperasi} Data Terekap`;
+
+            // Ubah judul chart bar jika sedang memfilter kabupaten
+            const filterKab = document.getElementById('statFilterKabupaten').value;
+            const barChartHeader = document.querySelector('#barChartWilayah').closest('.chart-card').querySelector('.chart-header');
+            if(filterKab) {
+                barChartHeader.innerHTML = `<i class="fas fa-chart-bar" style="color: var(--primary);"></i> Sebaran Koperasi di ${filterKab} (Per Kecamatan)`;
+            } else {
+                barChartHeader.innerHTML = `<i class="fas fa-chart-bar" style="color: var(--primary);"></i> Sebaran Koperasi Berdasarkan Kabupaten/Kota`;
+            }
+
+            renderBarChartWilayah(kabCountMap); renderDoughnutChartStatus(statusCountMap); renderPieChartKesehatan(kesehatanCountMap);
+        }
+
+        function renderBarChartWilayah(dataMap) {
+            const ctx = document.getElementById('barChartWilayah').getContext('2d');
+            if (chartInstances.barChart) chartInstances.barChart.destroy();
+            const labels = Object.keys(dataMap).sort(); const data = labels.map(label => dataMap[label]);
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400); gradient.addColorStop(0, 'rgba(211, 47, 47, 0.8)'); gradient.addColorStop(1, 'rgba(211, 47, 47, 0.2)');
+
+            chartInstances.barChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: labels, datasets: [{ label: 'Jumlah Koperasi', data: data, backgroundColor: gradient, borderColor: '#d32f2f', borderWidth: 1, borderRadius: 6, barPercentage: 0.6 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: '#e2e8f0', borderDash: [5, 5] } }, x: { grid: { display: false } } } }
+            });
+        }
+
+        function renderDoughnutChartStatus(dataMap) {
+            const ctx = document.getElementById('doughnutChartStatus').getContext('2d');
+            if (chartInstances.doughnutChart) chartInstances.doughnutChart.destroy();
+            const labels = Object.keys(dataMap); const data = labels.map(label => dataMap[label]);
+            const bgColors = labels.map(l => l === 'Aktif' ? '#10b981' : '#ef4444');
+
+            chartInstances.doughnutChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 2, borderColor: '#ffffff', hoverOffset: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } } }
+            });
+        }
+
+        function renderPieChartKesehatan(dataMap) {
+            const ctx = document.getElementById('pieChartKesehatan').getContext('2d');
+            if (chartInstances.pieChart) chartInstances.pieChart.destroy();
+            const labels = Object.keys(dataMap).sort(); const data = labels.map(label => dataMap[label]);
+            const bgColors = [ '#3b82f6', '#8b5cf6', '#f59e0b', '#94a3b8', '#14b8a6', '#ec4899' ];
+
+            chartInstances.pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors.slice(0, labels.length), borderWidth: 2, borderColor: '#ffffff', hoverOffset: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } } }
+            });
+        }
+        
+        window.onload = loadDataFromServer;
+    </script>
+</body>
+</html>

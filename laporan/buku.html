@@ -1,0 +1,2514 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Majalah Aktualisasi — Laporan Latsar CPNS 2026</title>
+  <meta name="description"
+    content="Majalah digital interaktif Laporan Aktualisasi Latsar CPNS Golongan III Angkatan I Tahun 2026 — Masyhuri Arifin, S.E.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ══════════════════════════════════════════════
+       ROOT / DESIGN TOKENS
+    ══════════════════════════════════════════════ */
+    :root {
+      --c-bg: #1a1520;
+      --c-bg2: #221c2a;
+      --c-surface: #f5f0e8;
+      --c-surface2: #ede6d8;
+      --c-paper: #faf7f2;
+      --c-paper-dark: #f0ead8;
+      --c-paper-shadow: rgba(0, 0, 0, 0.35);
+      --c-border: rgba(0, 0, 0, 0.08);
+      --c-border-accent: rgba(139, 90, 43, 0.25);
+      --c-text: #3d3229;
+      --c-text-dim: #8a7e70;
+      --c-heading: #1a1008;
+      --c-accent: #8b5a2b;
+      --c-accent2: #6b4c8a;
+      --c-accent3: #c05050;
+      --c-green: #2d7a4f;
+      --c-orange: #c07830;
+      --c-red: #b03a3a;
+      --c-gold: #b8963e;
+      --font-serif: 'Playfair Display', Georgia, serif;
+      --font-sans: 'Inter', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --radius: 4px;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --page-width: 520px;
+      --page-height: 700px;
+    }
+
+    @media (max-width: 1100px) {
+      :root {
+        --page-width: 420px;
+        --page-height: 600px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      :root {
+        --page-width: 360px;
+        --page-height: 540px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --page-width: min(90vw, 380px);
+        --page-height: min(75vh, 560px);
+      }
+    }
+
+    /* ══════════════════════════════════════════════
+       RESET
+    ══════════════════════════════════════════════ */
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--c-bg);
+      color: var(--c-text);
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ══════════════════════════════════════════════
+       FULLSCREEN MODE
+    ══════════════════════════════════════════════ */
+    body.fullscreen-active {
+      overflow: hidden;
+      justify-content: center;
+      --page-height: 94vh !important;
+      --page-width: calc(94vh * 0.7428) !important;
+    }
+    
+    body.fullscreen-active .topbar {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    
+    body.fullscreen-active .book-scene {
+      margin: 0 auto !important;
+    }
+    
+    @media (max-width: 768px) {
+      body.fullscreen-active {
+        --page-width: 95vw !important;
+        --page-height: calc(95vw * 1.346) !important;
+      }
+    }
+    
+    body.fullscreen-active .nav-controls {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      width: 100%;
+      transform: translateY(-50%);
+      justify-content: space-between;
+      padding: 0 15px;
+      pointer-events: none;
+      z-index: 100;
+    }
+    
+    body.fullscreen-active .nav-btn {
+      pointer-events: auto;
+      width: 50px;
+      height: 50px;
+      font-size: 1.2rem;
+      background: rgba(26, 21, 32, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    body.fullscreen-active .nav-info {
+      display: none;
+    }
+    
+    body.fullscreen-active .nav-dots,
+    body.fullscreen-active .kb-hints {
+      display: none;
+    }
+
+    .exit-fs-btn {
+      display: none;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 999;
+      background: rgba(26, 21, 32, 0.7);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+      backdrop-filter: blur(5px);
+      transition: all 0.3s;
+    }
+    
+    body.fullscreen-active .exit-fs-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .exit-fs-btn:hover {
+      background: var(--c-red);
+      transform: scale(1.1);
+    }
+
+    /* ══════════════════════════════════════════════
+       AMBIENT BACKGROUND
+    ══════════════════════════════════════════════ */
+    .ambient-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 100% 80% at 50% 30%, #2a1f30 0%, var(--c-bg) 70%),
+        radial-gradient(circle at 20% 80%, rgba(139, 90, 43, 0.08), transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(107, 76, 138, 0.08), transparent 50%);
+    }
+
+    .ambient-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity: 0.5;
+    }
+
+    /* ══════════════════════════════════════════════
+       TOP BAR
+    ══════════════════════════════════════════════ */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 900;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(1rem, 3vw, 2.5rem);
+      background: rgba(26, 21, 32, 0.85);
+      backdrop-filter: blur(20px) saturate(1.8);
+      -webkit-backdrop-filter: blur(20px) saturate(1.8);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: #e8ddd0;
+      font-family: var(--font-serif);
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: -0.01em;
+    }
+
+    .topbar-brand .brand-icon {
+      font-size: 1.1rem;
+    }
+
+    .topbar-center {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #8a7e70;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .topbar-center .page-indicator {
+      background: var(--c-accent);
+      color: #fff;
+      padding: 0.15rem 0.55rem;
+      border-radius: 50px;
+      font-size: 0.6rem;
+      font-weight: 700;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .topbar-btn {
+      background: none;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #8a7e70;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.3s var(--ease);
+      text-decoration: none;
+      padding: 0;
+      margin: 0;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .topbar-btn:hover {
+      color: #e8ddd0;
+      border-color: var(--c-accent);
+      background: rgba(139, 90, 43, 0.12);
+      transform: translateY(-1px);
+    }
+
+    /* ══════════════════════════════════════════════
+       BOOK CONTAINER
+    ══════════════════════════════════════════════ */
+    .book-scene {
+      position: relative;
+      z-index: 1;
+      width: calc(var(--page-width) * 2);
+      height: var(--page-height);
+      perspective: 2000px;
+      margin: 80px auto 40px;
+    }
+
+    @media (max-width: 768px) {
+      .book-scene {
+        width: var(--page-width);
+        margin: 70px auto 30px;
+      }
+    }
+
+    .book {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+    }
+
+    /* ══════════════════════════════════════════════
+       PAGES
+    ══════════════════════════════════════════════ */
+    .page {
+      position: absolute;
+      width: var(--page-width);
+      height: var(--page-height);
+      top: 0;
+      right: 0;
+      transform-origin: left center;
+      transform-style: preserve-3d;
+      transition: transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1);
+      cursor: pointer;
+      z-index: 1;
+    }
+
+    @media (max-width: 768px) {
+      .page {
+        width: 100%;
+      }
+    }
+
+    .page.flipped {
+      transform: rotateY(-180deg);
+    }
+
+    .page-front,
+    .page-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      overflow: hidden;
+      border-radius: 2px 8px 8px 2px;
+    }
+
+    .page-front {
+      background: var(--c-paper);
+      z-index: 2;
+      /* Paper texture */
+      background-image:
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    }
+
+    .page-back {
+      background: var(--c-paper-dark);
+      transform: rotateY(180deg);
+      z-index: 1;
+      background-image:
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    }
+
+    /* Page shadow / fold effect */
+    .page-front::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 40px;
+      background: linear-gradient(to left,
+          rgba(0, 0, 0, 0.06) 0%,
+          rgba(0, 0, 0, 0.02) 40%,
+          transparent 100%);
+      pointer-events: none;
+    }
+
+    .page-back::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 40px;
+      background: linear-gradient(to right,
+          rgba(0, 0, 0, 0.1) 0%,
+          rgba(0, 0, 0, 0.03) 40%,
+          transparent 100%);
+      pointer-events: none;
+    }
+
+    /* Dynamic shadow during flip */
+    .page::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0);
+      pointer-events: none;
+      transition: background 0.9s;
+      z-index: 100;
+      border-radius: 2px 8px 8px 2px;
+    }
+
+    /* Book spine shadow */
+    .book::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: -10px;
+      bottom: -10px;
+      width: 10px;
+      transform: translateX(-50%);
+      background: linear-gradient(90deg,
+          rgba(0, 0, 0, 0.2),
+          rgba(0, 0, 0, 0.35),
+          rgba(0, 0, 0, 0.2));
+      z-index: 999;
+      border-radius: 2px;
+    }
+
+    @media (max-width: 768px) {
+      .book::before {
+        left: 0;
+        transform: none;
+      }
+    }
+
+    /* Book shadow on table */
+    .book-shadow {
+      position: absolute;
+      left: 5%;
+      right: 5%;
+      bottom: -20px;
+      height: 30px;
+      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.35) 0%, transparent 70%);
+      filter: blur(8px);
+      z-index: -1;
+    }
+
+    /* ══════════════════════════════════════════════
+       PAGE CONTENT STYLING
+    ══════════════════════════════════════════════ */
+    .page-content {
+      width: 100%;
+      height: 100%;
+      padding: 2rem 2rem 2.5rem;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(139, 90, 43, 0.2) transparent;
+    }
+
+    .page-content::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .page-content::-webkit-scrollbar-thumb {
+      background: rgba(139, 90, 43, 0.2);
+      border-radius: 4px;
+    }
+
+    .page-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    /* Page number */
+    .pg-num {
+      position: absolute;
+      bottom: 0.8rem;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--c-text-dim);
+      letter-spacing: 0.08em;
+      opacity: 0.6;
+      z-index: 5;
+    }
+
+    .pg-num.left {
+      left: 1.5rem;
+    }
+
+    .pg-num.right {
+      right: 1.5rem;
+    }
+
+    /* ══════════════════════════════════════════════
+       COVER PAGE
+    ══════════════════════════════════════════════ */
+    .cover-front {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(145deg, #1a2a3a 0%, #0d1520 40%, #1a1525 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover-front::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(139, 90, 43, 0.15), transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(107, 76, 138, 0.1), transparent 50%);
+    }
+
+    .cover-front::after {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      border: 1px solid rgba(184, 150, 62, 0.2);
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    .cover-ornament-top,
+    .cover-ornament-bottom {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--c-gold), transparent);
+    }
+
+    .cover-ornament-top {
+      top: 24px;
+    }
+
+    .cover-ornament-bottom {
+      bottom: 24px;
+    }
+
+    .cover-edition-badge {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--c-gold);
+      padding: 0.35rem 1rem;
+      border: 1px solid rgba(184, 150, 62, 0.3);
+      border-radius: 50px;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cover-title {
+      font-family: var(--font-serif);
+      font-weight: 800;
+      font-size: clamp(1.2rem, 3.5vw, 1.7rem);
+      line-height: 1.25;
+      color: #f0e8d8;
+      margin-bottom: 0.8rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cover-title em {
+      font-style: italic;
+      color: var(--c-gold);
+    }
+
+    .cover-subtitle {
+      font-size: 0.72rem;
+      color: rgba(240, 232, 216, 0.5);
+      max-width: 340px;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cover-author {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cover-author-name {
+      font-family: var(--font-serif);
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #f0e8d8;
+    }
+
+    .cover-author-role {
+      font-size: 0.65rem;
+      color: rgba(240, 232, 216, 0.4);
+      letter-spacing: 0.05em;
+    }
+
+    .cover-cta {
+      position: absolute;
+      bottom: 40px;
+      font-size: 0.6rem;
+      color: rgba(240, 232, 216, 0.35);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      animation: pulseGlow 2.5s ease-in-out infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* ══════════════════════════════════════════════
+       MAGAZINE INTERIOR STYLES
+    ══════════════════════════════════════════════ */
+    .sec-label {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--c-accent);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .sec-label::before {
+      content: '';
+      width: 18px;
+      height: 2px;
+      background: var(--c-accent);
+      border-radius: 2px;
+    }
+
+    .sec-title {
+      font-family: var(--font-serif);
+      font-weight: 700;
+      font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+      color: var(--c-heading);
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.8rem;
+    }
+
+    .sec-divider {
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--c-accent), var(--c-accent2));
+      border-radius: 2px;
+      margin: 1rem 0;
+    }
+
+    .body-text {
+      font-size: 0.78rem;
+      line-height: 1.8;
+      color: var(--c-text);
+      text-align: justify;
+      hyphens: auto;
+    }
+
+    .body-text p+p {
+      margin-top: 0.7rem;
+    }
+
+    .body-text strong {
+      color: var(--c-heading);
+      font-weight: 700;
+    }
+
+    /* Info box in text */
+    .info-box {
+      background: linear-gradient(135deg, rgba(139, 90, 43, 0.06), rgba(107, 76, 138, 0.04));
+      border-left: 3px solid var(--c-accent);
+      border-radius: 0 8px 8px 0;
+      padding: 0.8rem 1rem;
+      margin: 0.8rem 0;
+    }
+
+    .info-box h4 {
+      font-family: var(--font-serif);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--c-heading);
+      margin-bottom: 0.3rem;
+    }
+
+    .info-box p {
+      font-size: 0.72rem;
+      color: var(--c-text);
+      line-height: 1.65;
+    }
+
+    /* Issue/Solution cards */
+    .issue-inset {
+      background: linear-gradient(135deg, rgba(176, 58, 58, 0.06), rgba(107, 76, 138, 0.04));
+      border: 1px solid rgba(176, 58, 58, 0.15);
+      border-radius: 8px;
+      padding: 0.8rem;
+      margin: 0.8rem 0;
+    }
+
+    .issue-inset h4 {
+      font-family: var(--font-serif);
+      font-weight: 700;
+      color: var(--c-red);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.4rem;
+    }
+
+    .issue-inset p {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--c-heading);
+      line-height: 1.5;
+      font-style: italic;
+    }
+
+    .solution-inset {
+      background: linear-gradient(135deg, rgba(45, 122, 79, 0.06), rgba(139, 90, 43, 0.04));
+      border: 1px solid rgba(45, 122, 79, 0.15);
+      border-radius: 8px;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+    }
+
+    .solution-inset h4 {
+      font-family: var(--font-serif);
+      font-weight: 700;
+      color: var(--c-green);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.4rem;
+    }
+
+    .solution-inset p {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--c-heading);
+      line-height: 1.5;
+    }
+
+    .solution-inset .sub-text {
+      font-size: 0.7rem;
+      font-weight: 400;
+      color: var(--c-text-dim);
+      margin-top: 0.3rem;
+      font-style: italic;
+    }
+
+    /* BerAKHLAK grid */
+    .akhlak-mini-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 0.8rem;
+    }
+
+    .akhlak-mini-item {
+      padding: 0.55rem 0.7rem;
+      background: rgba(139, 90, 43, 0.04);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 6px;
+      transition: border-color 0.3s;
+    }
+
+    .akhlak-mini-item:hover {
+      border-color: var(--c-accent);
+    }
+
+    .akhlak-mini-item strong {
+      display: block;
+      font-size: 0.68rem;
+      color: var(--c-heading);
+      margin-bottom: 0.15rem;
+    }
+
+    .akhlak-mini-item span {
+      font-size: 0.62rem;
+      color: var(--c-text-dim);
+      line-height: 1.5;
+    }
+
+    /* Activity header in page */
+    .act-head {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin-bottom: 1rem;
+    }
+
+    .act-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .act-icon.cyan { background: rgba(139, 90, 43, 0.1); }
+    .act-icon.violet { background: rgba(107, 76, 138, 0.1); }
+    .act-icon.green { background: rgba(45, 122, 79, 0.1); }
+    .act-icon.orange { background: rgba(192, 120, 48, 0.1); }
+    .act-icon.red { background: rgba(176, 58, 58, 0.1); }
+
+    .act-head-text .act-tag {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--c-accent);
+      margin-bottom: 0.15rem;
+    }
+
+    .act-head-text h3 {
+      font-family: var(--font-serif);
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--c-heading);
+      line-height: 1.3;
+    }
+
+    /* Tahapan list */
+    .tahapan-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .tahapan-entry {
+      position: relative;
+      padding: 0.6rem 0.7rem;
+      padding-left: 1.4rem;
+      background: rgba(0, 0, 0, 0.02);
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s var(--ease);
+    }
+
+    .tahapan-entry::before {
+      content: '';
+      position: absolute;
+      left: 0.6rem;
+      top: 0.85rem;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--c-accent);
+    }
+
+    .tahapan-entry:hover {
+      border-color: var(--c-accent);
+      background: rgba(139, 90, 43, 0.04);
+    }
+
+    .tahapan-entry-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--c-heading);
+      line-height: 1.5;
+    }
+
+    .tahapan-img-wrap {
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--c-border);
+      background: var(--c-surface2);
+      position: relative;
+      margin-top: 0.4rem;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.5s var(--ease), opacity 0.4s, margin 0.4s;
+    }
+
+    .tahapan-entry.expanded .tahapan-img-wrap {
+      max-height: 300px;
+      opacity: 1;
+      margin-top: 0.5rem;
+    }
+
+    .tahapan-img-wrap img {
+      width: 100%;
+      border-radius: 6px;
+      cursor: zoom-in;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    .tahapan-img-wrap img.loaded {
+      opacity: 1;
+    }
+
+    .tahapan-img-wrap .ev-loader {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--c-text-dim);
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .tahapan-img-wrap .ev-loader::after {
+      content: '';
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--c-border);
+      border-top-color: var(--c-accent);
+      border-radius: 50%;
+      animation: spinLoader 0.7s linear infinite;
+      margin-left: 0.4rem;
+    }
+
+    .tahapan-img-wrap .ev-loader.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    @keyframes spinLoader {
+      to { transform: rotate(360deg); }
+    }
+
+    .tahapan-toggle-hint {
+      font-size: 0.6rem;
+      color: var(--c-accent);
+      font-weight: 600;
+      margin-top: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .tahapan-toggle-hint .arr {
+      transition: transform 0.3s var(--ease);
+      font-size: 0.5rem;
+    }
+
+    .tahapan-entry.expanded .tahapan-toggle-hint .arr {
+      transform: rotate(180deg);
+    }
+
+    /* Evidence link button */
+    .ev-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin-top: 0.4rem;
+      padding: 0.3rem 0.7rem;
+      background: linear-gradient(135deg, var(--c-accent), var(--c-accent2));
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-family: var(--font-sans);
+      font-size: 0.6rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.3s var(--ease);
+    }
+
+    .ev-link-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(139, 90, 43, 0.3);
+    }
+
+    /* BerAKHLAK accordion inside activity */
+    .ak-collapse {
+      margin-top: 0.8rem;
+      border: 1px solid var(--c-border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.01);
+    }
+
+    .ak-collapse-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 0.8rem;
+      background: none;
+      border: none;
+      color: var(--c-accent);
+      font-family: var(--font-serif);
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .ak-collapse-btn:hover {
+      background: rgba(139, 90, 43, 0.04);
+    }
+
+    .ak-collapse-btn .ak-chev {
+      transition: transform 0.3s var(--ease);
+      font-size: 0.6rem;
+    }
+
+    .ak-collapse.open .ak-collapse-btn .ak-chev {
+      transform: rotate(180deg);
+    }
+
+    .ak-collapse-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s var(--ease), padding 0.3s;
+      padding: 0 0.8rem;
+    }
+
+    .ak-collapse.open .ak-collapse-body {
+      max-height: 2000px;
+      padding: 0 0.8rem 0.8rem;
+    }
+
+    .ak-entry {
+      padding: 0.5rem 0.6rem;
+      background: rgba(139, 90, 43, 0.02);
+      border-left: 2px solid var(--c-border);
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 0.3rem;
+      transition: border-color 0.3s;
+    }
+
+    .ak-entry:hover {
+      border-left-color: var(--c-accent);
+    }
+
+    .ak-entry .ak-n {
+      font-family: var(--font-serif);
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.15rem;
+    }
+
+    .ak-entry .ak-d {
+      font-size: 0.62rem;
+      color: var(--c-text);
+      line-height: 1.55;
+    }
+
+    /* ══════════════════════════════════════════════
+       FINAL / STATS PAGE
+    ══════════════════════════════════════════════ */
+    .final-content {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .final-trophy {
+      font-size: 3rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .final-title {
+      font-family: var(--font-serif);
+      font-weight: 800;
+      font-size: 1.3rem;
+      color: var(--c-heading);
+      margin-bottom: 0.5rem;
+    }
+
+    .final-desc {
+      font-size: 0.76rem;
+      color: var(--c-text-dim);
+      max-width: 360px;
+      line-height: 1.6;
+      margin-bottom: 1.2rem;
+    }
+
+    .stats-mini-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      width: 100%;
+      max-width: 320px;
+      margin-bottom: 1rem;
+    }
+
+    .stat-mini {
+      background: rgba(0, 0, 0, 0.02);
+      border: 1px solid var(--c-border);
+      border-radius: 8px;
+      padding: 0.8rem 0.5rem;
+      text-align: center;
+    }
+
+    .stat-mini .s-num {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--c-accent), var(--c-green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+    }
+
+    .stat-mini .s-lbl {
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--c-text-dim);
+      margin-top: 0.25rem;
+    }
+
+    .final-hash {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: var(--c-text-dim);
+      letter-spacing: 0.04em;
+      margin-bottom: 0.8rem;
+    }
+
+    .back-home {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.2rem;
+      background: linear-gradient(135deg, var(--c-accent), var(--c-accent2));
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.3s var(--ease);
+    }
+
+    .back-home:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(139, 90, 43, 0.4);
+    }
+
+    /* ══════════════════════════════════════════════
+       NAVIGATION CONTROLS
+    ══════════════════════════════════════════════ */
+    .nav-controls {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 0.8rem 0 2rem;
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #c8bfb0;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s var(--ease);
+      backdrop-filter: blur(10px);
+      padding: 0;
+      margin: 0;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      background: rgba(139, 90, 43, 0.2);
+      border-color: var(--c-accent);
+      color: #fff;
+      transform: scale(1.08);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .nav-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      min-width: 100px;
+    }
+
+    .nav-info .nav-page-text {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #c8bfb0;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-info .nav-page-title {
+      font-size: 0.6rem;
+      color: #8a7e70;
+      font-weight: 500;
+      text-align: center;
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Progress dots */
+    .nav-dots {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin-top: 0.3rem;
+    }
+
+    .nav-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: all 0.3s var(--ease);
+    }
+
+    .nav-dot.active {
+      background: var(--c-gold);
+      border-color: var(--c-gold);
+      box-shadow: 0 0 8px rgba(184, 150, 62, 0.4);
+      transform: scale(1.3);
+    }
+
+    .nav-dot:hover:not(.active) {
+      background: rgba(184, 150, 62, 0.3);
+      transform: scale(1.15);
+    }
+
+    /* ══════════════════════════════════════════════
+       LIGHTBOX
+    ══════════════════════════════════════════════ */
+    #lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(20px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s var(--ease);
+      padding: 2rem;
+    }
+
+    #lightbox.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #lightbox img {
+      max-width: 92vw;
+      max-height: 88vh;
+      border-radius: 8px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+      transform: scale(0.9);
+      transition: transform 0.4s var(--ease);
+      cursor: zoom-out;
+    }
+
+    #lightbox.open img {
+      transform: scale(1);
+    }
+
+    #lightbox-close {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      backdrop-filter: blur(10px);
+    }
+
+    #lightbox-close:hover {
+      background: var(--c-red);
+      transform: rotate(90deg) scale(1.1);
+    }
+
+    #lightbox-caption {
+      position: absolute;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.7);
+      font-family: var(--font-sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      white-space: nowrap;
+      max-width: 90vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ══════════════════════════════════════════════
+       KEYBOARD HINTS
+    ══════════════════════════════════════════════ */
+    .kb-hints {
+      position: relative;
+      z-index: 5;
+      text-align: center;
+      padding-bottom: 2rem;
+      color: #5a5048;
+      font-size: 0.6rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+
+    .kb-hints kbd {
+      display: inline-block;
+      padding: 0.15rem 0.45rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      margin: 0 0.15rem;
+      color: #8a7e70;
+    }
+
+    /* ══════════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .topbar-center {
+        display: none;
+      }
+
+      .page-content {
+        padding: 1.2rem 1rem 2rem;
+      }
+
+      .cover-front {
+        padding: 1.5rem;
+      }
+
+      .sec-title {
+        font-size: 1.1rem;
+      }
+
+      .body-text {
+        font-size: 0.72rem;
+        text-align: left;
+      }
+
+      .akhlak-mini-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-mini-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .nav-dots {
+        flex-wrap: wrap;
+        max-width: 300px;
+      }
+
+      .kb-hints {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .page-content {
+        padding: 1rem 0.8rem 1.8rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Ambient Background -->
+  <div class="ambient-bg"></div>
+
+  <!-- ═══ TOP BAR ═══ -->
+  <nav class="topbar" id="topbar">
+    <a href="index.html" class="topbar-brand">
+      <span class="brand-icon">📰</span>
+      <span>Majalah Aktualisasi</span>
+    </a>
+    <div class="topbar-center">
+      <span>Edisi 1 — 2026</span>
+      <span class="page-indicator" id="page-indicator">1 / 24</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" id="btnFullscreen" aria-label="Layar Penuh" title="Layar Penuh">⛶</button>
+      <a href="index.html" class="topbar-btn" aria-label="Kembali" title="Kembali ke Beranda">🏠</a>
+    </div>
+  </nav>
+
+  <!-- ═══ BOOK ═══ -->
+  <div class="book-scene" id="bookScene">
+    <div class="book" id="book">
+      <!-- Pages will be rendered by JS -->
+    </div>
+    <div class="book-shadow"></div>
+  </div>
+
+  <!-- ═══ NAVIGATION ═══ -->
+  <div class="nav-controls">
+    <button class="nav-btn" id="prevBtn" aria-label="Halaman Sebelumnya">◀</button>
+    <div class="nav-info">
+      <div class="nav-page-text" id="navPageText">Halaman 1</div>
+      <div class="nav-page-title" id="navPageTitle">Sampul Depan</div>
+    </div>
+    <button class="nav-btn" id="nextBtn" aria-label="Halaman Berikutnya">▶</button>
+  </div>
+
+  <div class="nav-dots" id="navDots"></div>
+
+  <div class="kb-hints">
+    Gunakan <kbd>←</kbd> <kbd>→</kbd> atau <kbd>klik halaman</kbd> untuk membalik
+  </div>
+
+  <button class="exit-fs-btn" id="btnExitFullscreen" aria-label="Keluar Layar Penuh" title="Keluar Layar Penuh">✕</button>
+
+  <!-- ═══ LIGHTBOX ═══ -->
+  <div id="lightbox">
+    <button id="lightbox-close">✕</button>
+    <img id="lightbox-img" src="" alt="">
+    <div id="lightbox-caption"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SCRIPT
+  ════════════════════════════════════════════ -->
+  <script>
+    /* ── FULLSCREEN CONTROLS ── */
+    const btnFullscreen = document.getElementById('btnFullscreen');
+    const btnExitFullscreen = document.getElementById('btnExitFullscreen');
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+           console.log("Error attempting to enable fullscreen:", err);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    if (btnFullscreen) btnFullscreen.addEventListener('click', toggleFullscreen);
+    if (btnExitFullscreen) btnExitFullscreen.addEventListener('click', toggleFullscreen);
+
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement) {
+        document.body.classList.add('fullscreen-active');
+      } else {
+        document.body.classList.remove('fullscreen-active');
+      }
+    });
+
+    /* ── GOOGLE DRIVE HELPERS ── */
+    function extractGdId(input) {
+      if (!input) return '';
+      input = input.trim();
+      let m = input.match(/[?&]id=([^&]+)/);
+      if (m) return m[1];
+      m = input.match(/\/d\/([^/?]+)/);
+      if (m) return m[1];
+      return input;
+    }
+    function gdImg(rawId) { return `https://lh3.googleusercontent.com/d/${extractGdId(rawId)}`; }
+    function gdImgFallback(rawId) { return `https://drive.google.com/thumbnail?id=${extractGdId(rawId)}&sz=w800`; }
+
+    /* ── ACTIVITY DATA ── */
+    const CPS = [
+      {
+        id: 'k1', tag: 'Kegiatan 1', label: 'Persiapan dan Konsultasi Rancangan', color: 'cyan', icon: '🤝',
+        tahapan: [
+          { title: '1. Menyiapkan bahan konsultasi (konsep dashboard & data awal).', imgId: '1f9Oy6-Ym9Fd8mO4q4-LmpQkE_qyRQNUo' },
+          { title: '2. Melakukan pertemuan konsultasi dengan Mentor.', imgId: '1Lr6VZxd3QhuDilw2hiDxTS4rqEi14Zft' },
+          { title: '3. Mencatat arahan dan meminta persetujuan pelaksanaan.', imgId: '1d2ssa_UPVBAy-NXbKQhXJrLsXOE8LWFx' }],
+        ak: [
+          { n: 'Berorientasi Pelayanan', c: '#8b5a2b', t: 'Menyiapkan bahan secara rapi dan sistematis agar mudah dipahami' },
+          { n: 'Akuntabel', c: '#6b4c8a', t: 'Bertanggung jawab penuh atas kebenaran konsep awal yang disusun' },
+          { n: 'Kompeten', c: '#2d7a4f', t: 'Menggunakan literatur dan referensi terbaik' },
+          { n: 'Harmonis', c: '#c07830', t: 'Menghargai ketersediaan waktu mentor' },
+          { n: 'Loyal', c: '#b03a3a', t: 'Memastikan rancangan sejalan dengan visi dan misi instansi' },
+          { n: 'Adaptif', c: '#c05050', t: 'Proaktif memanfaatkan media digital' },
+          { n: 'Kolaboratif', c: '#2d7a4f', t: 'Berdiskusi dan bertukar pikiran secara konstruktif dengan mentor' }]
+      },
+      {
+        id: 'k2', tag: 'Kegiatan 2', label: 'Pengumpulan dan Verifikasi Data Spasial', color: 'violet', icon: '📍',
+        tahapan: [
+          { title: '1. Mengumpulkan data spasial Koperasi menggunakan SIMKOPDES dan Para Pendamping.', imgId: '1vWWg9__dDUHs_w-E1JzREl3XYG8uTNzp' },
+          { title: '2. Memverifikasi validitas data dan titik koordinat.', imgId: '1ICRDqGgtEFK5aQsY8EA1KOt0762FiemY' },
+          { title: '3. Mengelompokkan data dalam berbagai kriteria.', imgId: '1J8_ifeOURTlk3_g7iG5zk3woOS-pl8P7' }],
+        ak: [
+          { n: 'Berorientasi Pelayanan', c: '#8b5a2b', t: 'Melayani permintaan data dengan sikap ramah' },
+          { n: 'Akuntabel', c: '#6b4c8a', t: 'Mengumpulkan data dengan integritas' },
+          { n: 'Kompeten', c: '#2d7a4f', t: 'Mengelola database mentah dengan teliti' },
+          { n: 'Harmonis', c: '#c07830', t: 'Membangun komunikasi yang baik' },
+          { n: 'Loyal', c: '#b03a3a', t: 'Menjaga kerahasiaan data internal koperasi' },
+          { n: 'Adaptif', c: '#c05050', t: 'Memanfaatkan formulir digital (Google Form)' },
+          { n: 'Kolaboratif', c: '#2d7a4f', t: 'Bersinergi dengan para pendamping koperasi' }]
+      },
+      {
+        id: 'k3', tag: 'Kegiatan 3', label: 'Perancangan Dashboard Pemetaan', color: 'green', icon: '🎨',
+        tahapan: [
+          { title: '1. Mengidentifikasi platform (Vercel, Google App Script, Looker Studio, dll).', imgId: '1lwuF108MnLERTLz86lsaJ8kZoFWViEJt' },
+          { title: '2. Membuat rancangan/desain sketsa dashboard pemetaan.', imgId: '1a7aUYOKX0wRc72UYafTvnvoKotCrNaeU' },
+          { title: '3. Menggunakan AI untuk membantu pembuatan dan coding Dashboard.', imgId: '1Xb9BSbWqKbVrZ0HO16s5aFy9FeXzLGRh' }],
+        ak: [
+          { n: 'Berorientasi Pelayanan', c: '#8b5a2b', t: 'Memilih platform yang paling user-friendly' },
+          { n: 'Akuntabel', c: '#6b4c8a', t: 'Memilih platform secara objektif dan dapat dipertanggungjawabkan' },
+          { n: 'Kompeten', c: '#2d7a4f', t: 'Terus belajar memahami spesifikasi teknis' },
+          { n: 'Harmonis', c: '#c07830', t: 'Berdiskusi dengan nyaman bersama rekan yang lebih paham IT' },
+          { n: 'Loyal', c: '#b03a3a', t: 'Memilih platform yang menjamin keamanan data negara' },
+          { n: 'Adaptif', c: '#c05050', t: 'Antusias mempelajari teknologi cloud-based' },
+          { n: 'Kolaboratif', c: '#2d7a4f', t: 'Bermusyawarah dengan pimpinan atau tim IT' }]
+      },
+      {
+        id: 'k4', tag: 'Kegiatan 4', label: 'Pembuatan dan Pengembangan Dashboard', color: 'orange', icon: '🗺️',
+        tahapan: [
+          { title: '1. Menginput dan mengintegrasikan database ke dalam platform.', imgId: '1XzAUbeAKSzPYCzZKpDVT3MdRvIeNl5Vd' },
+          { title: '2. Membangun titik koordinat spasial dan visualisasi data.', imgId: '12xHUDvsB-Bc2WzN6IfqCm_HfuR-bO1Pm' },
+          { title: '3. Menambahkan fitur filterisasi untuk kemudahan pencarian data.', imgId: '1kGjQCMxvIpIvWQD9i02L-tDBMB6m8Hhx' }],
+        ak: [
+          { n: 'Berorientasi Pelayanan', c: '#8b5a2b', t: 'Memastikan loading data berjalan cepat' },
+          { n: 'Akuntabel', c: '#6b4c8a', t: 'Mengunggah data dengan penuh tanggung jawab' },
+          { n: 'Kompeten', c: '#2d7a4f', t: 'Melakukan proses migrasi data dengan standar tinggi' },
+          { n: 'Harmonis', c: '#c07830', t: 'Menjaga emosi tetap stabil dan tenang' },
+          { n: 'Loyal', c: '#b03a3a', t: 'Berdedikasi bekerja di luar jam kantor jika diperlukan' },
+          { n: 'Adaptif', c: '#c05050', t: 'Sigap troubleshooting jika terjadi kendala' },
+          { n: 'Kolaboratif', c: '#2d7a4f', t: 'Melibatkan unit data center dinas' }]
+      },
+      {
+        id: 'k5', tag: 'Kegiatan 5', label: 'Uji Coba Terbatas dan Menerima Masukan', color: 'red', icon: '🐛',
+        tahapan: [
+          { title: '1. Melakukan uji coba akses dan fitur dashboard secara mandiri.', imgId: '1r8rK-H5jIlma-C5PTnXFWlvELe7SdHR4' },
+          { title: '2. Meminta rekan kerja sesama Pengawas Koperasi untuk mencoba dashboard.', imgId: '1p8he7ntDUnYjcIRTcU7rnAZbWEJtN8X8' },
+          { title: '3. Menampung masukan dan saran serta melakukan perbaikan.', imgId: '1ioPsFZrDfiPqJsWJD30iabW7TRhoHOsx' }],
+        ak: [
+          { n: 'Berorientasi Pelayanan', c: '#8b5a2b', t: 'Menempatkan diri sebagai pengguna akhir' },
+          { n: 'Akuntabel', c: '#6b4c8a', t: 'Mencatat setiap bug yang ditemukan dengan jujur' },
+          { n: 'Kompeten', c: '#2d7a4f', t: 'Menguji QA dengan standar tinggi' },
+          { n: 'Harmonis', c: '#c07830', t: 'Menghargai waktu yang diluangkan rekan kerja' },
+          { n: 'Loyal', c: '#b03a3a', t: 'Memastikan produk ini layak mewakili nama baik institusi' },
+          { n: 'Adaptif', c: '#c05050', t: 'Sigap mencatat setiap perubahan teknis' },
+          { n: 'Kolaboratif', c: '#2d7a4f', t: 'Mendiskusikan temuan uji coba mandiri dengan atasan' }]
+      },
+      {
+        id: 'k6', tag: 'Kegiatan 6', label: 'Sosialisasi dan Demonstrasi Dashboard', color: 'cyan', icon: '📡',
+        tahapan: [
+          { title: '1. Menyusun panduan singkat (manual book) cara penggunaan dashboard.', imgId: '1bRq8DwmsarYxP_tMdAZvmCXdQgFu3tqk', linkUrl: 'https://drive.google.com/file/d/1GCi88fzLIRqPna1YeKUMNnQW9rim7s7Q/view?usp=sharing' },
+          { title: '2. Mengundang mentor, rekan kerja, dan pimpinan untuk demonstrasi.', imgId: '1rbI6kSZbH99xkIXsi61E2SGqjD7SUU1c' },
+          { title: '3. Memaparkan cara kerja dashboard dan mendistribusikan tautan akses.', imgId: '1ZfPvcwZxI9_o_vIWoOLgQyV_eLtdomwT' }],
+        ak: [
+          { n: 'Berorientasi Pelayanan', c: '#8b5a2b', t: 'Menyusun panduan dengan bahasa yang mudah dimengerti' },
+          { n: 'Akuntabel', c: '#6b4c8a', t: 'Menyajikan langkah-langkah penggunaan secara cermat' },
+          { n: 'Kompeten', c: '#2d7a4f', t: 'Berbagi pengetahuan teknis untuk membantu rekan belajar' },
+          { n: 'Harmonis', c: '#c07830', t: 'Menciptakan suasana ruang rapat yang kondusif' },
+          { n: 'Loyal', c: '#b03a3a', t: 'Mewujudkan sosialisasi sebagai bentuk pengabdian' },
+          { n: 'Adaptif', c: '#c05050', t: 'Membuat panduan dalam format digital interaktif' },
+          { n: 'Kolaboratif', c: '#2d7a4f', t: 'Membangun kerja sama lintas bidang' }]
+      },
+      {
+        id: 'k7', tag: 'Kegiatan 7', label: 'Evaluasi dan Pelaporan Hasil Aktualisasi', color: 'violet', icon: '📝',
+        tahapan: [
+          { title: '1. Menganalisis efektivitas monitoring pasca-digitalisasi.', imgId: '1CD-nCtbjVbP1MzDrsyYGa-J_fxeuk8I1' },
+          { title: '2. Mengumpulkan seluruh bukti fisik untuk lampiran.', imgId: '1eWQ9NhD0n4ZZv4g02rbvUjjEl2ZOpFfQ' },
+          { title: '3. Menyusun laporan akhir aktualisasi.', imgId: '1zu9tA6cElIp8yf3wzmws4qT5kOnX7hH0' }],
+        ak: [
+          { n: 'Berorientasi Pelayanan', c: '#8b5a2b', t: 'Merumuskan rekomendasi perbaikan pelayanan' },
+          { n: 'Akuntabel', c: '#6b4c8a', t: 'Menyajikan data perbandingan sebelum dan sesudah secara jujur' },
+          { n: 'Kompeten', c: '#2d7a4f', t: 'Menghasilkan dokumen laporan akademis berkualitas tinggi' },
+          { n: 'Harmonis', c: '#c07830', t: 'Menyematkan ucapan terima kasih kepada seluruh pihak' },
+          { n: 'Loyal', c: '#b03a3a', t: 'Menyelesaikan amanat kewajiban CPNS dengan komitmen penuh' },
+          { n: 'Adaptif', c: '#c05050', t: 'Proaktif mengidentifikasi celah pengembangan di masa depan' },
+          { n: 'Kolaboratif', c: '#2d7a4f', t: 'Berkonsultasi dengan Coach untuk memfinalisasi laporan' }]
+      }
+    ];
+
+    /* ══════════════════════════════════════════════
+       BUILD ALL PAGE CONTENTS
+    ══════════════════════════════════════════════ */
+    const pageContents = [];
+    const pageTitles = [];
+
+        /* -- p0: Cover Front -- */
+    pageContents.push(`
+      <div class="cover-front">
+        <div class="cover-ornament-top"></div>
+        <div class="cover-edition-badge">Edisi Spesial — April 2026</div>
+        <h1 class="cover-title">
+          Optimalisasi Pengawasan<br>Koperasi Merah Putih<br>
+          <em>Dashboard Pemetaan<br>Digital</em>
+        </h1>
+        <p class="cover-subtitle">Laporan Aktualisasi Nilai-Nilai Dasar ASN — Pelatihan Dasar CPNS Golongan III Angkatan I Tahun 2026</p>
+        <div class="cover-author">
+          <div class="cover-author-name">Masyhuri Arifin, S.E.</div>
+          <div class="cover-author-role">Pengawas Koperasi Ahli Pertama · Dinas Koperasi & UMKM Prov. Sultra</div>
+        </div>
+        <div class="cover-cta">Buka halaman →</div>
+        <div class="cover-ornament-bottom"></div>
+      </div>
+    `);
+    pageTitles.push('Sampul Depan');
+
+
+    /* ═══════════════════════════════════════════════════
+       HALAMAN BUKU — URUTAN RESMI LAPORAN AKTUALISASI
+       1. Sampul | 2. Kata Pengantar | 3. Daftar Isi
+       4-5. BAB I | 6-8. BAB II | 9-10. BAB III
+       11. Peta Kegiatan | 12-25. BAB IV (dinamis)
+       26-27. Hasil & Capaian | 28. Penutup | 29. Lampiran
+    ═══════════════════════════════════════════════════ */
+
+    /* ── HALAMAN 2: KATA PENGANTAR ── */
+    pageContents.push(`
+      <div class="page-content">
+        <div class="sec-label">Pembuka</div>
+        <h2 class="sec-title">Kata Pengantar</h2>
+        <div class="sec-divider"></div>
+        <div class="body-text">
+          <p>Puji syukur penulis panjatkan ke hadirat Allah SWT yang telah melimpahkan rahmat dan hidayah-Nya sehingga penulis dapat menyelesaikan Laporan Aktualisasi Nilai-Nilai Dasar ASN, Peran dan Kedudukan PNS Menuju Smart Governance dengan judul <em>"Optimalisasi Pengawasan Koperasi Desa/Kelurahan Merah Putih Melalui Dashboard Pemetaan Digital pada Dinas Koperasi dan UMKM Provinsi Sulawesi Tenggara"</em>.</p>
+          <p>Dokumen ini disusun sebagai salah satu persyaratan mutlak dalam kelulusan Pelatihan Dasar CPNS Golongan III Angkatan I Tahun 2026 yang diselenggarakan oleh Badan Pengembangan Sumber Daya Manusia (BPSDM) Provinsi Sulawesi Tenggara. Penyusunan laporan ini sekaligus merupakan langkah habituasi nyata nilai-nilai <strong>BerAKHLAK</strong> di lingkungan kerja.</p>
+          <p>Penulis mengucapkan terima kasih yang setinggi-tingginya kepada:</p>
+        </div>
+        <ol style="padding-left:1.1rem;font-size:0.61rem;line-height:2.0;color:var(--c-text);">
+          <li>Gubernur Sulawesi Tenggara, Bapak Mayjen (Purn.) Andi Sumangerukka</li>
+          <li>Kepala BKD, Bapak Prof. Dr. Ir. Andi Khaeruni R., M.Si.</li>
+          <li>Kepala Dinas Koperasi dan UMKM, Bapak Dr. La Ode Muhammad Shalihin, S.Pd., M.Pd.</li>
+          <li>Kepala BPSDM Prov. Sultra, Bapak Syahruddin Nurdin, S.E. beserta jajaran</li>
+          <li><strong>Mentor:</strong> Ibu Hj. Ani Buton, S.E., M.M. — Kabid Pengawasan &amp; Pemeriksaan</li>
+          <li><strong>Coach:</strong> Bapak Ir. H. Amir Ma'sum, M.M.</li>
+          <li>Bapak/Ibu Widyaiswara yang telah membimbing setiap tahapan pelatihan</li>
+          <li>Istri dan anakku tercinta atas doa dan dukungan tanpa henti</li>
+          <li>Rekan seperjuangan Gelombang I, Angkatan I, Kelompok 1</li>
+        </ol>
+        <div style="margin-top:0.7rem;padding:0.55rem 0.75rem;background:rgba(139,90,43,0.05);border-left:3px solid var(--c-accent);border-radius:0 6px 6px 0;font-size:0.61rem;color:var(--c-text);line-height:1.7;">
+          Penulis menyadari laporan ini masih jauh dari sempurna. Kritik dan saran sangat diharapkan demi perbaikan ke depan. Semoga Allah SWT meridhoi setiap langkah kita. <em>Amin.</em>
+        </div>
+        <div style="margin-top:0.8rem;text-align:right;font-size:0.61rem;color:var(--c-text-dim);">
+          <p>Kendari, 9 Februari 2026</p>
+          <p style="margin-top:0.5rem;font-weight:700;color:var(--c-heading);">Masyhuri Arifin, S.E.</p>
+          <p style="font-size:0.57rem;">NIP. 19900526202504 1 003</p>
+        </div>
+        <span class="pg-num right">iv</span>
+      </div>
+    `);
+    pageTitles.push('Kata Pengantar');
+
+    /* ── HALAMAN 3: DAFTAR ISI ── */
+    pageContents.push(`
+      <div class="page-content">
+        <div class="sec-label">Navigasi Buku</div>
+        <h2 class="sec-title">Daftar Isi</h2>
+        <div class="sec-divider"></div>
+        <div style="font-size:0.61rem;color:var(--c-text);line-height:2.0;">
+          <div style="display:flex;justify-content:space-between;padding:0.25rem 0;border-bottom:1px dotted rgba(0,0,0,0.1);"><span>Halaman Persetujuan</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">ii</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.25rem 0;border-bottom:1px dotted rgba(0,0,0,0.1);"><span>Halaman Pengesahan</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">iii</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.25rem 0;border-bottom:1px dotted rgba(0,0,0,0.1);"><span>Kata Pengantar</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">iv</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.25rem 0;border-bottom:1px dotted rgba(0,0,0,0.1);"><span>Daftar Isi</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">vi</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.25rem 0;border-bottom:2px solid rgba(139,90,43,0.35);font-family:var(--font-serif);font-weight:700;color:var(--c-heading);margin-top:0.2rem;"><span>BAB I — Pendahuluan</span><span style="font-family:var(--font-mono);">1</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.18rem 0 0.18rem 1rem;border-bottom:1px dotted rgba(0,0,0,0.07);"><span>1.1 Latar Belakang</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">1</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.18rem 0 0.18rem 1rem;border-bottom:1px dotted rgba(0,0,0,0.07);"><span>1.2 Tujuan</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">5</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.18rem 0 0.18rem 1rem;border-bottom:1px dotted rgba(0,0,0,0.07);"><span>1.3 Manfaat</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">6</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.18rem 0 0.18rem 1rem;border-bottom:1px dotted rgba(0,0,0,0.1);"><span>1.4 Ruang Lingkup Kegiatan</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">7</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.25rem 0;border-bottom:2px solid rgba(139,90,43,0.35);font-family:var(--font-serif);font-weight:700;color:var(--c-heading);margin-top:0.2rem;"><span>BAB II — Gambaran Umum Organisasi</span><span style="font-family:var(--font-mono);">8</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.18rem 0 0.18rem 1rem;border-bottom:1px dotted rgba(0,0,0,0.07);"><span>2.1 Gambaran Umum Organisasi</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">8</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.18rem 0 0.18rem 1rem;border-bottom:1px dotted rgba(0,0,0,0.07);"><span>2.2 Profil Peserta</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">15</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.18rem 0 0.18rem 1rem;border-bottom:1px dotted rgba(0,0,0,0.1);"><span>2.3 Konsepsi Nilai Dasar ASN BerAKHLAK</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">17</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.25rem 0;border-bottom:2px solid rgba(139,90,43,0.35);font-family:var(--font-serif);font-weight:700;color:var(--c-heading);margin-top:0.2rem;"><span>BAB III — Rancangan Aktualisasi</span><span style="font-family:var(--font-mono);">22</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.18rem 0 0.18rem 1rem;border-bottom:1px dotted rgba(0,0,0,0.07);"><span>3.1 Identifikasi dan Analisis Isu</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">22</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.18rem 0 0.18rem 1rem;border-bottom:1px dotted rgba(0,0,0,0.07);"><span>3.2 Gagasan Kreatif &amp; Platform Teknologi</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">36</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.18rem 0 0.18rem 1rem;border-bottom:1px dotted rgba(0,0,0,0.1);"><span>3.3 Deskripsi Kegiatan</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">37</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.25rem 0;border-bottom:2px solid rgba(139,90,43,0.35);font-family:var(--font-serif);font-weight:700;color:var(--c-heading);margin-top:0.2rem;"><span>BAB IV — Pelaksanaan Aktualisasi (7 Kegiatan)</span><span style="font-family:var(--font-mono);">38</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.18rem 0 0.18rem 1rem;border-bottom:1px dotted rgba(0,0,0,0.07);"><span>4.1–4.7 Realisasi 7 Kegiatan Utama</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">42</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.18rem 0 0.18rem 1rem;border-bottom:1px dotted rgba(0,0,0,0.07);"><span>Capaian Penyelesaian Core Isu</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">78</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.18rem 0 0.18rem 1rem;border-bottom:1px dotted rgba(0,0,0,0.1);"><span>Manfaat Terselesainya Core Isu</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">79</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.25rem 0;border-bottom:2px solid rgba(139,90,43,0.35);font-family:var(--font-serif);font-weight:700;color:var(--c-heading);margin-top:0.2rem;"><span>BAB V — Penutup</span><span style="font-family:var(--font-mono);">83</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.25rem 0;border-bottom:1px dotted rgba(0,0,0,0.1);"><span>Daftar Pustaka</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">84</span></div>
+          <div style="display:flex;justify-content:space-between;padding:0.25rem 0;"><span>Lampiran</span><span style="font-family:var(--font-mono);color:var(--c-text-dim);">85</span></div>
+        </div>
+        <span class="pg-num left">vi</span>
+      </div>
+    `);
+    pageTitles.push('Daftar Isi');
+
+    /* ── HALAMAN 4: BAB I LATAR BELAKANG ── */
+    pageContents.push(`
+      <div class="page-content">
+        <div class="sec-label">BAB I — Pendahuluan</div>
+        <h2 class="sec-title">1.1 Latar Belakang</h2>
+        <div class="sec-divider"></div>
+        <div class="body-text">
+          <p>Berdasarkan Undang-Undang Nomor 20 Tahun 2023 tentang Aparatur Sipil Negara, Pegawai ASN memiliki peran strategis sebagai perencana, pelaksana, dan pengawas penyelenggaraan tugas umum pemerintahan. Setiap ASN tidak hanya dituntut memiliki kompetensi teknis, tetapi juga wajib menginternalisasi nilai-nilai dasar <em>Core Values</em> ASN <strong>BerAKHLAK</strong> — Berorientasi Pelayanan, Akuntabel, Kompeten, Harmonis, Loyal, Adaptif, dan Kolaboratif. Nilai-nilai ini bukan sekadar semboyan, melainkan fondasi perilaku yang harus tecermin dalam setiap napas pelayanan guna menjaga integritas birokrasi.</p>
+          <p>Pelatihan Dasar (Latsar) CPNS menjadi fase krusial bagi setiap calon aparatur untuk melakukan proses habituasi dan aktualisasi. Melalui pembelajaran Agenda III <em>"Kedudukan dan Peran PNS menuju Smart Governance"</em>, peserta dituntut bukan sekadar menjadi pelaksana tugas rutin, tetapi juga agen perubahan yang mampu memberikan gagasan kreatif dalam memecahkan isu strategis di unit kerja.</p>
+          <p>Pemerintah Provinsi Sulawesi Tenggara melalui Dinas Koperasi, Usaha Mikro, Kecil dan Menengah memegang peranan vital dalam membina dan mengawasi perkembangan koperasi sebagai soko guru perekonomian nasional. Fokus utama saat ini adalah penguatan <strong>Koperasi Desa/Kelurahan Merah Putih</strong> sesuai amanat Instruksi Presiden Nomor 9 Tahun 2025 tentang Percepatan Pembentukan dan Penguatan Koperasi Desa/Kelurahan Merah Putih.</p>
+          <p>Dalam realitas lapangan, pengawasan koperasi di Sulawesi Tenggara masih menemui kendala substantif. Sistem pengawasan yang berjalan masih didominasi metode konvensional — data koperasi tersimpan dalam dokumen fisik rentan rusak atau tabel digital statis yang terfragmentasi. Kondisi ini menciptakan <em>"siloed data"</em>, sehingga pimpinan dan tim Satgas kesulitan memetakan secara cepat koperasi mana yang aktif, memerlukan rehabilitasi, atau berada di wilayah berpotensi tinggi.</p>
+        </div>
+        <div class="info-box">
+          <h4>Dasar Hukum Utama</h4>
+          <ul style="padding-left:1rem;font-size:0.59rem;line-height:1.9;">
+            <li>UU No. 20 Tahun 2023 tentang Aparatur Sipil Negara</li>
+            <li>Inpres No. 9 Tahun 2025 — Percepatan Koperasi Merah Putih</li>
+            <li>Perpres No. 95 Tahun 2018 — Sistem Pemerintahan Berbasis Elektronik (SPBE)</li>
+            <li>SK Gubernur Sultra No. 100.3.3.1/305 Tahun 2025 — Satgas Pengawasan KMP</li>
+            <li>Pergub Sultra No. 37 Tahun 2022 — Tupoksi Dinas Koperasi &amp; UMKM</li>
+          </ul>
+        </div>
+        <span class="pg-num right">1</span>
+      </div>
+    `);
+    pageTitles.push('BAB I — Latar Belakang');
+
+    /* ── HALAMAN 5: BAB I TUJUAN & MANFAAT ── */
+    pageContents.push(`
+      <div class="page-content">
+        <div class="sec-label">BAB I — Pendahuluan</div>
+        <h2 class="sec-title">1.2 Tujuan &amp; 1.3 Manfaat</h2>
+        <div class="sec-divider"></div>
+        <div class="body-text">
+          <p>Satuan Tugas Pengawasan (SK Gubernur No. 100.3.3.1/305/2025) diwajibkan menyampaikan laporan kepada Gubernur sedikitnya <strong>1 kali dalam 7 hari</strong>. Tuntutan pelaporan yang sangat intensif ini berbenturan dengan realitas sistem konvensional yang lambat. Penulis, yang ditugaskan sebagai Anggota Satgas wilayah <strong>Kabupaten Bombana</strong>, menjadikan tantangan ini sebagai katalis gagasan inovatif berbasis GIS.</p>
+        </div>
+        <div class="info-box" style="margin-bottom:0.45rem;">
+          <h4>Tujuan Khusus</h4>
+          <ul style="padding-left:1rem;font-size:0.61rem;line-height:1.9;">
+            <li>Tersedianya Dashboard Pemetaan Digital yang memuat data spasial dan profil koperasi dalam <strong>1 bulan</strong></li>
+            <li>Terintegrasinya data dashboard dengan sistem pelaporan pengawasan secara <em>real-time</em></li>
+            <li>Terwujudnya Smart Governance dalam pembinaan dan pengawasan Koperasi Desa/Kelurahan berbasis data digital</li>
+          </ul>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.4rem;margin-bottom:0.45rem;">
+          <div style="background:var(--c-surface);border-radius:6px;padding:0.5rem 0.55rem;border:1px solid var(--c-border);">
+            <div style="font-size:0.53rem;font-weight:700;color:var(--c-accent);text-transform:uppercase;margin-bottom:0.25rem;">Bagi Penulis</div>
+            <ul style="padding-left:0.8rem;font-size:0.55rem;line-height:1.8;">
+              <li>Internalisasi BerAKHLAK nyata</li>
+              <li>Hard skill GIS &amp; cloud</li>
+              <li>Problem solving terasah</li>
+            </ul>
+          </div>
+          <div style="background:rgba(139,90,43,0.05);border-radius:6px;padding:0.5rem 0.55rem;border:1px solid rgba(139,90,43,0.3);">
+            <div style="font-size:0.53rem;font-weight:700;color:var(--c-accent);text-transform:uppercase;margin-bottom:0.25rem;">Bagi Organisasi</div>
+            <ul style="padding-left:0.8rem;font-size:0.55rem;line-height:1.8;">
+              <li>Efisiensi pencarian data</li>
+              <li>Keputusan berbasis data</li>
+              <li>Modernisasi kinerja</li>
+            </ul>
+          </div>
+          <div style="background:var(--c-surface);border-radius:6px;padding:0.5rem 0.55rem;border:1px solid var(--c-border);">
+            <div style="font-size:0.53rem;font-weight:700;color:var(--c-accent);text-transform:uppercase;margin-bottom:0.25rem;">Bagi Masyarakat</div>
+            <ul style="padding-left:0.8rem;font-size:0.55rem;line-height:1.8;">
+              <li>Akses profil koperasi</li>
+              <li>Pengawasan merata</li>
+              <li>Kepercayaan publik naik</li>
+            </ul>
+          </div>
+        </div>
+        <div class="info-box">
+          <h4>1.4 Ruang Lingkup — 7 Kegiatan Utama (1 Mar – 10 Apr 2026)</h4>
+          <ol style="padding-left:1rem;font-size:0.59rem;line-height:1.85;">
+            <li>Persiapan dan Konsultasi Rancangan Aktualisasi</li>
+            <li>Pengumpulan dan Verifikasi Data Spasial Koperasi Merah Putih</li>
+            <li>Perancangan Dashboard Pemetaan</li>
+            <li>Pembuatan dan Pengembangan Dashboard Pemetaan Digital (Digital Mapping)</li>
+            <li>Uji Coba Terbatas dan Penerimaan Saran/Masukan</li>
+            <li>Sosialisasi dan Demonstrasi Penggunaan Dashboard kepada Pimpinan</li>
+            <li>Evaluasi dan Pelaporan Hasil Aktualisasi</li>
+          </ol>
+        </div>
+        <span class="pg-num left">5</span>
+      </div>
+    `);
+    pageTitles.push('BAB I — Tujuan & Manfaat');
+
+    /* ── HALAMAN 6: BAB II GAMBARAN ORGANISASI ── */
+    pageContents.push(`
+      <div class="page-content">
+        <div class="sec-label">BAB II — Gambaran Umum Organisasi</div>
+        <h2 class="sec-title">2.1 Gambaran Umum Organisasi</h2>
+        <div class="sec-divider"></div>
+        <div class="body-text">
+          <p>Dinas Koperasi, Usaha Mikro, Kecil dan Menengah Provinsi Sulawesi Tenggara merupakan unsur pelaksana urusan pemerintahan di bidang koperasi, usaha kecil dan menengah. Berdasarkan Peraturan Gubernur Sulawesi Tenggara Nomor 37 Tahun 2022, Dinas Koperasi dan UMKM dipimpin Kepala Dinas yang bertanggung jawab kepada Gubernur melalui Sekretaris Daerah.</p>
+        </div>
+        <div class="info-box" style="margin-bottom:0.42rem;">
+          <h4>Visi &amp; Misi</h4>
+          <p style="font-size:0.59rem;font-style:italic;margin-bottom:0.3rem;">"Terwujudnya Sulawesi Tenggara Maju menuju Masyarakat Aman, Sejahtera dan Religius."</p>
+          <ul style="padding-left:1rem;font-size:0.59rem;line-height:1.8;">
+            <li>Mewujudkan masyarakat yang terjamin hak dan perlindungan sosialnya</li>
+            <li>Menumbuhkan perekonomian melalui penguatan potensi pertanian dan maritim</li>
+            <li>Menguatkan birokrasi yang akuntabel dan berintegritas</li>
+          </ul>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.32rem;margin-bottom:0.42rem;">
+          <div style="background:var(--c-surface);border-radius:6px;padding:0.42rem 0.45rem;border:1px solid var(--c-border);text-align:center;font-size:0.53rem;"><strong style="display:block;margin-bottom:0.15rem;">Bidang 1</strong>Perizinan &amp; Kelembagaan</div>
+          <div style="background:rgba(139,90,43,0.08);border-radius:6px;padding:0.42rem 0.45rem;border:1px solid var(--c-accent);text-align:center;font-size:0.53rem;"><strong style="display:block;color:var(--c-accent);margin-bottom:0.15rem;">Bidang 2 ★</strong>Pengawasan &amp; Pemeriksaan</div>
+          <div style="background:var(--c-surface);border-radius:6px;padding:0.42rem 0.45rem;border:1px solid var(--c-border);text-align:center;font-size:0.53rem;"><strong style="display:block;margin-bottom:0.15rem;">Bidang 3</strong>Pemberdayaan Koperasi</div>
+          <div style="background:var(--c-surface);border-radius:6px;padding:0.42rem 0.45rem;border:1px solid var(--c-border);text-align:center;font-size:0.53rem;"><strong style="display:block;margin-bottom:0.15rem;">Bidang 4</strong>Pemberdayaan Usaha Kecil</div>
+        </div>
+        <div class="info-box" style="margin-bottom:0.42rem;">
+          <h4>Tugas Pokok Dinas (Pergub No. 37/2022)</h4>
+          <p style="font-size:0.59rem;line-height:1.6;">Membantu Gubernur melaksanakan urusan pemerintahan bidang koperasi dan UMKM, meliputi: penerbitan izin usaha simpan pinjam, <strong>pengawasan dan pemeriksaan koperasi</strong>, penilaian kesehatan KSP/USP, pendidikan dan pelatihan perkoperasian, serta pemberdayaan UMKM.</p>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.32rem;text-align:center;">
+          <div style="background:var(--c-surface);border-radius:6px;padding:0.4rem;border:1px solid var(--c-border);"><div style="font-family:var(--font-serif);font-size:1.05rem;font-weight:900;color:var(--c-accent);">123</div><div style="font-size:0.5rem;color:var(--c-text-dim);">Total ASN</div></div>
+          <div style="background:var(--c-surface);border-radius:6px;padding:0.4rem;border:1px solid var(--c-border);"><div style="font-family:var(--font-serif);font-size:1.05rem;font-weight:900;color:var(--c-accent);">92</div><div style="font-size:0.5rem;color:var(--c-text-dim);">PNS/CPNS</div></div>
+          <div style="background:var(--c-surface);border-radius:6px;padding:0.4rem;border:1px solid var(--c-border);"><div style="font-family:var(--font-serif);font-size:1.05rem;font-weight:900;color:var(--c-accent);">88</div><div style="font-size:0.5rem;color:var(--c-text-dim);">Berijazah S-1</div></div>
+        </div>
+        <div style="margin-top:0.42rem;font-size:0.59rem;color:var(--c-text);line-height:1.8;padding:0.45rem 0.6rem;background:var(--c-surface);border-radius:6px;border:1px solid var(--c-border);">
+          <strong>Kepala Dinas:</strong> Dr. La Ode Muhammad Shalihin, S.Pd., M.Pd.<br>
+          <strong>Mentor:</strong> Hj. Ani Buton, S.E., M.M. (Kabid Pengawasan &amp; Pemeriksaan)<br>
+          <strong>Coach:</strong> Ir. H. Amir Ma'sum, M.M. &nbsp;|&nbsp; <strong>Penguji:</strong> Drs. H. Asrun Lio, M.Hum., Ph.D.
+        </div>
+        <span class="pg-num right">8</span>
+      </div>
+    `);
+    pageTitles.push('BAB II — Gambaran Organisasi');
+
+    /* ── HALAMAN 7: BAB II PROFIL PESERTA ── */
+    pageContents.push(`
+      <div class="page-content">
+        <div class="sec-label">BAB II — Profil Peserta</div>
+        <h2 class="sec-title">2.2 Profil Peserta</h2>
+        <div class="sec-divider"></div>
+        <div style="display:flex;gap:0.75rem;align-items:flex-start;margin-bottom:0.65rem;padding:0.65rem 0.75rem;background:var(--c-surface);border-radius:8px;border:1px solid var(--c-border);">
+          <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--c-accent),#6b4c8a);display:flex;align-items:center;justify-content:center;font-family:var(--font-serif);font-size:1.05rem;color:#fff;font-weight:900;flex-shrink:0;">MA</div>
+          <div>
+            <div style="font-family:var(--font-serif);font-size:0.82rem;font-weight:800;color:var(--c-heading);">Masyhuri Arifin, S.E.</div>
+            <div style="font-size:0.56rem;color:var(--c-accent);font-weight:600;margin:0.08rem 0;">Pengawas Koperasi Ahli Pertama — CPNS Formasi 2024</div>
+            <div style="font-size:0.55rem;color:var(--c-text-dim);line-height:1.8;">NIP: 19900526202504 1 003 &nbsp;|&nbsp; NDH: 36 &nbsp;|&nbsp; Golongan III &nbsp;|&nbsp; Angkatan I<br>Pendidikan: S-1 Ekonomi &nbsp;|&nbsp; Unit: Bid. Pengawasan &amp; Pemeriksaan, Dinas Koperasi &amp; UMKM Prov. Sultra</div>
+          </div>
+        </div>
+        <div class="info-box" style="margin-bottom:0.42rem;">
+          <h4>Dasar Pengangkatan</h4>
+          <p>SK Gubernur Sulawesi Tenggara Nomor <strong>100.3.3.1/111</strong> tentang Pengangkatan CPNS di Lingkup Pemerintah Provinsi Sulawesi Tenggara Formasi Tahun 2024.</p>
+        </div>
+        <div class="info-box" style="margin-bottom:0.42rem;">
+          <h4>Tugas Jabatan Fungsional (PermenpanRB No. 43/2018)</h4>
+          <ul style="padding-left:1rem;font-size:0.59rem;line-height:1.85;">
+            <li>Pengawasan koperasi — aspek penerapan kepatuhan</li>
+            <li>Pemeriksaan kelembagaan koperasi</li>
+            <li>Pemeriksaan usaha simpan pinjam (KSP/USP)</li>
+            <li>Penilaian kesehatan usaha simpan pinjam</li>
+            <li>Penerapan sanksi bagi koperasi bermasalah</li>
+          </ul>
+        </div>
+        <div style="padding:0.55rem 0.75rem;background:rgba(139,90,43,0.05);border-left:3px solid var(--c-accent);border-radius:0 6px 6px 0;font-size:0.61rem;color:var(--c-text);line-height:1.65;">
+          <strong style="display:block;font-size:0.53rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--c-accent);margin-bottom:0.18rem;">Peran dalam Satgas Pengawasan Koperasi Merah Putih</strong>
+          Ditunjuk sebagai Anggota Satuan Tugas Pengawasan Pelaksanaan Koperasi Desa/Kelurahan Merah Putih wilayah <strong>Kabupaten Bombana</strong> berdasarkan SK Gubernur No. 100.3.3.1/305 Tahun 2025. Wajib menyampaikan laporan kepada Gubernur minimal <strong>1 kali per 7 hari</strong>. Intensitas pelaporan inilah yang menginspirasi lahirnya gagasan Dashboard Pemetaan Digital.
+        </div>
+        <span class="pg-num left">15</span>
+      </div>
+    `);
+    pageTitles.push('BAB II — Profil Peserta');
+
+
+
+    /* ── HALAMAN 8: BAB II BERAKHBLAK ── */
+    pageContents.push(`
+      <div class="page-content">
+        <div class="sec-label">BAB II — Konsepsi Nilai Dasar</div>
+        <h2 class="sec-title">2.3 Nilai Dasar ASN BerAKHLAK</h2>
+        <div class="sec-divider"></div>
+        <div class="body-text">
+          <p>Sesuai Surat Edaran Menteri PANRB Nomor 20 Tahun 2021, Core Values ASN yang harus diimplementasikan adalah <strong>BerAKHLAK</strong>. Berikut implementasinya dalam kegiatan aktualisasi ini:</p>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.38rem;margin-top:0.3rem;">
+          <div style="background:var(--c-surface);border-radius:6px;padding:0.5rem 0.6rem;border:1px solid var(--c-border);">
+            <div style="font-size:0.55rem;font-weight:700;color:var(--c-accent);text-transform:uppercase;margin-bottom:0.18rem;">Berorientasi Pelayanan</div>
+            <div style="font-size:0.56rem;color:var(--c-text);line-height:1.55;">Membangun dashboard untuk memenuhi kebutuhan pimpinan dan publik akan data koperasi yang cepat, akurat, dan solutif.</div>
+          </div>
+          <div style="background:var(--c-surface);border-radius:6px;padding:0.5rem 0.6rem;border:1px solid var(--c-border);">
+            <div style="font-size:0.55rem;font-weight:700;color:var(--c-accent);text-transform:uppercase;margin-bottom:0.18rem;">Akuntabel</div>
+            <div style="font-size:0.56rem;color:var(--c-text);line-height:1.55;">Digitalisasi data memastikan setiap informasi koperasi akurat, dapat diaudit, dan mencegah manipulasi data lapangan.</div>
+          </div>
+          <div style="background:var(--c-surface);border-radius:6px;padding:0.5rem 0.6rem;border:1px solid var(--c-border);">
+            <div style="font-size:0.55rem;font-weight:700;color:var(--c-accent);text-transform:uppercase;margin-bottom:0.18rem;">Kompeten</div>
+            <div style="font-size:0.56rem;color:var(--c-text);line-height:1.55;">Penulis mempelajari teknik GIS, cloud hosting, dan pemrograman web untuk menghasilkan output berkualitas terbaik.</div>
+          </div>
+          <div style="background:var(--c-surface);border-radius:6px;padding:0.5rem 0.6rem;border:1px solid var(--c-border);">
+            <div style="font-size:0.55rem;font-weight:700;color:var(--c-accent);text-transform:uppercase;margin-bottom:0.18rem;">Harmonis</div>
+            <div style="font-size:0.56rem;color:var(--c-text);line-height:1.55;">Membantu rekan kerja beradaptasi dengan sistem digital tanpa diskriminasi usia atau jabatan; membangun lingkungan kondusif.</div>
+          </div>
+          <div style="background:var(--c-surface);border-radius:6px;padding:0.5rem 0.6rem;border:1px solid var(--c-border);">
+            <div style="font-size:0.55rem;font-weight:700;color:var(--c-accent);text-transform:uppercase;margin-bottom:0.18rem;">Loyal</div>
+            <div style="font-size:0.56rem;color:var(--c-text);line-height:1.55;">Mendukung penuh suksesnya Inpres No. 9/2025 sebagai program prioritas presiden adalah wujud loyalitas tegak lurus ASN.</div>
+          </div>
+          <div style="background:var(--c-surface);border-radius:6px;padding:0.5rem 0.6rem;border:1px solid var(--c-border);">
+            <div style="font-size:0.55rem;font-weight:700;color:var(--c-accent);text-transform:uppercase;margin-bottom:0.18rem;">Adaptif</div>
+            <div style="font-size:0.56rem;color:var(--c-text);line-height:1.55;">Meninggalkan cara kerja manual dan beralih ke dashboard digital — bentuk adaptasi nyata terhadap era Smart Governance.</div>
+          </div>
+        </div>
+        <div style="margin-top:0.38rem;background:var(--c-surface);border-radius:6px;padding:0.5rem 0.6rem;border:1px solid var(--c-border);">
+          <div style="font-size:0.55rem;font-weight:700;color:var(--c-accent);text-transform:uppercase;margin-bottom:0.18rem;">Kolaboratif</div>
+          <div style="font-size:0.56rem;color:var(--c-text);line-height:1.55;">Bekerjasama dengan admin data, penyuluh lapangan, dan stakeholder terkait untuk memvalidasi data koperasi secara komprehensif.</div>
+        </div>
+        <div style="margin-top:0.38rem;padding:0.45rem 0.6rem;background:rgba(139,90,43,0.05);border-radius:6px;border:1px solid rgba(139,90,43,0.2);font-size:0.58rem;color:var(--c-text);line-height:1.6;">
+          <strong>Smart ASN:</strong> Penulis menerapkan 4 pilar Smart ASN — Digital Skill (GIS &amp; coding), Digital Culture (paperless workflow), Digital Ethics (keamanan data koperasi), dan Digital Safety (hosting terenkripsi SSL).
+        </div>
+        <span class="pg-num right">17</span>
+      </div>
+    `);
+    pageTitles.push('BAB II — BerAKHLAK');
+
+    /* ── HALAMAN 9: BAB III ANALISIS ISU ── */
+    pageContents.push(`
+      <div class="page-content">
+        <div class="sec-label">BAB III — Rancangan Aktualisasi</div>
+        <h2 class="sec-title">3.1 Identifikasi &amp; Analisis Isu</h2>
+        <div class="sec-divider"></div>
+        <div class="body-text">
+          <p>Melalui <em>environmental scanning</em> dan analisis kesenjangan antara kondisi saat ini dengan yang diharapkan, teridentifikasi tiga isu strategis. Penetapan prioritas menggunakan teknik <strong>APKL</strong> (Aktual, Problematik, Khalayak, Layak) dengan skala 1–5.</p>
+        </div>
+        <div style="border-left:4px solid rgba(45,122,79,0.7);padding:0.45rem 0.65rem;margin-bottom:0.38rem;background:rgba(45,122,79,0.04);border-radius:0 6px 6px 0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.1rem;">
+            <div style="font-size:0.52rem;font-weight:700;color:#2d7a4f;text-transform:uppercase;">ISU 1</div>
+            <div style="font-size:0.52rem;font-weight:700;color:#2d7a4f;">APKL: 15 — Rangking III</div>
+          </div>
+          <div style="font-size:0.64rem;font-weight:700;color:var(--c-heading);margin-bottom:0.1rem;">Belum Optimalnya Digitalisasi Sistem Penerbitan Sertifikat Pelatihan</div>
+          <div style="font-size:0.57rem;color:var(--c-text);line-height:1.5;">Proses penerbitan sertifikat masih manual (cetak fisik), memakan waktu lama dan berisiko rusak. Belum tersedia sistem e-sertifikat otomatis yang efisien.</div>
+        </div>
+        <div style="border-left:4px solid var(--c-accent);padding:0.45rem 0.65rem;margin-bottom:0.38rem;background:rgba(139,90,43,0.06);border-radius:0 6px 6px 0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.1rem;">
+            <div style="font-size:0.52rem;font-weight:700;color:var(--c-accent);text-transform:uppercase;">ISU 2 ★ PRIORITAS</div>
+            <div style="font-size:0.52rem;font-weight:700;color:var(--c-accent);">APKL: 20 — Rangking I</div>
+          </div>
+          <div style="font-size:0.64rem;font-weight:700;color:var(--c-heading);margin-bottom:0.1rem;">Belum Optimalnya Pengawasan &amp; Penyajian Data Sebaran Koperasi Merah Putih</div>
+          <div style="font-size:0.57rem;color:var(--c-text);line-height:1.5;">Data hanya berupa spreadsheet tabelaris tanpa visualisasi spasial. Tidak ada peta sebaran wilayah, status keaktifan, dan kesehatan koperasi — mengakibatkan <em>spatial blindness</em> bagi pengawas.</div>
+        </div>
+        <div style="border-left:4px solid rgba(107,76,138,0.5);padding:0.45rem 0.65rem;margin-bottom:0.42rem;background:rgba(107,76,138,0.04);border-radius:0 6px 6px 0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.1rem;">
+            <div style="font-size:0.52rem;font-weight:700;color:#6b4c8a;text-transform:uppercase;">ISU 3</div>
+            <div style="font-size:0.52rem;font-weight:700;color:#6b4c8a;">APKL: 16 — Rangking II</div>
+          </div>
+          <div style="font-size:0.64rem;font-weight:700;color:var(--c-heading);margin-bottom:0.1rem;">Rendahnya Efektivitas Penyusunan LPJ Kegiatan Pelatihan Perkoperasian</div>
+          <div style="font-size:0.57rem;color:var(--c-text);line-height:1.5;">Rekap data peserta masih manual, sering human error, berakibat keterlambatan penyusunan LPJ. Belum ada sistem pelaporan digital yang terintegrasi.</div>
+        </div>
+        <div class="info-box">
+          <h4>Analisis USG — Akar Masalah Isu Prioritas</h4>
+          <table style="width:100%;border-collapse:collapse;font-size:0.56rem;margin-top:0.22rem;">
+            <tr style="background:var(--c-surface2);"><th style="padding:0.24rem 0.3rem;text-align:left;border-bottom:1px solid var(--c-border);">Penyebab Isu Prioritas</th><th style="padding:0.24rem;text-align:center;border-bottom:1px solid var(--c-border);">U</th><th style="padding:0.24rem;text-align:center;border-bottom:1px solid var(--c-border);">S</th><th style="padding:0.24rem;text-align:center;border-bottom:1px solid var(--c-border);">G</th><th style="padding:0.24rem;text-align:center;border-bottom:1px solid var(--c-border);font-weight:700;">Total</th></tr>
+            <tr><td style="padding:0.24rem 0.3rem;border-bottom:1px solid var(--c-border);">Metode pengelolaan data masih tabelaris, belum geospasial</td><td style="text-align:center;">4</td><td style="text-align:center;">4</td><td style="text-align:center;">5</td><td style="text-align:center;font-weight:700;color:#2d7a4f;">13 ★</td></tr>
+            <tr><td style="padding:0.24rem 0.3rem;border-bottom:1px solid var(--c-border);">Belum tersedia aplikasi pemetaan visual di unit kerja</td><td style="text-align:center;">4</td><td style="text-align:center;">4</td><td style="text-align:center;">4</td><td style="text-align:center;">12</td></tr>
+            <tr><td style="padding:0.24rem 0.3rem;">Kompetensi digital SDM dalam pengolahan data masih kurang</td><td style="text-align:center;">4</td><td style="text-align:center;">3</td><td style="text-align:center;">4</td><td style="text-align:center;">11</td></tr>
+          </table>
+        </div>
+        <span class="pg-num left">22</span>
+      </div>
+    `);
+    pageTitles.push('BAB III — Analisis Isu');
+
+    /* ── HALAMAN 10: BAB III GAGASAN & TEKNOLOGI ── */
+    pageContents.push(`
+      <div class="page-content">
+        <div class="sec-label">BAB III — Rancangan Aktualisasi</div>
+        <h2 class="sec-title">3.2 Gagasan Kreatif &amp; Platform Teknologi</h2>
+        <div class="sec-divider"></div>
+        <div class="body-text">
+          <p>Gagasan kreatif untuk menyelesaikan isu prioritas adalah <strong>"Pengembangan Dashboard Pemetaan Digital Koperasi Desa/Kelurahan Merah Putih"</strong> berbasis GIS. Gagasan ini merupakan implementasi nyata Digital Skill dan Digital Culture sebagai wujud Smart ASN yang adaptif, sekaligus mendukung pelaksanaan SPBE (Perpres No. 95/2018). Transformasi ini bukan sekadar memindahkan data ke layar, melainkan perubahan paradigma menuju <em>Data-Driven Decision Making</em>.</p>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.37rem;margin-bottom:0.42rem;">
+          <div style="background:#1a1520;color:#e8ddd0;border-radius:6px;padding:0.5rem 0.6rem;border:1px solid rgba(255,255,255,0.06);">
+            <div style="font-size:0.57rem;font-weight:700;color:#b8963e;">Vercel (Hosting)</div>
+            <div style="font-size:0.51rem;color:rgba(232,221,208,0.65);line-height:1.4;margin-top:0.08rem;">URL publik, SSL gratis, deploy otomatis</div>
+          </div>
+          <div style="background:#1a1520;color:#e8ddd0;border-radius:6px;padding:0.5rem 0.6rem;border:1px solid rgba(255,255,255,0.06);">
+            <div style="font-size:0.57rem;font-weight:700;color:#b8963e;">Google Apps Script</div>
+            <div style="font-size:0.51rem;color:rgba(232,221,208,0.65);line-height:1.4;margin-top:0.08rem;">Backend API — Google Sheet ke frontend</div>
+          </div>
+          <div style="background:#1a1520;color:#e8ddd0;border-radius:6px;padding:0.5rem 0.6rem;border:1px solid rgba(255,255,255,0.06);">
+            <div style="font-size:0.57rem;font-weight:700;color:#b8963e;">Google Sheets</div>
+            <div style="font-size:0.51rem;color:rgba(232,221,208,0.65);line-height:1.4;margin-top:0.08rem;">Database — NIB, NIK, koordinat GPS, status</div>
+          </div>
+          <div style="background:#1a1520;color:#e8ddd0;border-radius:6px;padding:0.5rem 0.6rem;border:1px solid rgba(255,255,255,0.06);">
+            <div style="font-size:0.57rem;font-weight:700;color:#b8963e;">Leaflet.js / GIS</div>
+            <div style="font-size:0.51rem;color:rgba(232,221,208,0.65);line-height:1.4;margin-top:0.08rem;">Peta interaktif — marker &amp; pop-up koperasi</div>
+          </div>
+          <div style="background:#1a1520;color:#e8ddd0;border-radius:6px;padding:0.5rem 0.6rem;border:1px solid rgba(255,255,255,0.06);">
+            <div style="font-size:0.57rem;font-weight:700;color:#b8963e;">AI (Kecerdasan Buatan)</div>
+            <div style="font-size:0.51rem;color:rgba(232,221,208,0.65);line-height:1.4;margin-top:0.08rem;">Coding, debugging, dan pengembangan fitur</div>
+          </div>
+          <div style="background:#1a1520;color:#e8ddd0;border-radius:6px;padding:0.5rem 0.6rem;border:1px solid rgba(255,255,255,0.06);">
+            <div style="font-size:0.57rem;font-weight:700;color:#b8963e;">SIMKOPDES</div>
+            <div style="font-size:0.51rem;color:rgba(232,221,208,0.65);line-height:1.4;margin-top:0.08rem;">Sumber data koordinat GPS koperasi</div>
+          </div>
+        </div>
+        <div class="info-box">
+          <h4>Estimasi Biaya Kegiatan — Total Rp 425.000,-</h4>
+          <table style="width:100%;border-collapse:collapse;font-size:0.57rem;margin-top:0.22rem;">
+            <tr><td style="padding:0.22rem 0;border-bottom:1px solid var(--c-border);">Persiapan &amp; konsultasi rancangan</td><td style="text-align:right;border-bottom:1px solid var(--c-border);">Rp 0,-</td></tr>
+            <tr><td style="padding:0.22rem 0;border-bottom:1px solid var(--c-border);">Inventarisasi &amp; validasi data lapangan</td><td style="text-align:right;border-bottom:1px solid var(--c-border);">Rp 50.000,-</td></tr>
+            <tr><td style="padding:0.22rem 0;border-bottom:1px solid var(--c-border);">Kuota internet &amp; langganan AI (platform cloud)</td><td style="text-align:right;border-bottom:1px solid var(--c-border);">Rp 225.000,-</td></tr>
+            <tr><td style="padding:0.22rem 0;border-bottom:1px solid var(--c-border);">Uji coba dan validasi internal</td><td style="text-align:right;border-bottom:1px solid var(--c-border);">Rp 0,-</td></tr>
+            <tr><td style="padding:0.22rem 0;">Cetak laporan &amp; sosialisasi terbatas</td><td style="text-align:right;">Rp 150.000,-</td></tr>
+          </table>
+        </div>
+        <span class="pg-num right">36</span>
+      </div>
+    `);
+    pageTitles.push('BAB III — Gagasan & Teknologi');
+
+
+    /* ── HALAMAN 11: PETA KEGIATAN (original) ── */
+    pageContents.push(`
+      <div class="page-content">
+        <div style="font-family:var(--font-serif);font-size:0.88rem;font-weight:700;color:var(--c-heading);margin-bottom:0.8rem;">Peta Kegiatan</div>
+        <div style="display:flex;flex-direction:column;gap:0.45rem;">
+          ${CPS.map((cp, i) => `
+          <div style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.7rem;background:rgba(0,0,0,0.02);border:1px solid rgba(0,0,0,0.04);border-radius:6px;">
+            <span style="font-size:1rem;">${cp.icon}</span>
+            <div>
+              <div style="font-family:var(--font-mono);font-size:0.55rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--c-accent);">${cp.tag}</div>
+              <div style="font-size:0.72rem;font-weight:600;color:var(--c-heading);line-height:1.35;">${cp.label}</div>
+            </div>
+          </div>`).join('')}
+        </div>
+        <span class="pg-num left">08</span>
+      </div>
+    `);
+    pageTitles.push('Peta Kegiatan');
+
+    /* ── HALAMAN 12–25: BAB IV 7 KEGIATAN DINAMIS ── */
+        CPS.forEach((cp, idx) => {
+      const pageNumA = String(idx * 2 + 9).padStart(2, '0');
+      const pageNumB = String(idx * 2 + 10).padStart(2, '0');
+
+      // Page A: tahapan
+      pageContents.push(`
+        <div class="page-content">
+          <div class="act-head">
+            <div class="act-icon ${cp.color}">${cp.icon}</div>
+            <div class="act-head-text">
+              <div class="act-tag">${cp.tag}</div>
+              <h3>${cp.label}</h3>
+            </div>
+          </div>
+          <div class="tahapan-list">
+            ${cp.tahapan.map((t, ti) => {
+              const hasImg = t.imgId && t.imgId.trim() !== '';
+              const cleanId = hasImg ? extractGdId(t.imgId) : '';
+              const imgSrc = hasImg ? gdImg(t.imgId) : '';
+              return `
+              <div class="tahapan-entry" onclick="this.classList.toggle('expanded')">
+                <div class="tahapan-entry-title">${t.title}</div>
+                ${hasImg ? `<div class="tahapan-toggle-hint"><span class="arr">▼</span> Lihat bukti</div>` : ''}
+                ${hasImg ? `
+                <div class="tahapan-img-wrap" data-file-id="${cleanId}">
+                  <div class="ev-loader">Memuat</div>
+                  <img
+                    src="${imgSrc}"
+                    alt="Bukti — ${cp.tag} Tahap ${ti + 1}"
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                    onclick="event.stopPropagation();openLightbox(this.src, this.alt)"
+                    onload="this.classList.add('loaded');var l=this.parentElement.querySelector('.ev-loader');if(l)l.classList.add('hidden')"
+                    onerror="this.onerror=null;this.src=gdImgFallback('${cleanId}');this.onload=function(){this.classList.add('loaded');var l=this.parentElement.querySelector('.ev-loader');if(l)l.classList.add('hidden')};this.onerror=function(){this.style.display='none';this.parentElement.querySelector('.ev-loader').innerHTML='⚠️ Gambar tidak tersedia'}"
+                  >
+                </div>` : ''}
+                ${t.linkUrl ? `
+                <a href="${t.linkUrl}" target="_blank" rel="noopener noreferrer" class="ev-link-btn" onclick="event.stopPropagation()">
+                  📂 Buka Dokumen ↗
+                </a>` : ''}
+              </div>`;
+            }).join('')}
+          </div>
+          <span class="pg-num right">${pageNumA}</span>
+        </div>
+      `);
+      pageTitles.push(`${cp.tag} — Tahapan`);
+
+      // Page B: BerAKHLAK
+      pageContents.push(`
+        <div class="page-content">
+          <div style="font-family:var(--font-serif);font-size:0.82rem;font-weight:700;color:var(--c-heading);margin-bottom:0.3rem;">${cp.tag}: Keterkaitan BerAKHLAK</div>
+          <div class="sec-divider"></div>
+          <div class="ak-collapse open" id="ak-${cp.id}">
+            <div class="ak-collapse-body" style="max-height:2000px;padding:0 0 0.6rem;">
+              ${cp.ak.map(a => `
+              <div class="ak-entry" style="border-left-color:${a.c}">
+                <div class="ak-n" style="color:${a.c}">${a.n}</div>
+                <div class="ak-d">${a.t}</div>
+              </div>`).join('')}
+            </div>
+          </div>
+          <span class="pg-num left">${pageNumB}</span>
+        </div>
+      `);
+      pageTitles.push(`${cp.tag} — BerAKHLAK`);
+    });
+
+    /* ── HALAMAN 26: HASIL AKHIR (original) ── */
+        /* -- Final pages -- */
+    pageContents.push(`
+      <div class="page-content">
+        <div class="final-content">
+          <div class="final-trophy">🏆</div>
+          <h2 class="final-title">Smart Governance Terwujud!</h2>
+          <p class="final-desc">Seluruh <strong>7 kegiatan utama</strong> dengan <strong>21 tahapan</strong> berhasil dilaksanakan 100% dan nilai BerAKHLAK teraktualisasi pada setiap tahapan.</p>
+          <div class="stats-mini-grid">
+            <div class="stat-mini"><div class="s-num">7</div><div class="s-lbl">Kegiatan</div></div>
+            <div class="stat-mini"><div class="s-num">21</div><div class="s-lbl">Tahapan</div></div>
+            <div class="stat-mini"><div class="s-num">100%</div><div class="s-lbl">Realisasi</div></div>
+            <div class="stat-mini"><div class="s-num">30</div><div class="s-lbl">Hari Habituasi</div></div>
+          </div>
+          <div class="final-hash">#SmartGovernance · Dinas Koperasi & UMKM · 2026</div>
+        </div>
+        <span class="pg-num right">23</span>
+      </div>
+    `);
+    pageTitles.push('Hasil Akhir');
+
+
+    /* ── HALAMAN 28: CAPAIAN CORE ISU ── */
+    pageContents.push(`
+      <div class="page-content">
+        <div class="sec-label">BAB IV — Capaian Aktualisasi</div>
+        <h2 class="sec-title">Capaian Penyelesaian Core Isu</h2>
+        <div class="sec-divider"></div>
+        <div class="body-text">
+          <p>Seluruh 7 kegiatan aktualisasi dilaksanakan di Dinas Koperasi dan UMKM Provinsi Sulawesi Tenggara selama masa habituasi <strong>1 Maret – 10 April 2026</strong>, terealisasi <strong>100%</strong>. Berikut capaian penyelesaian core isu secara komparatif:</p>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:0.57rem;margin-bottom:0.45rem;">
+          <tr style="background:var(--c-surface2);">
+            <th style="padding:0.28rem 0.35rem;text-align:left;border-bottom:2px solid rgba(139,90,43,0.4);">Aspek</th>
+            <th style="padding:0.28rem 0.35rem;text-align:left;border-bottom:2px solid rgba(139,90,43,0.4);">Sebelum Aktualisasi</th>
+            <th style="padding:0.28rem 0.35rem;text-align:left;border-bottom:2px solid rgba(139,90,43,0.4);">Sesudah Aktualisasi</th>
+          </tr>
+          <tr><td style="padding:0.28rem 0.35rem;border-bottom:1px solid var(--c-border);font-weight:700;">Visualisasi Data</td><td style="padding:0.28rem 0.35rem;border-bottom:1px solid var(--c-border);color:var(--c-text-dim);">Spreadsheet tabelaris kaku &amp; dokumen fisik terfragmentasi</td><td style="padding:0.28rem 0.35rem;border-bottom:1px solid var(--c-border);color:#2d7a4f;font-weight:600;">Dashboard GIS interaktif real-time — sebaran koperasi dalam satu layar</td></tr>
+          <tr><td style="padding:0.28rem 0.35rem;border-bottom:1px solid var(--c-border);font-weight:700;">Pencarian Data</td><td style="padding:0.28rem 0.35rem;border-bottom:1px solid var(--c-border);color:var(--c-text-dim);">Sortir manual ribuan baris Excel, memakan waktu lama</td><td style="padding:0.28rem 0.35rem;border-bottom:1px solid var(--c-border);color:#2d7a4f;font-weight:600;">Filter otomatis (kab/kota, kecamatan, status) — selesai detik</td></tr>
+          <tr><td style="padding:0.28rem 0.35rem;font-weight:700;">Profil Koperasi</td><td style="padding:0.28rem 0.35rem;color:var(--c-text-dim);">Data NIB, NIK, pengurus tersimpan terpisah dari lokasi</td><td style="padding:0.28rem 0.35rem;color:#2d7a4f;font-weight:600;">Pop-up marker lengkap — Single Source of Truth</td></tr>
+        </table>
+        <div class="info-box">
+          <h4>Manfaat Terselesainya Core Isu</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.38rem;margin-top:0.28rem;">
+            <div>
+              <div style="font-size:0.55rem;font-weight:700;color:var(--c-accent);margin-bottom:0.18rem;">Bagi Penulis</div>
+              <ul style="padding-left:0.85rem;font-size:0.56rem;line-height:1.8;">
+                <li>Internalisasi BerAKHLAK secara nyata</li>
+                <li>Hard skill GIS, cloud &amp; AI coding</li>
+                <li>Problem solving terasah</li>
+              </ul>
+            </div>
+            <div>
+              <div style="font-size:0.55rem;font-weight:700;color:var(--c-accent);margin-bottom:0.18rem;">Bagi Instansi</div>
+              <ul style="padding-left:0.85rem;font-size:0.56rem;line-height:1.8;">
+                <li>Alat pengawasan berbasis GIS</li>
+                <li>Mendukung SPBE Perpres 95/2018</li>
+                <li>Respons cepat terhadap Inpres 9/2025</li>
+              </ul>
+            </div>
+          </div>
+          <div style="margin-top:0.38rem;padding-top:0.38rem;border-top:1px solid var(--c-border);">
+            <div style="font-size:0.55rem;font-weight:700;color:var(--c-accent);margin-bottom:0.15rem;">Bagi Stakeholders &amp; Masyarakat</div>
+            <p style="font-size:0.56rem;line-height:1.6;">Pemerintah Provinsi mendapat alat pemantauan handal. Pengurus koperasi mendapat pembinaan lebih tepat sasaran. Masyarakat mendapat transparansi informasi profil koperasi secara digital dan interaktif.</p>
+          </div>
+        </div>
+        <span class="pg-num left">78</span>
+      </div>
+    `);
+    pageTitles.push('Capaian Core Isu');
+
+    /* ── HALAMAN 29: PENUTUP ── */
+    pageContents.push(`
+      <div class="page-content">
+        <div class="sec-label">BAB V — Penutup</div>
+        <h2 class="sec-title">Kesimpulan &amp; Saran</h2>
+        <div class="sec-divider"></div>
+        <div style="font-size:0.63rem;font-weight:700;color:var(--c-heading);margin-bottom:0.28rem;">Kesimpulan</div>
+        <div class="body-text">
+          <p>Berdasarkan analisis APKL dan USG, ditetapkan isu prioritas <em>"Belum Optimalnya Pengawasan dan Penyajian Data Sebaran Koperasi Desa/Kelurahan Merah Putih"</em> (skor APKL 20/20). Melalui 7 kegiatan terstruktur selama 30 hari kerja habituasi, penulis berhasil membangun Dashboard Pemetaan Digital berbasis GIS yang mengubah data tabelaris kaku menjadi peta interaktif real-time.</p>
+          <p>Seluruh nilai dasar BerAKHLAK terinternalisasi dalam setiap tahapan kerja. Keberhasilan aktualisasi ini tidak hanya diukur dari tersedianya produk digital, tetapi juga dari perubahan budaya kerja menuju digitalisasi yang lebih adaptif, profesional, dan berorientasi pelayanan publik.</p>
+        </div>
+        <div class="info-box" style="margin-bottom:0.42rem;">
+          <h4>Saran Tindak Lanjut</h4>
+          <ul style="padding-left:1rem;font-size:0.59rem;line-height:1.85;">
+            <li><strong style="color:var(--c-accent);">Bagi Organisasi:</strong> Integrasikan dashboard ke portal resmi dinas dan kembangkan ke tingkat kabupaten/kota seluruh Sulawesi Tenggara</li>
+            <li><strong style="color:var(--c-accent);">Bagi Rekan ASN:</strong> Terus tingkatkan kompetensi digital (Digital Skill) untuk inovasi sederhana yang berdampak besar bagi pelayanan publik</li>
+            <li><strong style="color:var(--c-accent);">Bagi Koperasi:</strong> Aktif memperbarui data lokasi dan profil usaha secara berkala agar dashboard selalu menyajikan informasi terkini</li>
+          </ul>
+        </div>
+        <div style="padding:0.75rem 0.9rem;background:linear-gradient(135deg,rgba(139,90,43,0.07),rgba(107,76,138,0.05));border-radius:8px;border:1px solid rgba(139,90,43,0.2);">
+          <div style="font-family:var(--font-serif);font-size:0.72rem;font-weight:800;color:var(--c-heading);margin-bottom:0.35rem;">Penutup</div>
+          <p style="font-size:0.61rem;font-style:italic;line-height:1.7;color:var(--c-text);">"Melalui aktualisasi ini, diharapkan kualitas pengawasan koperasi meningkat secara signifikan, akuntabilitas data terjaga, dan Pemerintah Provinsi Sulawesi Tenggara dapat menjadi <strong>pionir dalam mengakselerasi transformasi digital menuju Smart Governance</strong> di tingkat daerah."</p>
+          <div style="text-align:right;font-size:0.58rem;color:var(--c-text-dim);margin-top:0.45rem;">Kendari, 10 April 2026</div>
+          <div style="text-align:right;font-size:0.61rem;font-weight:700;color:var(--c-heading);">Masyhuri Arifin, S.E.</div>
+        </div>
+        <span class="pg-num right">83</span>
+      </div>
+    `);
+    pageTitles.push('Penutup');
+
+    /* ── HALAMAN 30: LAMPIRAN ── */
+    pageContents.push(`
+      <div class="page-content">
+        <div class="sec-label">Lampiran</div>
+        <h2 class="sec-title">Lampiran &amp; Dokumentasi</h2>
+        <div class="sec-divider"></div>
+        <div class="body-text">
+          <p>Kumpulan bukti fisik dan dokumentasi pelaksanaan 7 kegiatan aktualisasi sebagai pertanggungjawaban habituasi <em>off-campus</em> Pelatihan Dasar CPNS Golongan III Angkatan I Tahun 2026. Seluruh dokumen telah dikumpulkan dan disahkan oleh Mentor dan Coach pada Seminar Pelaksanaan Aktualisasi tanggal <strong>28 Februari 2026</strong>.</p>
+        </div>
+        <div class="info-box" style="margin-bottom:0.42rem;">
+          <h4>Dokumen Administrasi Wajib</h4>
+          <ul style="padding-left:1rem;font-size:0.61rem;line-height:1.9;">
+            <li>Surat Persetujuan Mentor (bermeterai, ditandatangani 3 Maret 2026)</li>
+            <li>Lembar Konsultasi Mentor &amp; Coach (7 pertemuan terdokumentasi)</li>
+            <li>Nota Dinas / Surat Tugas pelaksanaan kegiatan habituasi</li>
+            <li>Berita Acara Uji Coba Dashboard (ditandatangani Kabid Pengawasan)</li>
+            <li>Berita Acara Sosialisasi dan Demonstrasi kepada Pimpinan</li>
+            <li>Daftar Hadir Peserta Sosialisasi Dashboard</li>
+          </ul>
+        </div>
+        <div class="info-box" style="margin-bottom:0.42rem;">
+          <h4>Bukti Teknis Dashboard GIS</h4>
+          <ul style="padding-left:1rem;font-size:0.61rem;line-height:1.9;">
+            <li>Screenshot tampilan Dashboard — peta interaktif wilayah Kota Kendari</li>
+            <li>Screenshot fitur pop-up marker koperasi (NIB, NIK, Pengurus, Status)</li>
+            <li>Screenshot fitur filterisasi kecamatan &amp; status operasional</li>
+            <li>URL Dashboard yang dapat diakses publik (hosted di Vercel, terenkripsi SSL)</li>
+            <li>Screenshot Google Sheet sebagai database terintegrasi</li>
+            <li>Dokumentasi foto kegiatan sosialisasi dan demonstrasi</li>
+          </ul>
+        </div>
+        <div class="info-box">
+          <h4>Manual Book &amp; Materi Sosialisasi</h4>
+          <ul style="padding-left:1rem;font-size:0.61rem;line-height:1.9;">
+            <li>Manual Book Dashboard — panduan penggunaan versi cetak</li>
+            <li>Presentasi PPT sosialisasi kepada Pimpinan Dinas (slide lengkap)</li>
+            <li>Materi Panduan Singkat (1 halaman) untuk distribusi kepada rekan kerja</li>
+          </ul>
+        </div>
+        <span class="pg-num left">85</span>
+      </div>
+    `);
+    pageTitles.push('Lampiran');
+
+
+/* ══════════════════════════════════════════════
+       RENDER BOOK PAGES
+    ══════════════════════════════════════════════ */
+    const bookEl = document.getElementById('book');
+    const totalSpreads = Math.ceil(pageContents.length / 2);
+    const totalDisplayPages = pageContents.length;
+
+    // Create page sheets (each sheet has front + back)
+    for (let i = 0; i < totalSpreads; i++) {
+      const frontIdx = i * 2;
+      const backIdx = i * 2 + 1;
+
+      const pageEl = document.createElement('div');
+      pageEl.className = 'page';
+      pageEl.style.zIndex = totalSpreads - i;
+      pageEl.dataset.index = i;
+
+      const frontEl = document.createElement('div');
+      frontEl.className = 'page-front';
+      if (frontIdx === 0) {
+        // Special cover styling
+        frontEl.innerHTML = pageContents[frontIdx];
+      } else {
+        frontEl.innerHTML = pageContents[frontIdx] || '';
+      }
+
+      const backEl = document.createElement('div');
+      backEl.className = 'page-back';
+      if (backIdx < pageContents.length) {
+        backEl.innerHTML = pageContents[backIdx];
+      }
+
+      pageEl.appendChild(frontEl);
+      pageEl.appendChild(backEl);
+      bookEl.appendChild(pageEl);
+    }
+
+    /* ══════════════════════════════════════════════
+       PAGE FLIP LOGIC
+    ══════════════════════════════════════════════ */
+    const pages = document.querySelectorAll('.page');
+    let currentPage = 0;
+    let isAnimating = false;
+
+    function updateControls() {
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const navPageText = document.getElementById('navPageText');
+      const navPageTitle = document.getElementById('navPageTitle');
+      const pageIndicator = document.getElementById('page-indicator');
+
+      prevBtn.disabled = currentPage === 0;
+      nextBtn.disabled = currentPage >= totalSpreads;
+
+      // Calc visible page numbers
+      const leftPageNum = currentPage * 2;
+      const rightPageNum = currentPage * 2 + 1;
+
+      if (currentPage === 0) {
+        navPageText.textContent = 'Sampul';
+        navPageTitle.textContent = pageTitles[0] || '';
+      } else if (currentPage >= totalSpreads) {
+        navPageText.textContent = `Halaman ${totalDisplayPages}`;
+        navPageTitle.textContent = pageTitles[totalDisplayPages - 1] || '';
+      } else {
+        navPageText.textContent = `Hal. ${leftPageNum}–${Math.min(rightPageNum, totalDisplayPages - 1) + 1}`;
+        const t1 = pageTitles[leftPageNum] || '';
+        const t2 = pageTitles[rightPageNum] || '';
+        navPageTitle.textContent = t1 && t2 ? `${t1} / ${t2}` : t1 || t2;
+      }
+
+      pageIndicator.textContent = `${currentPage + 1} / ${totalSpreads + 1}`;
+
+      // Update dots
+      document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentPage);
+      });
+
+      // Update z-index for proper stacking
+      pages.forEach((p, i) => {
+        if (p.classList.contains('flipped')) {
+          p.style.zIndex = 100 + i;
+        } else {
+          p.style.zIndex = totalSpreads - i;
+        }
+      });
+    }
+
+    function flipNext() {
+      if (currentPage >= totalSpreads || isAnimating) return;
+      isAnimating = true;
+      pages[currentPage].classList.add('flipped');
+      currentPage++;
+      updateControls();
+      setTimeout(() => { isAnimating = false; }, 700);
+    }
+
+    function flipPrev() {
+      if (currentPage <= 0 || isAnimating) return;
+      isAnimating = true;
+      currentPage--;
+      pages[currentPage].classList.remove('flipped');
+      updateControls();
+      setTimeout(() => { isAnimating = false; }, 700);
+    }
+
+    function goToPage(targetSpread) {
+      if (isAnimating) return;
+      if (targetSpread === currentPage) return;
+
+      isAnimating = true;
+      const dir = targetSpread > currentPage ? 1 : -1;
+
+      function step() {
+        if (currentPage === targetSpread) {
+          isAnimating = false;
+          updateControls();
+          return;
+        }
+        if (dir === 1) {
+          pages[currentPage].classList.add('flipped');
+          currentPage++;
+        } else {
+          currentPage--;
+          pages[currentPage].classList.remove('flipped');
+        }
+        updateControls();
+        setTimeout(step, 150);
+      }
+      step();
+    }
+
+    // Click on page to flip
+    pages.forEach((p, i) => {
+      p.addEventListener('click', (e) => {
+        // Don't flip if clicking interactive elements
+        if (e.target.closest('a, button, .tahapan-entry, .ak-collapse-btn, .back-home')) return;
+        if (p.classList.contains('flipped')) {
+          flipPrev();
+        } else {
+          flipNext();
+        }
+      });
+    });
+
+    // Buttons
+    document.getElementById('prevBtn').addEventListener('click', flipPrev);
+    document.getElementById('nextBtn').addEventListener('click', flipNext);
+
+    // Keyboard
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        flipNext();
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        flipPrev();
+      }
+    });
+
+    // Swipe support
+    let touchStartX = 0;
+    let touchStartY = 0;
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].screenX - touchStartX;
+      const dy = e.changedTouches[0].screenY - touchStartY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+        if (dx < 0) flipNext(); else flipPrev();
+      }
+    }, { passive: true });
+
+    // Build nav dots
+    const navDotsEl = document.getElementById('navDots');
+    for (let i = 0; i <= totalSpreads; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'nav-dot';
+      if (i === 0) dot.classList.add('active');
+      dot.addEventListener('click', () => goToPage(i));
+      navDotsEl.appendChild(dot);
+    }
+
+    updateControls();
+
+    /* ── LIGHTBOX ── */
+    const lb = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lightbox-img');
+    const lbCaption = document.getElementById('lightbox-caption');
+
+    function openLightbox(src, alt) {
+      let hires = src;
+      if (src.includes('thumbnail')) hires = src.replace(/sz=w\d+/, 'sz=w1600');
+      lbImg.src = hires;
+      lbImg.alt = alt;
+      lbCaption.textContent = alt;
+      lb.classList.add('open');
+    }
+
+    function closeLightbox() {
+      lb.classList.remove('open');
+      setTimeout(() => { lbImg.src = ''; }, 350);
+    }
+
+    document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+    lb.addEventListener('click', e => { if (e.target === lb || e.target === lbImg) closeLightbox(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+  </script>
+</body>
+
+</html>

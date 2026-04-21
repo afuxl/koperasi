@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laporan Aktualisasi — Dashboard Pemetaan Digital</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root{
+  /* Core Colors */
+  --accent:#22d3ee;--accent2:#818cf8;--green:#4ade80;
+  --orange:#fb923c;--red:#f87171;
+  
+  /* Theme: DARK (Default) */
+  --sky:#060e1e;
+  --sky-hero:radial-gradient(ellipse 80% 70% at 50% 30%,#0d2448,#020810);
+  --card:rgba(10,20,40,0.85);--border:rgba(34,211,238,0.2);
+  --text:#e2e8f0;--heading:#ffffff;--muted:#94a3b8;
+  --glass-bg:rgba(255,255,255,0.05);--glass-hover:rgba(255,255,255,0.1);
+  --glass-border:rgba(255,255,255,0.1);--shadow:rgba(0,0,0,0.5);
+  --popup-bg:rgba(2,8,20,0.9);
+
+  /* 3D Scene Dark */
+  --sky-svg:#091424;--terrain:#111827;--road-1:#192330;--road-2:#0f1620;
+  --road-line:#cbd5e1;--road-dash:#475569;--star-opacity:1;--sun-opacity:0;
+  --headlight-op:0.9;--gate-banner:#0284c7;--gate-border:#38bdf8;
+  --pillar-bg:linear-gradient(90deg,#0f172a,#334155,#0f172a);--pillar-border:#475569;
+}
+
+body.light-mode {
+  /* Theme: LIGHT */
+  --sky:#f0f9ff;
+  --sky-hero:radial-gradient(ellipse 80% 70% at 50% 30%,#bae6fd,#e0f2fe);
+  --card:rgba(255, 255, 255, 0.9);--border:rgba(14, 165, 233, 0.3);
+  --text:#334155;--heading:#0f172a;--muted:#64748b;
+  --glass-bg:rgba(0,0,0,0.03);--glass-hover:rgba(0,0,0,0.06);
+  --glass-border:rgba(0,0,0,0.1);--shadow:rgba(0,0,0,0.1);
+  --popup-bg:rgba(255,255,255,0.95);
+
+  /* 3D Scene Light */
+  --sky-svg:#7dd3fc;--terrain:#86efac;--road-1:#94a3b8;--road-2:#cbd5e1;
+  --road-line:#ffffff;--road-dash:#ffffff;--star-opacity:0;--sun-opacity:1;
+  --headlight-op:0.15;--gate-banner:#0ea5e9;--gate-border:#bae6fd;
+  --pillar-bg:linear-gradient(90deg,#94a3b8,#e2e8f0,#94a3b8);--pillar-border:#cbd5e1;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--sky);color:var(--text);overflow-x:hidden; transition: background 0.5s, color 0.5s;}
+
+/* ── NAVBAR ── */
+#main-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9990;
+  background: rgba(6,14,30,0.75); backdrop-filter: blur(18px) saturate(1.6);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; height: 60px;
+  transition: background 0.5s, border 0.5s, transform 0.4s;
+}
+body.light-mode #main-nav { background: rgba(240,249,255,0.8); }
+#main-nav.nav-hidden { transform: translateY(-100%); }
+
+.nav-brand {
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  white-space: nowrap; letter-spacing: 0.02em;
+}
+
+.nav-links {
+  display: flex; align-items: center; gap: 0.25rem; list-style: none;
+}
+.nav-links li a {
+  font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500;
+  color: var(--muted); text-decoration: none;
+  padding: 0.45rem 0.9rem; border-radius: 8px;
+  transition: all 0.3s cubic-bezier(.16,1,.3,1);
+  position: relative; white-space: nowrap;
+}
+.nav-links li a:hover { color: var(--heading); background: var(--glass-hover); }
+.nav-links li a.active {
+  color: var(--accent); background: rgba(34,211,238,0.1);
+}
+.nav-links li a.active::after {
+  content: ''; position: absolute; bottom: 2px; left: 30%; right: 30%;
+  height: 2px; background: var(--accent); border-radius: 2px;
+}
+
+.nav-actions { display: flex; align-items: center; gap: 0.6rem; }
+
+/* Hamburger */
+.hamburger {
+  display: none; background: none; border: none; cursor: pointer;
+  width: 36px; height: 36px; position: relative; z-index: 9999;
+}
+.hamburger span {
+  display: block; width: 22px; height: 2px; background: var(--text);
+  border-radius: 2px; margin: 5px auto;
+  transition: all 0.3s cubic-bezier(.16,1,.3,1);
+}
+.hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 768px) {
+  .hamburger { display: block; }
+  .nav-links {
+    position: fixed; top: 0; right: 0; width: 280px; height: 100vh;
+    flex-direction: column; align-items: stretch; gap: 0;
+    background: var(--card); border-left: 1px solid var(--border);
+    backdrop-filter: blur(20px); padding: 5rem 1.5rem 2rem;
+    transform: translateX(100%); transition: transform 0.4s cubic-bezier(.16,1,.3,1);
+    box-shadow: -10px 0 40px var(--shadow);
+  }
+  .nav-links.open { transform: translateX(0); }
+  .nav-links li a { padding: 0.8rem 1rem; font-size: 0.95rem; border-radius: 10px; }
+  .nav-links li a.active::after { display: none; }
+}
+
+/* ── THEME TOGGLE ── */
+.theme-toggle {
+  background: var(--glass-bg); border: 1px solid var(--glass-border);
+  color: var(--text); border-radius: 50%; width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1rem; backdrop-filter: blur(10px);
+  transition: transform 0.3s, background 0.5s, border 0.5s;
+}
+.theme-toggle:hover { transform: scale(1.1); background: var(--glass-hover); }
+.icon-moon { display: none; }
+body.light-mode .icon-sun { display: none; }
+body.light-mode .icon-moon { display: block; }
+
+/* ── ROAD NAV ARROWS ── */
+.road-nav-btn {
+  position: absolute; z-index: 300; cursor: pointer;
+  background: var(--glass-bg); border: 1px solid var(--border);
+  backdrop-filter: blur(12px); border-radius: 50%;
+  width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent); font-size: 1.4rem; font-weight: 700;
+  transition: all 0.3s cubic-bezier(.16,1,.3,1);
+  box-shadow: 0 8px 25px var(--shadow);
+  opacity: 0; pointer-events: none;
+}
+.road-nav-btn.show { opacity: 1; pointer-events: auto; }
+.road-nav-btn:hover {
+  transform: scale(1.15); background: rgba(34,211,238,0.15);
+  box-shadow: 0 0 20px rgba(34,211,238,0.3);
+}
+#road-prev { bottom: 6rem; left: 1.5rem; }
+#road-next { bottom: 6rem; right: 1.5rem; }
+.road-nav-btn .road-nav-label {
+  position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  font-family: 'Syne', sans-serif; font-size: 0.6rem; font-weight: 700;
+  color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em;
+  white-space: nowrap; pointer-events: none;
+  opacity: 0; transition: opacity 0.2s;
+}
+.road-nav-btn:hover .road-nav-label { opacity: 1; }
+
+/* ── HERO ── */
+#hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5rem 2rem 4rem;position:relative;overflow:hidden}
+#hero-bg{position:absolute;inset:0;background:var(--sky-hero);z-index:0; transition: background 0.5s;}
+.hero-stars{position:absolute;inset:0;z-index:0;overflow:hidden; opacity: var(--star-opacity); transition: opacity 0.5s;}
+.hstar{position:absolute;border-radius:50%;background:#fff}
+@keyframes blink{0%,100%{opacity:.15}50%{opacity:.9}}
+.hero-content{position:relative;z-index:2;max-width:900px;margin:auto}
+.hero-tag{display:inline-block;border:1px solid var(--border);background:var(--glass-bg);color:var(--accent);padding:.4rem 1.2rem;border-radius:50px;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;margin-bottom:2rem; transition: all 0.5s;}
+.hero-h1{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(1.8rem,4vw,3rem);line-height:1.3;color:var(--heading);margin-bottom:1.5rem; transition: color 0.5s;}
+.hero-h1 em{font-style:normal;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:clamp(.9rem,2vw,1.1rem);color:var(--muted);max-width:700px;margin:0 auto 3rem;line-height:1.8; transition: color 0.5s;}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.8rem;justify-content:center;margin-bottom:3rem}
+.meta-chip{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:8px;padding:.4rem 1rem;font-size:.85rem;color:var(--text);display:flex;align-items:center;gap:.5rem; transition: all 0.5s;}
+.scroll-hint{display:flex;flex-direction:column;align-items:center;gap:.5rem;color:var(--muted);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;animation:fadeUp .6s 1.2s both}
+.scroll-hint span{width:2px;height:36px;background:linear-gradient(180deg,var(--accent),transparent);border-radius:2px;animation:scrollPulse 1.6s ease-in-out infinite}
+@keyframes scrollPulse{0%,100%{opacity:.3;transform:scaleY(.5)}50%{opacity:1;transform:scaleY(1)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── BAB ── */
+.bab-container{position:relative;z-index:5;max-width:1000px;margin:0 auto;padding:2rem 1.5rem 6rem;display:flex;flex-direction:column;gap:3rem}
+.bab-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:2.5rem;backdrop-filter:blur(12px);box-shadow:0 20px 40px var(--shadow); transition: all 0.5s;}
+.bab-header{display:flex;align-items:baseline;gap:1rem;margin-bottom:1.5rem;border-bottom:1px solid var(--glass-border);padding-bottom:1rem; transition: border 0.5s;}
+.bab-num{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--accent);line-height:1}
+.bab-title{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:700;color:var(--heading); transition: color 0.5s;}
+.bab-text{font-size:.95rem;line-height:1.8;margin-bottom:1.2rem}
+.bab-subtitle{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:600;color:var(--accent2);margin:1.8rem 0 1rem}
+.grid-2{display:grid;grid-template-columns:1fr;gap:1.5rem}
+@media(min-width:768px){.grid-2{grid-template-columns:1fr 1fr}}
+.info-box{background:var(--glass-bg);border-radius:12px;padding:1.5rem;border-left:3px solid var(--accent); transition: background 0.5s;}
+
+/* ── ROAD ── */
+#road-container{position:relative;background:var(--sky); transition: background 0.5s;}
+#road-sticky{position:sticky;top:0;left:0;right:0;height:100vh;overflow:hidden}
+
+#road-hint{position:absolute;bottom:12%;left:50%;transform:translateX(-50%);z-index:200;pointer-events:none;opacity:0;transition:opacity .5s;white-space:nowrap}
+#road-hint.show{opacity:1}
+#road-hint p{font-family:'Syne',sans-serif;color:var(--accent);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;background:var(--card);padding:.55rem 1.3rem;border-radius:50px;border:1px solid var(--border); transition: background 0.5s;}
+
+#sky-layer{position:absolute;inset:0;height:46%;z-index:0;overflow:hidden}
+#road-wrap{position:absolute;bottom:0;left:0;right:0;z-index:2;height:55%}
+#road-svg{width:100%;height:100%}
+
+@keyframes laneMove{from{stroke-dashoffset:0}to{stroke-dashoffset:-75}}
+.moving-dash{animation:laneMove .4s linear infinite;animation-play-state:paused}
+
+#car-scene{position:absolute;bottom:34%;left:50%;transform:translateX(-50%);z-index:50;pointer-events:none}
+#car-svg{width:140px;max-width:90vw;height:auto}
+@keyframes eng{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+#car-body{animation:eng .35s ease-in-out infinite}
+
+/* SIGN POLES */
+.sign-pole{
+  position:absolute;
+  display:flex;flex-direction:column;align-items:center;
+  cursor:pointer;
+  transform-origin:bottom center;
+  will-change:transform,opacity,z-index;
+}
+.sign-pole:hover .sign-board{filter:drop-shadow(0 0 12px currentColor); transform:scale(1.05);}
+.pole-stick{width:8px;height:180px;background:linear-gradient(180deg,#4b5563,#1f2937);border-radius:4px; box-shadow: inset 0 0 4px rgba(0,0,0,0.5);}
+.pole-foot{width:30px;height:10px;background:#1f2937;border-radius:5px}
+.sign-board{
+  border-radius:14px;
+  padding:1rem 1.2rem;
+  width:280px;
+  text-align:center;
+  box-shadow:0 8px 30px rgba(0,0,0,.6);
+  position:relative;
+  transition:all .3s;
+}
+.sign-board::after{content:'▼';position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);font-size:.75rem;line-height:1}
+.sb-title {font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;margin-bottom:0;line-height:1.3;}
+.sb-click {margin-top:1rem;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;opacity:0.9;font-weight:700;text-align:center;border-top:1px solid rgba(255,255,255,0.2);padding-top:0.8rem; display:flex; align-items:center; justify-content:center; gap:0.4rem;}
+
+.sc{background:#0c3040;border:2px solid var(--accent);color:#fff}.sc::after{color:var(--accent)}.sc .sb-title{color:var(--accent)}.sc .sb-click{color:var(--accent)}
+.sv{background:#1a0c40;border:2px solid var(--accent2);color:#fff}.sv::after{color:var(--accent2)}.sv .sb-title{color:var(--accent2)}.sv .sb-click{color:var(--accent2)}
+.sg{background:#0a2010;border:2px solid var(--green);color:#fff}.sg::after{color:var(--green)}.sg .sb-title{color:var(--green)}.sg .sb-click{color:var(--green)}
+.so{background:#2a1000;border:2px solid var(--orange);color:#fff}.so::after{color:var(--orange)}.so .sb-title{color:var(--orange)}.so .sb-click{color:var(--orange)}
+.sr{background:#2a0808;border:2px solid var(--red);color:#fff}.sr::after{color:var(--red)}.sr .sb-title{color:var(--red)}.sr .sb-click{color:var(--red)}
+
+.sign-pole.passed .pole-stick{background:linear-gradient(180deg,var(--green),#1f2937)}
+.sign-pole.passed .sign-board{box-shadow:0 0 20px rgba(74,222,128,.5),0 4px 20px rgba(0,0,0,.5);border-color:var(--green);}
+.sign-pole.passed .sb-title, .sign-pole.passed .sb-click, .sign-pole.passed .sign-board::after { color:var(--green); }
+
+/* ── PROGRESS ── */
+#progress{position:fixed;top:0;left:0;height:4px;width:0%;z-index:999;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--green));box-shadow:0 0 12px rgba(34,211,238,.6)}
+
+/* ── FINAL ── */
+#final{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4rem 2rem;background:var(--sky-hero);position:relative;overflow:hidden; transition: background 0.5s;}
+.final-content{position:relative;z-index:2;max-width:800px;display:flex;flex-direction:column;align-items:center;width:100%}
+.f-trophy{font-size:4rem;margin-bottom:1.5rem;animation:tp 1s cubic-bezier(.175,.885,.32,1.275) both}
+@keyframes tp{from{transform:scale(0) rotate(-30deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.f-h2{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(2rem,4vw,3rem);color:var(--heading);margin-bottom:1rem; transition: color 0.5s;}
+.f-sub{color:var(--muted);font-size:1rem;line-height:1.8;margin-bottom:2.5rem; transition: color 0.5s;}
+.f-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1.5rem;margin-bottom:3.5rem;width:100%}
+.f-stat{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:2rem 1.5rem; transition: all 0.5s; box-shadow:0 10px 20px var(--shadow);}
+.f-n{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.2}
+.f-l{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:.5rem;font-weight:700}
+
+/* STRUKTUR GERBANG FINISH RAKSASA */
+.gate-container{display:flex;flex-direction:column;align-items:center;margin-bottom:5rem;animation:tp 1.2s ease-out both;width:100%;max-width:1000px}
+.gate-banner{background:var(--gate-banner);border:16px solid var(--gate-border);padding:4rem 8rem;border-radius:32px;box-shadow:0 0 100px rgba(56,189,248,.6),inset 0 0 40px rgba(0,0,0,.4);z-index:2;width:100%;text-align:center; transition: all 0.5s;}
+.gate-text{font-family:'Syne',sans-serif;font-size:3.5rem;font-weight:800;color:#fff;letter-spacing:15px;text-shadow:0 0 30px rgba(255,255,255,0.9)}
+.gate-pillars{display:flex;justify-content:space-between;width:85%;margin-top:-40px}
+.gate-pillar{width:140px;height:450px;background:var(--pillar-bg);border-radius:16px;box-shadow:inset 0 0 30px rgba(0,0,0,.6),0 30px 60px var(--shadow);border:8px solid var(--pillar-border);border-top:none; transition: all 0.5s;}
+
+/* ── POPUP ── */
+.popup-wrap{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;background:var(--popup-bg);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition: background 0.5s, opacity 0.3s;}
+.popup-wrap.open{opacity:1;pointer-events:auto}
+.popup-box{background:var(--card);border:1px solid var(--border);border-radius:24px;max-width:650px;width:100%;max-height:88vh;overflow-y:auto;padding:3rem;box-shadow:0 40px 100px var(--shadow);transform:translateY(20px);transition:transform .3s cubic-bezier(.175,.885,.32,1.275), background 0.5s; position:relative}
+.popup-wrap.open .popup-box{transform:translateY(0)}
+.popup-box::-webkit-scrollbar{width:8px}
+.popup-box::-webkit-scrollbar-thumb{background:rgba(34,211,238,.5);border-radius:4px}
+.pop-close{position:absolute;top:1.5rem;right:1.5rem;background:var(--glass-bg);border:none;color:var(--text);width:38px;height:38px;border-radius:50%;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.pop-close:hover{background:var(--red);color:#fff; transform:rotate(90deg);}
+.pop-tag{font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;display:inline-block;background:rgba(34,211,238,.1);padding:.4rem 1rem;border-radius:50px}
+.pop-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;color:var(--heading);line-height:1.2;margin-bottom:2rem; transition: color 0.5s;}
+
+.t-wrap{display:flex;flex-direction:column;gap:1rem;margin-bottom:2rem}
+.t-item{background:var(--glass-bg);border-radius:12px;padding:1.2rem;border-left:3px solid var(--accent2); transition: background 0.5s;}
+.t-title{font-size:.9rem;font-weight:700;color:var(--heading);margin-bottom:.4rem; transition: color 0.5s;}
+.t-desc{font-size:.85rem;color:var(--text);line-height:1.6; transition: color 0.5s;}
+
+/* Placeholder Bukti Dukung */
+.evidence-placeholder{width:100%;height:180px;background:rgba(0,0,0,0.15);border:2px dashed var(--muted);border-radius:12px;margin-top:1rem;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;text-align:center;padding:1rem;transition:all 0.5s;}
+body.light-mode .evidence-placeholder{background:rgba(0,0,0,0.03);}
+
+.ak-head{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;color:var(--accent);margin-bottom:1.5rem;display:flex;align-items:center;gap:.6rem; border-bottom:1px solid var(--glass-border); padding-bottom:0.8rem;}
+.ak-head::before{content:'★';font-size:1.1rem}
+.ak-wrap{display:flex;flex-direction:column;gap:1.2rem}
+.ak-block{background:var(--glass-bg);border-radius:16px;padding:1.5rem;border-left:4px solid var(--glass-border); transition: all 0.5s;}
+.ak-n{font-size:1rem;font-family:'Syne',sans-serif;font-weight:700;color:var(--c,var(--accent));margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.05em}
+.ak-t{font-size:.9rem;color:var(--text);line-height:1.7; transition: color 0.5s;}
+
+/* ── NAV DOTS ── */
+#keg-nav{position:fixed;bottom:1.4rem;left:50%;transform:translateX(-50%);z-index:400;display:flex;gap:.5rem;opacity:0;pointer-events:none;transition:opacity .4s}
+#keg-nav.show{opacity:1;pointer-events:auto}
+.kn-dot{width:12px;height:12px;border-radius:50%;background:var(--glass-bg);border:1px solid var(--glass-border);cursor:pointer;transition:all .3s}
+.kn-dot.active{background:var(--accent);box-shadow:0 0 10px var(--accent);transform:scale(1.4)}
+.kn-dot.done{background:var(--green);border-color:var(--green)}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(60px);transition:opacity 0.8s cubic-bezier(.16,1,.3,1),transform 0.8s cubic-bezier(.16,1,.3,1)}
+.reveal.from-left{transform:translateX(-80px)}
+.reveal.from-right{transform:translateX(80px)}
+.reveal.visible{opacity:1;transform:translate(0,0)}
+
+/* ── CURSOR GLOW ── */
+#cursor-glow{position:fixed;width:350px;height:350px;border-radius:50%;pointer-events:none;z-index:9998;mix-blend-mode:screen;opacity:0;transition:opacity 0.4s;background:radial-gradient(circle,rgba(34,211,238,0.08) 0%,transparent 70%)}
+body.light-mode #cursor-glow{background:radial-gradient(circle,rgba(14,165,233,0.06) 0%,transparent 70%)}
+
+/* ── 3D TILT ── */
+.tilt-card{transition:transform 0.15s ease-out,box-shadow 0.3s}
+.tilt-card:hover{box-shadow:0 25px 60px var(--shadow),0 0 30px rgba(34,211,238,0.15)!important}
+
+/* ── CARD GLOW BORDER ── */
+.bab-card{position:relative;overflow:hidden}
+.bab-card::before{content:'';position:absolute;top:-2px;left:-2px;right:-2px;bottom:-2px;border-radius:22px;background:conic-gradient(from var(--glow-angle,0deg),transparent 0%,var(--accent) 10%,transparent 20%);opacity:0;transition:opacity 0.5s;z-index:-1}
+.bab-card:hover::before{opacity:1}
+@property --glow-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes glowSpin{from{--glow-angle:0deg}to{--glow-angle:360deg}}
+.bab-card:hover::before{animation:glowSpin 3s linear infinite}
+
+/* ── FLOATING PARTICLES ── */
+.particle{position:fixed;border-radius:50%;pointer-events:none;z-index:0;opacity:0}
+@keyframes floatUp{0%{transform:translateY(0) scale(1);opacity:0}10%{opacity:0.6}90%{opacity:0.6}100%{transform:translateY(-100vh) scale(0.3);opacity:0}}
+
+/* ── BACK TO TOP ── */
+#back-top{position:fixed;bottom:2rem;right:1.5rem;z-index:450;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transform:translateY(20px);transition:all 0.4s cubic-bezier(.16,1,.3,1);box-shadow:0 8px 25px rgba(34,211,238,0.3)}
+#back-top.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+#back-top:hover{transform:translateY(-4px) scale(1.1);box-shadow:0 12px 35px rgba(34,211,238,0.5)}
+
+/* ── AUTO-SCROLL BUTTON ── */
+#auto-scroll-btn{
+  position:fixed;bottom:2rem;left:1.5rem;z-index:450;
+  width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(135deg,var(--green),var(--accent));
+  color:#fff;border:none;font-size:1.2rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 25px rgba(74,222,128,0.3);
+  transition:all 0.4s cubic-bezier(.16,1,.3,1);
+}
+#auto-scroll-btn:hover{transform:translateY(-4px) scale(1.1);box-shadow:0 12px 35px rgba(74,222,128,0.5)}
+#auto-scroll-btn.paused{background:linear-gradient(135deg,var(--accent2),var(--accent));box-shadow:0 8px 25px rgba(129,140,248,0.3)}
+#auto-scroll-btn.paused:hover{box-shadow:0 12px 35px rgba(129,140,248,0.5)}
+#auto-scroll-btn .aslabel{
+  position:absolute;left:calc(100% + 10px);white-space:nowrap;
+  font-family:'DM Sans',sans-serif;font-size:0.7rem;font-weight:600;
+  color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;
+  opacity:0;transition:opacity 0.2s;pointer-events:none;
+}
+#auto-scroll-btn:hover .aslabel{opacity:1}
+
+@keyframes autoPulse{0%,100%{box-shadow:0 8px 25px rgba(74,222,128,0.3)}50%{box-shadow:0 8px 30px rgba(74,222,128,0.6),0 0 15px rgba(74,222,128,0.2)}}
+#auto-scroll-btn.playing{animation:autoPulse 2s ease-in-out infinite}
+
+/* ── CONFETTI ── */
+.confetti-piece{position:fixed;top:-10px;z-index:600;pointer-events:none;width:10px;height:16px;border-radius:2px;opacity:0.9}
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg) scale(1);opacity:1}100%{transform:translateY(100vh) rotate(720deg) scale(0.3);opacity:0}}
+
+/* ── ENHANCED HOVER for meta-chips ── */
+.meta-chip{transition:all 0.3s cubic-bezier(.16,1,.3,1)}
+.meta-chip:hover{transform:translateY(-4px) scale(1.05);box-shadow:0 8px 25px var(--shadow);border-color:var(--accent);background:var(--glass-hover)}
+
+/* ── F-STAT HOVER ── */
+.f-stat{transition:all 0.4s cubic-bezier(.16,1,.3,1)}
+.f-stat:hover{transform:translateY(-8px) scale(1.05);box-shadow:0 20px 50px var(--shadow);border-color:var(--accent)}
+
+/* ── INFO-BOX HOVER ── */
+.info-box{transition:all 0.3s cubic-bezier(.16,1,.3,1)}
+.info-box:hover{transform:translateY(-4px);box-shadow:0 10px 30px var(--shadow);border-left-color:var(--accent2)}
+
+/* ── PULSE GLOW for hero-tag ── */
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 5px rgba(34,211,238,0.2)}50%{box-shadow:0 0 20px rgba(34,211,238,0.4),0 0 40px rgba(34,211,238,0.1)}}
+.hero-tag{animation:pulseGlow 3s ease-in-out infinite}
+
+/* ── TOOLTIP ── */
+.kn-dot{position:relative}
+.kn-dot::after{content:attr(title);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) scale(0.8);background:var(--card);color:var(--text);font-size:0.65rem;padding:0.3rem 0.6rem;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:all 0.2s;border:1px solid var(--border)}
+.kn-dot:hover::after{opacity:1;transform:translateX(-50%) scale(1)}
+
+/* ── SMOOTH LINK UNDERLINE for popup ── */
+.ak-block{transition:all 0.3s cubic-bezier(.16,1,.3,1)}
+.ak-block:hover{transform:translateX(6px);border-left-color:var(--c,var(--accent));background:var(--glass-hover)}
+
+/* ── POPUP ENTRANCE ── */
+.popup-wrap.open .popup-box{animation:popIn 0.4s cubic-bezier(.16,1,.3,1)}
+@keyframes popIn{from{transform:translateY(40px) scale(0.95);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="main-nav">
+  <div class="nav-brand">📊 Dashboard Aktualisasi</div>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="#hero" data-section="hero">Beranda</a></li>
+    <li><a href="#bab-1" data-section="bab-1">Pendahuluan</a></li>
+    <li><a href="#bab-2" data-section="bab-2">Profil ASN</a></li>
+    <li><a href="#bab-3" data-section="bab-3">Rancangan</a></li>
+    <li><a href="#road-container" data-section="road-container">Perjalanan</a></li>
+    <li><a href="#final" data-section="final">Hasil Akhir</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button id="theme-toggle" class="theme-toggle" aria-label="Ganti Tema">
+      <span class="icon-sun">☀️</span>
+      <span class="icon-moon">🌙</span>
+    </button>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div id="cursor-glow"></div>
+<button id="back-top" aria-label="Kembali ke atas">↑</button>
+<button id="auto-scroll-btn" class="playing" aria-label="Auto Scroll">
+  <span id="as-icon">▶</span>
+  <span class="aslabel">Auto Scroll</span>
+</button>
+
+<div id="progress"></div>
+
+<!-- HERO -->
+<section id="hero">
+  <div id="hero-bg"></div>
+  <div class="hero-stars" id="hs"></div>
+  <div class="hero-content">
+    <div class="hero-tag">Laporan Aktualisasi Latsar CPNS 2026</div>
+    <h1 class="hero-h1">OPTIMALISASI PENGAWASAN KOPERASI DESA/KELURAHAN<br><em>MERAH PUTIH MELALUI DASHBOARD PEMETAAN DIGITAL</em></h1>
+    <p class="hero-sub">Dinas Koperasi dan UMKM Provinsi Sulawesi Tenggara</p>
+    <div class="hero-meta">
+      <div class="meta-chip">👤 Masyhuri Arifin, S.E. (NDH: 36)</div>
+      <div class="meta-chip">💼 Pengawas Koperasi Ahli Pertama</div>
+      <div class="meta-chip">🏆 Nilai-Nilai Dasar ASN, Peran dan Kedudukan PNS Menuju Smart Governance</div>
+    </div>
+    <div class="scroll-hint"><p>Scroll untuk mulai</p><span></span></div>
+  </div>
+</section>
+
+<!-- BAB 1–3 -->
+<section class="bab-container">
+  <div class="bab-card" id="bab-1">
+    <div class="bab-header"><div class="bab-num">01</div><h2 class="bab-title">Pendahuluan</h2></div>
+    <p class="bab-text">Berdasarkan Undang-Undang Nomor 20 Tahun 2023 tentang Aparatur Sipil Negara, Pegawai ASN memiliki peran strategis sebagai perencana, pelaksana, dan pengawas penyelenggaraan tugas umum pemerintahan serta pembangunan nasional. Setiap ASN wajib menginternalisasi nilai-nilai dasar (Core Values) ASN <strong>BerAKHLAK</strong>.</p>
+    <p class="bab-text">Sejalan dengan Inpres Nomor 9 Tahun 2025 tentang Percepatan Pembentukan dan Penguatan Koperasi Desa/Kelurahan Merah Putih, Dinas Koperasi UMKM Sultra dihadapkan pada tingginya tuntutan pengawasan. Namun, pengawasan saat ini terkendala oleh sistem konvensional—data tersimpan dalam format fisik atau spreadsheet statis. Ketiadaan visualisasi spasial menyebabkan <strong>"kebutaan spasial" (spatial blindness)</strong> yang menyulitkan penentuan prioritas pembinaan.</p>
+    <div class="grid-2" style="margin-top:2rem">
+      <div class="info-box"><h3 class="bab-subtitle" style="margin-top:0">🎯 Tujuan Khusus</h3><p class="bab-text" style="font-size:.85rem">Tersedianya dashboard pemetaan digital Koperasi Desa/Kelurahan Merah Putih di Sultra yang memuat data spasial secara <em>real-time</em> untuk mewujudkan Smart Governance.</p></div>
+      <div class="info-box"><h3 class="bab-subtitle" style="margin-top:0">✨ Manfaat</h3><p class="bab-text" style="font-size:.85rem">Bagi Organisasi: Meningkatkan efisiensi pencarian informasi lokasi dan mendukung pengambilan keputusan yang lebih cepat dan berbasis data.</p></div>
+    </div>
+  </div>
+
+  <div class="bab-card" id="bab-2">
+    <div class="bab-header"><div class="bab-num">02</div><h2 class="bab-title">Profil & Konsepsi ASN</h2></div>
+    <p class="bab-text">Dinas Koperasi dan UMKM Provinsi Sulawesi Tenggara memiliki visi "Terwujudnya Sulawesi Tenggara Maju menuju Masyarakat Aman, Sejahtera dan Religius".</p>
+    <h3 class="bab-subtitle">Nilai Dasar BerAKHLAK</h3>
+    <div class="grid-2">
+      <p class="bab-text" style="font-size:.85rem"><strong>Berorientasi Pelayanan:</strong><br>Komitmen memberikan layanan prima demi kepuasan masyarakat.<br><br><strong>Akuntabel:</strong><br>Bertanggung jawab atas kepercayaan yang diberikan.</p>
+      <p class="bab-text" style="font-size:.85rem"><strong>Kompeten:</strong><br>Terus belajar dan mengembangkan kapabilitas.<br><br><strong>Harmonis & Loyal:</strong><br>Saling peduli, menghargai perbedaan, dan berdedikasi mengutamakan kepentingan Bangsa dan Negara.</p>
+    </div>
+    <p class="bab-text" style="font-size:.85rem;margin-top:1rem"><strong>Adaptif & Kolaboratif:</strong><br>Terus berinovasi, antusias menggerakkan perubahan serta membangun kerja sama yang sinergis.</p>
+  </div>
+
+  <div class="bab-card" id="bab-3">
+    <div class="bab-header"><div class="bab-num">03</div><h2 class="bab-title">Rancangan Aktualisasi</h2></div>
+    <p class="bab-text">Melalui pemindaian lingkungan kerja (environmental scanning) dan teknik analisis isu APKL & USG, ditetapkan satu Isu Prioritas yang mendesak untuk diselesaikan.</p>
+    <div class="info-box" style="margin-bottom:1.5rem">
+      <h3 class="bab-subtitle" style="margin-top:0;color:#f87171">Core Issue</h3>
+      <p class="bab-text" style="font-size:.95rem;font-weight:600">"Belum optimalnya pengawasan dan penyajian data sebaran Koperasi Desa/Kelurahan Merah Putih."</p>
+    </div>
+    <div class="info-box" style="border-left-color:var(--green)">
+      <h3 class="bab-subtitle" style="margin-top:0;color:var(--green)">💡 Gagasan Kreatif Terpilih</h3>
+      <p class="bab-text" style="font-size:.95rem;font-weight:600">"Optimalisasi Pengawasan Melalui Pembuatan Dashboard Pemetaan Digital (GIS)"</p>
+      <p class="bab-text" style="font-size:.85rem;margin-top:.5rem">Gagasan ini diwujudkan ke dalam 7 kegiatan utama, 21 tahapan, selama 30 hari habituasi. <em>Scroll perlahan untuk melihat perjalanannya.</em></p>
+    </div>
+  </div>
+</section>
+
+<!-- ROAD — BAB 4 -->
+<div id="road-container">
+  <div id="road-sticky">
+    <div id="road-hint"><p>🚦 Klik rambu untuk melihat Nilai BerAKHLAK</p></div>
+
+    <!-- Road Navigation Arrows -->
+    <button class="road-nav-btn" id="road-prev" aria-label="Kegiatan Sebelumnya">
+      <span class="road-nav-label">Sebelumnya</span>
+      ◀
+    </button>
+    <button class="road-nav-btn" id="road-next" aria-label="Kegiatan Selanjutnya">
+      <span class="road-nav-label">Selanjutnya</span>
+      ▶
+    </button>
+
+    <!-- SKY -->
+    <div id="sky-layer">
+      <svg style="position:absolute;bottom:0;left:0;right:0;width:100%;height:100px" viewBox="0 0 1400 100" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,100 L0,60 L40,60 L40,30 L70,30 L70,15 L80,15 L80,30 L110,30 L110,55 L150,55 L150,20 L165,5 L180,20 L180,55 L220,55 L220,40 L240,40 L240,25 L255,25 L255,40 L280,40 L280,60 L330,60 L330,35 L360,35 L360,60 L400,60 L400,45 L430,45 L430,60 L480,60 L480,30 L500,15 L520,30 L520,60 L580,60 L580,40 L610,40 L610,60 L670,60 L670,45 L700,45 L700,25 L715,10 L730,25 L730,60 L790,60 L790,45 L830,45 L830,70 L900,70 L900,40 L930,40 L930,20 L945,5 L960,20 L960,40 L990,40 L990,70 L1050,70 L1050,50 L1080,50 L1080,35 L1100,20 L1120,35 L1120,60 L1170,60 L1170,40 L1200,40 L1200,60 L1250,60 L1250,55 L1280,55 L1280,35 L1300,20 L1320,35 L1320,60 L1370,60 L1370,45 L1390,45 L1390,70 L1400,70 L1400,100 Z" fill="var(--sky-svg)" style="transition: fill 0.5s;"/>
+        
+        <circle cx="85%" cy="30" r="18" fill="#fef08a" style="opacity: var(--sun-opacity); transition: opacity 0.5s;"/>
+        
+        <g fill="#fef08a" style="opacity: var(--star-opacity); transition: opacity 0.5s;">
+          <rect x="73" y="20" width="4" height="5"/><rect x="163" y="10" width="4" height="4"/>
+          <rect x="502" y="20" width="4" height="6"/><rect x="947" y="10" width="4" height="4"/>
+          <rect x="1102" y="25" width="4" height="5"/><rect x="1302" y="25" width="4" height="5"/>
+        </g>
+      </svg>
+    </div>
+
+    <!-- ROAD SVG -->
+    <div id="road-wrap">
+      <svg id="road-svg" viewBox="0 0 1400 600" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="rg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--road-1)"/>
+            <stop offset="100%" stop-color="var(--road-2)"/>
+          </linearGradient>
+        </defs>
+        <polygon points="0,600 150,600 685,50 0,50" fill="var(--terrain)" style="transition: fill 0.5s;"/>
+        <polygon points="1250,600 1400,600 1400,50 715,50" fill="var(--terrain)" style="transition: fill 0.5s;"/>
+        <polygon points="150,600 1250,600 715,50 685,50" fill="url(#rg)"/>
+        
+        <line x1="150" y1="600" x2="685" y2="50" stroke="var(--road-line)" stroke-width="4" opacity=".5" style="transition: stroke 0.5s;"/>
+        <line x1="1250" y1="600" x2="715" y2="50" stroke="var(--road-line)" stroke-width="4" opacity=".5" style="transition: stroke 0.5s;"/>
+        <line class="moving-dash" x1="450" y1="600" x2="692" y2="50" stroke="var(--road-dash)" stroke-width="3" stroke-dasharray="30 25" opacity=".6" style="transition: stroke 0.5s;"/>
+        <line class="moving-dash" x1="950" y1="600" x2="708" y2="50" stroke="var(--road-dash)" stroke-width="3" stroke-dasharray="30 25" opacity=".6" style="transition: stroke 0.5s;"/>
+        
+        <line class="moving-dash" x1="695" y1="600" x2="699" y2="50" stroke="#fcd34d" stroke-width="6" stroke-dasharray="40 35" opacity=".9"/>
+        <line class="moving-dash" x1="705" y1="600" x2="701" y2="50" stroke="#fcd34d" stroke-width="6" stroke-dasharray="40 35" opacity=".9"/>
+      </svg>
+    </div>
+
+    <!-- CAR — z-index 50 -->
+    <div id="car-scene">
+      <svg id="car-svg" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="cPaint" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#1e293b"/><stop offset="30%" stop-color="#475569"/>
+            <stop offset="50%" stop-color="#94a3b8"/><stop offset="70%" stop-color="#475569"/>
+            <stop offset="100%" stop-color="#1e293b"/>
+          </linearGradient>
+          <linearGradient id="cGlass" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#020617"/><stop offset="60%" stop-color="#1e293b"/>
+            <stop offset="100%" stop-color="#0f172a"/>
+          </linearGradient>
+          <filter id="gw-headlight" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="8" result="blur"/>
+            <feComponentTransfer in="blur" result="glow">
+              <feFuncA type="linear" slope="2.5"/>
+            </feComponentTransfer>
+            <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="8"/>
+          </filter>
+        </defs>
+        
+        <ellipse cx="200" cy="265" rx="135" ry="15" fill="var(--shadow)" filter="url(#shadow)" style="transition: fill 0.5s;"/>
+        <g id="car-body">
+          <rect x="55" y="210" width="55" height="60" rx="8" fill="#020617"/>
+          <rect x="290" y="210" width="55" height="60" rx="8" fill="#020617"/>
+          <path d="M 60,220 L 105,220 L 105,270 L 60,270 Z" fill="#0f172a"/>
+          <path d="M 295,220 L 340,220 L 340,270 L 295,270 Z" fill="#0f172a"/>
+          <rect x="85" y="240" width="230" height="25" fill="#000"/>
+          <path d="M 60,225 Q 200,255 340,225 L 325,250 Q 200,270 75,250 Z" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
+          <path d="M 50,180 Q 200,210 350,180 L 345,230 Q 200,255 55,230 Z" fill="url(#cPaint)" stroke="#334155" stroke-width="1"/>
+          <path d="M 115,210 Q 200,225 285,210 L 275,235 Q 200,245 125,235 Z" fill="#020617"/>
+          <ellipse cx="80" cy="235" rx="8" ry="4" fill="#fef08a" opacity=".8"/>
+          <ellipse cx="320" cy="235" rx="8" ry="4" fill="#fef08a" opacity=".8"/>
+          <path d="M 125,165 Q 200,180 275,165 L 265,205 Q 200,215 135,205 Z" fill="#020617" stroke="#94a3b8" stroke-width="2"/>
+          <path d="M 130,175 Q 200,190 270,175" fill="none" stroke="#334155" stroke-width="2"/>
+          <path d="M 133,185 Q 200,200 267,185" fill="none" stroke="#334155" stroke-width="2"/>
+          <path d="M 135,195 Q 200,210 265,195" fill="none" stroke="#334155" stroke-width="2"/>
+          <rect x="155" y="238" width="90" height="24" rx="3" fill="#f8fafc" stroke="#94a3b8" stroke-width="1"/>
+          <text x="200" y="254" font-family="monospace" font-size="12" font-weight="bold" fill="#0f172a" text-anchor="middle">DW 36 ABH</text>
+          <path d="M 65,135 Q 200,115 335,135 L 350,180 Q 200,205 50,180 Z" fill="url(#cPaint)"/>
+          <path d="M 65,135 L 50,180 L 40,175 L 55,130 Z" fill="#0f172a"/>
+          <path d="M 335,135 L 350,180 L 360,175 L 345,130 Z" fill="#0f172a"/>
+          <path d="M 50,160 L 120,155 L 125,175 L 60,180 Z" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+          <path d="M 350,160 L 280,155 L 275,175 L 340,180 Z" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+          
+          <!-- Headlight Transitions -->
+          <path d="M 55,165 L 110,160 L 115,170 L 60,175 Z" fill="#fff" filter="url(#gw-headlight)" style="opacity: var(--headlight-op); transition: opacity 0.5s;"/>
+          <path d="M 345,165 L 290,160 L 285,170 L 340,175 Z" fill="#fff" filter="url(#gw-headlight)" style="opacity: var(--headlight-op); transition: opacity 0.5s;"/>
+          <path d="M 55,160 L 115,155" stroke="#38bdf8" stroke-width="3" filter="url(#gw-headlight)" style="opacity: var(--headlight-op); transition: opacity 0.5s;"/>
+          <path d="M 345,160 L 285,155" stroke="#38bdf8" stroke-width="3" filter="url(#gw-headlight)" style="opacity: var(--headlight-op); transition: opacity 0.5s;"/>
+          
+          <path d="M 100,65 Q 200,55 300,65 L 330,130 Q 200,120 70,130 Z" fill="url(#cGlass)" stroke="#020617" stroke-width="4"/>
+          <path d="M 110,70 Q 200,60 290,70 L 255,95 Q 200,85 135,95 Z" fill="rgba(255,255,255,.08)"/>
+          <path d="M 80,125 Q 200,115 320,125 L 315,128 Q 200,118 85,128 Z" fill="#020617"/>
+          <path d="M 115,35 Q 200,25 285,35 L 300,60 Q 200,50 100,60 Z" fill="url(#cPaint)"/>
+          <path d="M 105,25 L 115,35 L 100,60 L 90,50 Z" fill="#0f172a"/>
+          <path d="M 295,25 L 285,35 L 300,60 L 310,50 Z" fill="#0f172a"/>
+          <path d="M 80,105 L 50,110 L 45,125 L 70,120 Z" fill="url(#cPaint)"/>
+          <rect x="70" y="115" width="10" height="5" fill="#020617"/>
+          <path d="M 320,105 L 350,110 L 355,125 L 330,120 Z" fill="url(#cPaint)"/>
+          <rect x="320" y="115" width="10" height="5" fill="#020617"/>
+          <ellipse cx="200" cy="155" rx="7" ry="5" fill="#fbbf24" stroke="#d97706" stroke-width="1"/>
+          <path d="M 70,185 Q 200,165 330,185 L 320,190 Q 200,170 80,190 Z" fill="rgba(255,255,255,.12)"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- FINAL -->
+<section id="final">
+  <div id="fstars" class="hero-stars"></div>
+  <div class="final-content">
+    
+    <!-- GERBANG FINISH RAKSASA -->
+    <div class="gate-container">
+      <div class="gate-banner"><span class="gate-text">FINISH</span></div>
+      <div class="gate-pillars"><div class="gate-pillar"></div><div class="gate-pillar"></div></div>
+    </div>
+    
+    <div class="f-trophy">🏆</div>
+    <h2 class="f-h2">Smart Governance Terwujud!</h2>
+    <p class="f-sub">Seluruh <strong style="color:var(--accent)">7 kegiatan utama</strong> dengan <strong style="color:var(--accent)">21 tahapan</strong> berhasil dilaksanakan 100% dan nilai BerAKHLAK teraktualisasi pada setiap tahapan kegiatan.</p>
+    <div class="f-stats">
+      <div class="f-stat"><div class="f-n"><span class="cnt" data-n="7">0</span></div><div class="f-l">Kegiatan</div></div>
+      <div class="f-stat"><div class="f-n"><span class="cnt" data-n="21">0</span></div><div class="f-l">Tahapan</div></div>
+      <div class="f-stat"><div class="f-n"><span class="cnt" data-n="100">0</span>%</div><div class="f-l">Realisasi</div></div>
+      <div class="f-stat"><div class="f-n"><span class="cnt" data-n="30">0</span></div><div class="f-l">Hari Habituasi</div></div>
+    </div>
+    <p style="margin-top:1.8rem;font-size:.75rem;color:var(--muted)">#SmartGovernance · Dinas Koperasi &amp; UMKM Prov. Sultra · 2026</p>
+  </div>
+</section>
+
+<!-- NAV DOTS -->
+<div id="keg-nav"></div>
+
+<!-- POPUP -->
+<div class="popup-wrap" id="popup">
+  <div class="popup-box">
+    <button class="pop-close" id="pc">✕</button>
+    <div class="pop-tag" id="ptag"></div>
+    <div class="pop-title" id="ptitle"></div>
+    <div class="t-wrap" id="tlist"></div>
+    <div class="ak-head">Keterkaitan Nilai-Nilai Dasar BerAKHLAK</div>
+    <div class="ak-wrap" id="alist"></div>
+  </div>
+</div>
+
+<script>
+// THEME TOGGLE LOGIC
+const themeBtn = document.getElementById('theme-toggle');
+themeBtn.addEventListener('click', () => {
+  document.body.classList.toggle('light-mode');
+  const isLight = document.body.classList.contains('light-mode');
+  localStorage.setItem('latsar_theme', isLight ? 'light' : 'dark');
+});
+
+if(localStorage.getItem('latsar_theme') === 'light') {
+  document.body.classList.add('light-mode');
+}
+
+// ── HAMBURGER MENU ──
+const hamburger = document.getElementById('hamburger');
+const navLinks = document.getElementById('nav-links');
+hamburger.addEventListener('click', () => {
+  hamburger.classList.toggle('open');
+  navLinks.classList.toggle('open');
+});
+navLinks.querySelectorAll('a').forEach(a => {
+  a.addEventListener('click', () => {
+    hamburger.classList.remove('open');
+    navLinks.classList.remove('open');
+  });
+});
+
+// ── NAVBAR: Active link tracking & Auto-hide ──
+const navItems = document.querySelectorAll('.nav-links li a');
+const mainNav = document.getElementById('main-nav');
+let lastScrollNav = 0, navHideTimer = null;
+
+function updateActiveNav() {
+  const sy = window.scrollY;
+  const sections = ['hero', 'bab-1', 'bab-2', 'bab-3', 'road-container', 'final'];
+  let activeId = 'hero';
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= 120) activeId = id;
+  });
+  navItems.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('data-section') === activeId);
+  });
+
+  // Auto-hide logic: hide when scrolling down, show when scrolling up
+  if (sy > lastScrollNav + 5 && sy > 200) {
+    mainNav.classList.add('nav-hidden');
+  } else if (sy < lastScrollNav - 5 || sy < 100) {
+    mainNav.classList.remove('nav-hidden');
+  }
+  lastScrollNav = sy;
+}
+window.addEventListener('scroll', updateActiveNav, { passive: true });
+
+// Show nav on hover near top
+document.addEventListener('mousemove', (e) => {
+  if (e.clientY < 15) mainNav.classList.remove('nav-hidden');
+});
+
+// DATA SESUAI PDF
+const CPS = [
+  { id:'k1', tag:'Kegiatan 1', label:'Persiapan dan Konsultasi Rancangan', sc:'c', icon:'🤝',
+    tahapan:[
+      {title:'1. Menyiapkan bahan konsultasi (konsep dashboard & data awal).'},
+      {title:'2. Melakukan pertemuan konsultasi dengan Mentor.'},
+      {title:'3. Mencatat arahan dan meminta persetujuan pelaksanaan.'}],
+    ak:[
+      {n:'Berorientasi Pelayanan',c:'#22d3ee',t:'Menyiapkan bahan secara rapi dan sistematis agar mudah dipahami oleh pimpinan.<br>Bersikap santun dan komunikatif saat menghadap mentor.<br>Cekatan merespons perbaikan yang diminta oleh mentor.'},
+      {n:'Akuntabel',c:'#60a5fa',t:'Bertanggung jawab penuh atas kebenaran konsep awal yang disusun.<br>Memaparkan ide aktualisasi secara transparan dan jujur.<br>Mencatat seluruh arahan dengan cermat agar tidak ada poin penting yang terlewat.'},
+      {n:'Kompeten',c:'#a78bfa',t:'Menggunakan literatur dan referensi terbaik untuk menghasilkan kualitas bahan yang optimal.<br>Menjelaskan gagasan teknis dashboard dengan jelas dan berpengetahuan luas.<br>Merevisi draf dengan cepat dan tepat sesuai standar kualitas.'},
+      {n:'Harmonis',c:'#f472b6',t:'Menyusun bahan tanpa mengganggu ritme kerja rekan sejawat di ruangan.<br>Menghargai ketersediaan waktu mentor dan mendengarkan dengan penuh rasa hormat.<br>Menerima segala masukan dan kritik dengan sikap positif.'},
+      {n:'Loyal',c:'#f87171',t:'Memastikan rancangan ini sejalan dengan visi dan misi instansi.<br>Patuh dan tegak lurus pada arahan atasan demi kebaikan instansi.<br>Mendedikasikan waktu lembur jika diperlukan untuk segera memfinalisasi lembar persetujuan.'},
+      {n:'Adaptif',c:'#fb923c',t:'Proaktif memanfaatkan media digital untuk menyusun bahan.<br>Menyesuaikan waktu dan tempat konsultasi sesuai dengan kesibukan mentor.<br>Siap mengubah arah konsep jika dinilai belum sesuai dengan perkembangan terkini.'},
+      {n:'Kolaboratif',c:'#4ade80',t:'Meminta masukan awal dari rekan kerja sebelum menghadap mentor.<br>Berdiskusi dan bertukar pikiran secara konstruktif dengan mentor.<br>Melibatkan mentor secara penuh dalam pengesahan dokumen.'}]},
+  { id:'k2', tag:'Kegiatan 2', label:'Pengumpulan dan Verifikasi Data Spasial', sc:'v', icon:'📍',
+    tahapan:[
+      {title:'1. Mengumpulkan data spasial Koperasi dengan menggunakan SIMKOPDES dan Para Pendamping Koperasi.'},
+      {title:'2. Memverifikasi validitas data dan titik koordinat.'},
+      {title:'3. Mengelompokkan data dalam berbagai kriteria.'}],
+    ak:[
+      {n:'Berorientasi Pelayanan',c:'#22d3ee',t:'Melayani permintaan data dengan sikap ramah kepada pengelola SIMKOPDES maupun pendamping.<br>Memastikan data yang diverifikasi akurat agar pelayanan informasi nantinya dapat diandalkan.<br>Mengelompokkan data secara rapi agar pimpinan mudah membacanya.'},
+      {n:'Akuntabel',c:'#60a5fa',t:'Mengumpulkan data dengan integritas tanpa memanipulasi angka.<br>Cermat meneliti setiap baris alamat dan titik koordinat agar tidak menyesatkan.<br>Mematuhi kaidah pengolahan data yang disiplin dan sistematis.'},
+      {n:'Kompeten',c:'#a78bfa',t:'Mengelola database mentah dengan teliti dan keahlian administrasi yang baik.<br>Menggunakan kemampuan komputasi untuk membersihkan data (data cleansing) dengan kualitas terbaik.<br>Melakukan teknik segmentasi data dengan cekatan dan akurat.'},
+      {n:'Harmonis',c:'#f472b6',t:'Membangun komunikasi yang baik kepada pihak penyedia data.<br>Membantu rekan kerja lain jika ada yang kebingungan membaca koordinat geografis.<br>Menghargai pendapat tim mengenai kategori apa yang paling dibutuhkan.'},
+      {n:'Loyal',c:'#f87171',t:'Menjaga kerahasiaan data internal koperasi yang telah terkumpul.<br>Menunjukkan dedikasi dan kesabaran tinggi dalam memverifikasi ribuan baris data instansi.<br>Memastikan klasifikasi data selaras dengan kebutuhan strategis pimpinan daerah.'},
+      {n:'Adaptif',c:'#fb923c',t:'Memanfaatkan formulir digital (Google Form) jika diperlukan.<br>Proaktif menggunakan Google Earth atau Maps untuk mencocokkan titik buta.<br>Menggunakan rumus mutakhir pada aplikasi pengolah angka (Excel/Spreadsheet).'},
+      {n:'Kolaboratif',c:'#4ade80',t:'Bersinergi dengan para pendamping koperasi di kabupaten/kota.<br>Melakukan konfirmasi silang (cross-check) dengan pengawas lain.<br>Bekerja sama dengan tim perizinan untuk menyelaraskan pengelompokan status legalitas.'}]},
+  { id:'k3', tag:'Kegiatan 3', label:'Perancangan Dashboard Pemetaan', sc:'g', icon:'🎨',
+    tahapan:[
+      {title:'1. Mengidentifikasi platform yang akan digunakan (Vercel, Google App Script, Looker Studio, dll).'},
+      {title:'2. Membuat rancangan atau desain/sketsa dashboard pemetaan.'},
+      {title:'3. Menggunakan Akal Imitasi (AI) yang dapat membantu pembuatan dan coding Dashboard Pemetaan.'}],
+    ak:[
+      {n:'Berorientasi Pelayanan',c:'#22d3ee',t:'Memilih platform yang paling user-friendly demi kepuasan pengguna layanan.<br>Mendesain antarmuka yang ramah pengguna, mudah diakses, dan estetis.<br>Menggunakan AI secara cekatan untuk menghasilkan sistem yang solutif.'},
+      {n:'Akuntabel',c:'#60a5fa',t:'Memilih platform secara objektif dan dapat mempertanggungjawabkan alasan pemilihannya.<br>Merancang tata letak yang menampilkan data pengawasan secara transparan dan jujur.<br>Memastikan dashboard menampilkan fakta yang objektif.'},
+      {n:'Kompeten',c:'#a78bfa',t:'Terus belajar memahami spesifikasi teknis (kelebihan dan kelemahan) masing-masing platform IT.<br>Mencurahkan kreativitas untuk menghasilkan karya desain dengan kualitas terbaik.<br>Menghasilkan desain dashboard yang informatif melalui proses terus belajar.'},
+      {n:'Harmonis',c:'#f472b6',t:'Berdiskusi dengan nyaman bersama rekan yang lebih paham IT tanpa merasa gengsi.<br>Menggunakan kombinasi warna desain yang selaras dan nyaman dipandang.<br>Menyelaraskan sistem baru dengan prosedur di instansi agar kondusif.'},
+      {n:'Loyal',c:'#f87171',t:'Memilih platform yang menjamin keamanan data negara/instansi.<br>Menyertakan elemen identitas instansi (logo pemprov/dinas) sebagai wujud kebanggaan institusi.<br>Menjaga kerahasiaan data spesifik saat memproses coding.'},
+      {n:'Adaptif',c:'#fb923c',t:'Antusias mempelajari teknologi aplikasi cloud-based yang masih baru.<br>Mengadopsi tren desain antarmuka modern yang responsif (bisa dibuka di HP maupun PC).<br>Mengikuti tren desain antarmuka (interface) terkini dengan adaptasi cerdas.'},
+      {n:'Kolaboratif',c:'#4ade80',t:'Bermusyawarah dengan pimpinan atau tim IT untuk penentuan final.<br>Meminta umpan balik (feedback) rancangan desain dari pengguna potensial (pengawas lain).<br>Meminta umpan balik desain dan struktur coding dari mentor secara sinergis.'}]},
+  { id:'k4', tag:'Kegiatan 4', label:'Pembuatan dan Pengembangan Dashboard', sc:'o', icon:'🗺️',
+    tahapan:[
+      {title:'1. Menginput dan mengintegrasikan database yang telah divalidasi ke dalam platform yang akan digunakan.'},
+      {title:'2. Membangun titik koordinat spasial dan memasukkan visualisasi data (profil, status koperasi, NIB, NIK).'},
+      {title:'3. Menambahkan fitur filterisasi (berdasarkan kabupaten/kota, kecamatan, status) untuk kemudahan pencarian data.'}],
+    ak:[
+      {n:'Berorientasi Pelayanan',c:'#22d3ee',t:'Memastikan loading data berjalan cepat demi kenyamanan pengguna.<br>Menyajikan pop-up profil Koperasi yang informatif dan menjawab kebutuhan pimpinan.<br>Menyediakan fitur pencarian yang solutif untuk menghemat waktu pimpinan.'},
+      {n:'Akuntabel',c:'#60a5fa',t:'Mengunggah data dengan penuh tanggung jawab, tanpa ada satu pun yang tertinggal.<br>Memastikan setiap titik peta secara jujur mewakili lokasi geografis Koperasi yang sebenarnya.<br>Menguji fitur filter ini secara disiplin agar hasil pencariannya 100% akurat.'},
+      {n:'Kompeten',c:'#a78bfa',t:'Melakukan proses migrasi data dengan kehati-hatian dan standar teknis yang tinggi.<br>Mendemonstrasikan kemampuan Geographic Information System (GIS) terbaik.<br>Menerapkan logika algoritma filterisasi dengan ahli dan tanpa error.'},
+      {n:'Harmonis',c:'#f472b6',t:'Menjaga emosi tetap stabil dan tenang meskipun menghadapi ribuan baris data.<br>Membedakan jenis koperasi dengan ikon yang ramah dan mudah dikenali.<br>Membangun menu navigasi yang inklusif dan mudah ditekan oleh siapa saja.'},
+      {n:'Loyal',c:'#f87171',t:'Berdedikasi bekerja di luar jam kantor jika proses unggah membutuhkan waktu lama.<br>Memastikan visualisasi ini benar-benar mendukung terwujudnya program Koperasi Merah Putih Presiden RI.<br>Menyelaraskan instrumen pencarian dengan nomenklatur wilayah administratif pemprov.'},
+      {n:'Adaptif',c:'#fb923c',t:'Sigap mencari jalan keluar (troubleshooting) jika terjadi kendala gagal unggah.<br>Terus bereksperimen mengubah format tabel membosankan menjadi peta dinamis yang menarik.<br>Proaktif menambahkan kriteria filter baru jika pimpinan memintanya sewaktu-waktu.'},
+      {n:'Kolaboratif',c:'#4ade80',t:'Melibatkan unit data (data center) dinas untuk memastikan kelancaran integrasi.<br>Mengajak rekan kerja mengoreksi letak titik yang mungkin dirasa kurang presisi.<br>Meminta masukan dari admin provinsi terkait hierarki wilayah yang benar.'}]},
+  { id:'k5', tag:'Kegiatan 5', label:'Uji Coba Terbatas dan Menerima Masukan', sc:'r', icon:'🐛',
+    tahapan:[
+      {title:'1. Melakukan uji coba akses dan fitur dashboard secara mandiri.'},
+      {title:'2. Meminta rekan kerja sesama Pengawas Koperasi untuk mencoba menggunakan dashboard tersebut.'},
+      {title:'3. Menampung masukan dan saran serta melakukan perbaikan berdasarkan hasil uji coba terbatas.'}],
+    ak:[
+      {n:'Berorientasi Pelayanan',c:'#22d3ee',t:'Menempatkan diri sebagai pengguna akhir untuk memastikan sistem tidak mengecewakan.<br>Melayani setiap keluhan rekan saat mereka mencoba sistem dengan responsif.<br>Menjadikan masukan rekan sebagai landasan untuk melakukan perbaikan tiada henti.'},
+      {n:'Akuntabel',c:'#60a5fa',t:'Mencatat setiap kerusakan (bug) yang ditemukan dengan jujur dan integritas.<br>Transparan menunjukkan kekurangan sistem kepada rekan untuk dinilai secara objektif.<br>Mempertanggungjawabkan perbaikan (maintenance) sesuai dengan laporan kerusakan yang masuk.'},
+      {n:'Kompeten',c:'#a78bfa',t:'Menguji kelayakan sistem (Quality Assurance) dengan standar dan kualitas tinggi.<br>Terus belajar dari pola interaksi rekan kerja terhadap sistem yang dibuat.<br>Mengeksekusi perbaikan sistem/coding secara cepat, akurat, dan tuntas.'},
+      {n:'Harmonis',c:'#f472b6',t:'Menumbuhkan ketenangan batin dalam menguji coba sistem tanpa terburu-buru.<br>Bersikap sangat menghargai waktu yang diluangkan rekan kerja untuk menjadi tester.<br>Menerima semua kritik teknis tanpa baper (selaras dan kondusif).'},
+      {n:'Loyal',c:'#f87171',t:'Memastikan produk ini layak mewakili nama baik institusi sebelum ditunjukkan ke pihak luar.<br>Mengajak rekan sejawat bersama-sama memajukan metode pengawasan dinas.<br>Berdedikasi memperbaiki aplikasi hingga mencapai kesempurnaan fungsional.'},
+      {n:'Adaptif',c:'#fb923c',t:'Sigap mencatat setiap perubahan teknis yang harus segera ditindaklanjuti.<br>Proaktif mengamati kesulitan rekan (apakah gaptek atau error sistem) dan mencarikan jalan keluar.<br>Terbuka terhadap inovasi perubahan fitur yang mendadak disarankan oleh para pengguna.'},
+      {n:'Kolaboratif',c:'#4ade80',t:'Mendiskusikan temuan uji coba mandiri dengan atasan langsung.<br>Memberi kesempatan seluas-luasnya kepada rekan sejawat untuk mengeksplorasi sistem.<br>Bersinergi dengan pihak yang memberi saran untuk memastikan perbaikan sudah sesuai harapan mereka.'}]},
+  { id:'k6', tag:'Kegiatan 6', label:'Sosialisasi dan Demonstrasi Penggunaan Dashboard', sc:'c', icon:'📡',
+    tahapan:[
+      {title:'1. Menyusun panduan singkat (manual book) terkait cara penggunaan dashboard.'},
+      {title:'2. Mengundang mentor, rekan kerja, dan pimpinan untuk menghadiri demonstrasi.'},
+      {title:'3. Memaparkan cara kerja dashboard dan mendistribusikan tautan (URL) akses kepada peserta demonstrasi.'}],
+    ak:[
+      {n:'Berorientasi Pelayanan',c:'#22d3ee',t:'Menyusun panduan dengan bahasa yang mudah dimengerti demi kepuasan pemakai.<br>Menyampaikan undangan dengan ramah, komunikatif, dan penuh etika.<br>Mendemonstrasikan aplikasi dengan cekatan dan menjawab pertanyaan secara solutif.'},
+      {n:'Akuntabel',c:'#60a5fa',t:'Menyajikan langkah-langkah penggunaan secara cermat, berurutan, dan dapat dipercaya.<br>Memastikan undangan tersampaikan tepat waktu kepada seluruh pihak berkepentingan.<br>Membagikan link akses dengan tanggung jawab penuh terhadap kerahasiaan password dinas.'},
+      {n:'Kompeten',c:'#a78bfa',t:'Berbagi pengetahuan teknis untuk membantu rekan lain belajar dengan materi kualitas terbaik.<br>Merencanakan acara demonstrasi secara profesional dan terstruktur.<br>Tampil percaya diri mempresentasikan produk sebagai subject matter expert di bidang tersebut.'},
+      {n:'Harmonis',c:'#f472b6',t:'Menyertakan ilustrasi yang ramah dan menarik dalam buku saku agar pembaca tidak bosan.<br>Menghargai perbedaan latar belakang pimpinan dan rekan dengan mengundang mereka secara setara.<br>Menciptakan suasana ruang rapat yang kondusif, hangat, dan interaktif.'},
+      {n:'Loyal',c:'#f87171',t:'Menyisipkan logo dan nilai organisasi di dalam manual book sebagai identitas korporat dinas.<br>Mewujudkan sosialisasi ini sebagai bentuk pengabdian untuk kemajuan dinas.<br>Menegaskan bahwa inovasi ini sepenuhnya dipersembahkan untuk kemudahan operasional instansi.'},
+      {n:'Adaptif',c:'#fb923c',t:'Membuat panduan dalam format digital (PDF interaktif) yang dapat dibagikan via grup WhatsApp.<br>Sigap beralih menggunakan Zoom Meeting apabila pimpinan sedang tidak berada di tempat.<br>Antusias menularkan semangat digitalisasi dan budaya paperless kepada rekan-rekan senior.'},
+      {n:'Kolaboratif',c:'#4ade80',t:'Melibatkan unit kepegawaian/humas jika diperlukan untuk distribusi dokumen panduan.<br>Membangun kerja sama lintas bidang untuk menyukseskan acara demonstrasi inovasi ini.<br>Menggerakkan seluruh audiens untuk membuka URL tersebut di smartphone masing-masing secara serentak.'}]},
+  { id:'k7', tag:'Kegiatan 7', label:'Evaluasi dan Pelaporan Hasil Aktualisasi', sc:'v', icon:'📝',
+    tahapan:[
+      {title:'1. Menganalisis efektivitas monitoring pasca-digitalisasi.'},
+      {title:'2. Mengumpulkan seluruh bukti fisik (dokumentasi, screenshot dasboard, surat-surat) untuk lampiran.'},
+      {title:'3. Menyusun laporan akhir aktualisasi.'}],
+    ak:[
+      {n:'Berorientasi Pelayanan',c:'#22d3ee',t:'Merumuskan rekomendasi perbaikan pelayanan untuk program tindak lanjut berikutnya.<br>Menyediakan evidence yang jelas dan rapi untuk memudahkan Penguji saat seminar.<br>Merevisi laporan dengan cekatan.'},
+      {n:'Akuntabel',c:'#60a5fa',t:'Menyajikan data perbandingan sebelum dan sesudah secara jujur.<br>Bertanggung jawab memastikan semua dokumen yang dilampirkan adalah benar adanya (valid).<br>Mematuhi batas waktu pengumpulan laporan secara disiplin.'},
+      {n:'Kompeten',c:'#a78bfa',t:'Menggunakan kemampuan analitik kritis untuk menakar keberhasilan aktualisasi.<br>Menata arsip dokumen dengan teliti agar tidak ada bukti kegiatan yang tercecer.<br>Menghasilkan dokumen laporan akademis dengan kualitas penulisan terbaik.'},
+      {n:'Harmonis',c:'#f472b6',t:'Sertakan testimoni objektif, saling ingatkan rekan Latsar, dan sisipkan ucapan terima kasih.<br>Saling mengingatkan dengan sesama rekan Latsar mengenai kelengkapan bukti dukung.<br>Menyematkan ucapan terima kasih kepada seluruh pihak yang telah mendukung kegiatan habituasi ini.'},
+      {n:'Loyal',c:'#f87171',t:'Memastikan evaluasi ini berdampak lurus terhadap capaian IKU (Indikator Kinerja Utama).<br>Mendokumentasikan setiap momen pengabdian sebagai jejak historis CPNS.<br>Menyelesaikan amanat kewajiban CPNS (Latsar) ini dengan penuh komitmen dan tanggung jawab.'},
+      {n:'Adaptif',c:'#fb923c',t:'Proaktif mengidentifikasi celah pengembangan sistem lebih lanjut di masa depan.<br>Menyusun portofolio ini dalam format digital (cloud folder) yang mudah diakses siapa saja.<br>Cepat menyesuaikan gaya penulisan dan tata letak dokumen (layout) sesuai dengan pedoman terbaru BPSDM.'},
+      {n:'Kolaboratif',c:'#4ade80',t:'Membedah hasil analisis ini bersama mentor untuk mendapatkan insight strategis.<br>Meminta bantuan rekan untuk mendokumentasikan kegiatan selama di kantor.<br>Secara aktif berkonsultasi dengan Coach untuk memfinalisasi laporan.'}]}
+];
+
+const N               = CPS.length;
+const SCROLL_PER_SIGN = 1200; // Jarak scroll diperpanjang
+const RC              = document.getElementById('road-container');
+const STICKY          = document.getElementById('road-sticky');
+const pb              = document.getElementById('progress');
+const dashes          = document.querySelectorAll('.moving-dash');
+const PW              = document.getElementById('popup');
+const roadHint        = document.getElementById('road-hint');
+const kegNav          = document.getElementById('keg-nav');
+const roadPrev        = document.getElementById('road-prev');
+const roadNext        = document.getElementById('road-next');
+let VH                = window.innerHeight;
+let currentSignIndex  = 0;
+
+RC.style.height = (N * SCROLL_PER_SIGN + VH * 2.5) + 'px';
+
+const scClass = {c:'sc',v:'sv',g:'sg',o:'so',r:'sr'};
+
+// Posisi X saat dekat layar (sisi kiri/kanan jalan)
+const XL = [15, 20, 12, 22, 10, 18, 15];   
+const XR = [85, 80, 88, 78, 90, 82, 85];   
+
+const signEls = CPS.map((cp, i) => {
+  const pole  = document.createElement('div');
+  pole.className = 'sign-pole';
+  pole.id = 'sp_' + cp.id;
+
+  const board = document.createElement('div');
+  board.className = 'sign-board ' + (scClass[cp.sc] || 'sc');
+  
+  board.innerHTML = `
+    <div class="sb-title">${cp.icon} ${cp.label}</div>
+    <div class="sb-click">Klik Detail Tahapan & Bukti</div>
+  `;
+
+  const stick = document.createElement('div'); stick.className = 'pole-stick';
+  const foot  = document.createElement('div'); foot.className  = 'pole-foot';
+  pole.appendChild(board); pole.appendChild(stick); pole.appendChild(foot);
+
+  STICKY.appendChild(pole);
+  pole.addEventListener('click', () => openPopup(cp));
+
+  const isLeft = i % 2 === 0;
+  const baseX  = isLeft ? XL[i % XL.length] : XR[i % XR.length];
+  return { el: pole, cp, i, isLeft, baseX };
+});
+
+const kegDots = CPS.map((cp, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'kn-dot'; dot.title = cp.label;
+  dot.addEventListener('click', () => {
+    const rt = RC.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top: rt + VH + i * SCROLL_PER_SIGN + SCROLL_PER_SIGN * 0.4, behavior:'smooth' });
+  });
+  kegNav.appendChild(dot);
+  return dot;
+});
+
+// LOGIKA PERSPEKTIF BESAR -> KECIL (BAWAH KE ATAS)
+let lastY = 0, laneTimer = null, hintShown = false, hintTimer = null;
+
+function setLane(on){ dashes.forEach(d => d.style.animationPlayState = on ? 'running' : 'paused'); }
+
+function onScroll(){
+  const sy = window.scrollY;
+  const dh = document.documentElement.scrollHeight - VH;
+  pb.style.width = Math.min(100, sy / dh * 100) + '%';
+
+  const vel = sy - lastY; lastY = sy;
+  if(Math.abs(vel) > 1){ setLane(true); clearTimeout(laneTimer); laneTimer = setTimeout(() => setLane(false), 220); }
+
+  const rcTop = RC.getBoundingClientRect().top + sy;
+  const rs    = sy - rcTop;
+  const rcH   = RC.offsetHeight;
+  const inRoad = rs > -VH * 0.5 && rs < rcH;
+
+  if(inRoad && rs > 0){
+    kegNav.classList.add('show');
+    roadPrev.classList.add('show');
+    roadNext.classList.add('show');
+    if(!hintShown){
+      roadHint.classList.add('show'); hintShown = true;
+      clearTimeout(hintTimer);
+      hintTimer = setTimeout(() => roadHint.classList.remove('show'), 3000);
+    }
+  } else {
+    kegNav.classList.remove('show');
+    roadPrev.classList.remove('show');
+    roadNext.classList.remove('show');
+  }
+
+  if(!inRoad) return;
+
+  const rp          = Math.max(0, Math.min(1, rs / Math.max(1, rcH - VH)));
+  const totalUnits  = N + 2; 
+  const currentUnit = rp * totalUnits;
+
+  const horizonY = VH * 0.48; 
+  const baseY = VH * 1.1; // Muncul dari bawah luar layar
+
+  signEls.forEach(({el, cp, i, isLeft, baseX}) => {
+    // Dist meningkat seiring scroll ke bawah.
+    // i = 0 (Kegiatan 1) diproses pertama, bergerak dari 0 ke atas
+    const dist = currentUnit - i; 
+
+    if (dist < -0.5 || dist > 8) {
+      el.style.opacity = 0;
+      el.style.pointerEvents = 'none';
+    } else {
+      el.style.pointerEvents = 'auto';
+      
+      // Scale akan mengecil saat dist meningkat (Besar di bawah, ke Kecil di cakrawala)
+      const scale = 2.0 * Math.pow(0.55, dist);
+      const normalizedScale = scale / 2.0; 
+      
+      // Y position bergerak dari baseY (bawah layar) ke horizonY (cakrawala)
+      const y = horizonY + (baseY - horizonY) * normalizedScale;
+      
+      const targetX = baseX;
+      const center = 50;
+      const diff = targetX - center;
+      const currentX = center + diff * normalizedScale;
+      
+      el.style.left = currentX + '%';
+      el.style.top = y + 'px';
+      el.style.transform = `translate(-50%, -100%) scale(${scale.toFixed(4)})`;
+      
+      el.style.zIndex = Math.floor(scale * 100);
+      
+      let opacity = 1;
+      if (dist < 0) opacity = Math.max(0, 1 + dist * 2); // Fade In saat masuk
+      else if (dist > 5) opacity = Math.max(0, 1 - (dist - 5) * 0.5); // Fade Out di cakrawala
+      el.style.opacity = opacity;
+    }
+
+    if(kegDots[i]) kegDots[i].className = 'kn-dot'
+      + (dist > 1.8 ? ' done' : dist > 0.3 && dist < 1.8 ? ' active' : '');
+
+    // Track current sign index for prev/next navigation
+    if (dist > 0.3 && dist < 1.8) currentSignIndex = i;
+  });
+}
+
+window.addEventListener('scroll', onScroll, { passive:true });
+window.addEventListener('resize', () => { VH = window.innerHeight; RC.style.height = (N * SCROLL_PER_SIGN + VH * 2.5) + 'px'; onScroll(); });
+onScroll();
+
+// ── ROAD PREV/NEXT BUTTONS ──
+function scrollToSign(index) {
+  const clamped = Math.max(0, Math.min(N - 1, index));
+  const rcTop = RC.getBoundingClientRect().top + window.scrollY;
+  window.scrollTo({ top: rcTop + VH + clamped * SCROLL_PER_SIGN + SCROLL_PER_SIGN * 0.4, behavior: 'smooth' });
+}
+roadPrev.addEventListener('click', () => scrollToSign(currentSignIndex - 1));
+roadNext.addEventListener('click', () => scrollToSign(currentSignIndex + 1));
+
+// POPUP MANUAL SAAT RAMBU DIKLIK
+document.getElementById('pc').onclick = () => PW.classList.remove('open');
+PW.addEventListener('click', e => { if(e.target === PW) PW.classList.remove('open'); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') PW.classList.remove('open'); });
+
+function openPopup(cp){
+  document.getElementById('ptag').textContent   = '📌 ' + cp.tag;
+  document.getElementById('ptitle').textContent = cp.label;
+  
+  // Tempatkan tahapan beserta placeholder gambar
+  document.getElementById('tlist').innerHTML = cp.tahapan.map(t =>
+    `<div class="t-item">
+      <div class="t-title">${t.title}</div>
+      <div class="t-desc">${t.desc || ''}</div>
+      <div class="evidence-placeholder">
+        [ Tempatkan URL/Link Gambar Bukti Dukung Di Sini ]
+      </div>
+    </div>`
+  ).join('');
+  
+  let akHTML = '';
+  cp.ak.forEach(a => {
+    akHTML += `
+      <div class="ak-block" style="--c:${a.c}">
+        <div class="ak-n">${a.n}</div>
+        <div class="ak-t">${a.t}</div>
+      </div>
+    `;
+  });
+  document.getElementById('alist').innerHTML = akHTML;
+  
+  PW.classList.add('open');
+  PW.querySelector('.popup-box').scrollTop = 0;
+}
+
+// COUNTER (FINAL STATS)
+const cio = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(!e.isIntersecting) return;
+    const el = e.target, tg = parseInt(el.dataset.n, 10);
+    let cur = 0; const step = tg / (1200 / 16);
+    const t = setInterval(() => { cur += step; if(cur >= tg){ cur = tg; clearInterval(t); } el.textContent = Math.ceil(cur); }, 16);
+    cio.unobserve(el);
+  });
+}, { threshold:.5 });
+document.querySelectorAll('.cnt').forEach(el => cio.observe(el));
+
+// GENERATE STARS for hero & final sections
+function generateStars(containerId, count) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  for (let i = 0; i < count; i++) {
+    const star = document.createElement('div');
+    star.className = 'hstar';
+    const size = Math.random() * 3 + 1;
+    star.style.width = size + 'px';
+    star.style.height = size + 'px';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.opacity = Math.random() * 0.6 + 0.2;
+    star.style.animation = `blink ${Math.random() * 3 + 2}s ease-in-out ${Math.random() * 3}s infinite`;
+    container.appendChild(star);
+  }
+}
+generateStars('hs', 80);
+generateStars('fstars', 60);
+
+// ── CURSOR GLOW ──
+const glow = document.getElementById('cursor-glow');
+let glowActive = false;
+document.addEventListener('mousemove', e => {
+  if (!glowActive) { glow.style.opacity = '1'; glowActive = true; }
+  requestAnimationFrame(() => {
+    glow.style.left = (e.clientX - 175) + 'px';
+    glow.style.top = (e.clientY - 175) + 'px';
+  });
+});
+document.addEventListener('mouseleave', () => { glow.style.opacity = '0'; glowActive = false; });
+
+// ── SCROLL REVEAL ──
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.bab-card').forEach((card, i) => {
+  card.classList.add('reveal', i % 2 === 0 ? 'from-left' : 'from-right');
+  card.style.transitionDelay = '0.1s';
+  revealObserver.observe(card);
+});
+
+document.querySelectorAll('.f-stat').forEach((stat, i) => {
+  stat.classList.add('reveal');
+  stat.style.transitionDelay = (i * 0.12) + 's';
+  revealObserver.observe(stat);
+});
+
+document.querySelectorAll('.info-box').forEach((box, i) => {
+  box.classList.add('reveal');
+  box.style.transitionDelay = (i * 0.15 + 0.2) + 's';
+  revealObserver.observe(box);
+});
+
+// ── 3D TILT on CARDS ──
+function addTilt(el) {
+  el.classList.add('tilt-card');
+  el.addEventListener('mousemove', (e) => {
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    el.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) scale(1.02)`;
+  });
+  el.addEventListener('mouseleave', () => {
+    el.style.transform = 'perspective(800px) rotateY(0) rotateX(0) scale(1)';
+  });
+}
+document.querySelectorAll('.bab-card').forEach(addTilt);
+document.querySelectorAll('.f-stat').forEach(addTilt);
+
+// ── HERO MOUSE PARALLAX ──
+const heroContent = document.querySelector('.hero-content');
+const heroSection = document.getElementById('hero');
+heroSection.addEventListener('mousemove', (e) => {
+  const rect = heroSection.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width - 0.5;
+  const y = (e.clientY - rect.top) / rect.height - 0.5;
+  heroContent.style.transform = `translate(${x * 15}px, ${y * 10}px)`;
+  const starsEl = document.getElementById('hs');
+  if (starsEl) starsEl.style.transform = `translate(${-x * 25}px, ${-y * 20}px)`;
+});
+heroSection.addEventListener('mouseleave', () => {
+  heroContent.style.transform = 'translate(0,0)';
+  const starsEl = document.getElementById('hs');
+  if (starsEl) starsEl.style.transform = 'translate(0,0)';
+});
+heroContent.style.transition = 'transform 0.3s ease-out';
+const hsParallax = document.getElementById('hs');
+if (hsParallax) hsParallax.style.transition = 'transform 0.3s ease-out';
+
+// ── FLOATING PARTICLES ──
+function spawnParticle() {
+  const particle = document.createElement('div');
+  particle.className = 'particle';
+  const size = Math.random() * 5 + 2;
+  const colors = ['var(--accent)', 'var(--accent2)', 'var(--green)', '#fbbf24'];
+  particle.style.cssText = `
+    width:${size}px;height:${size}px;
+    left:${Math.random() * 100}vw;
+    top:100vh;
+    background:${colors[Math.floor(Math.random() * colors.length)]};
+    animation:floatUp ${Math.random() * 8 + 8}s linear forwards;
+  `;
+  document.body.appendChild(particle);
+  setTimeout(() => particle.remove(), 16000);
+}
+setInterval(spawnParticle, 1500);
+
+// ── BACK TO TOP ──
+const backTop = document.getElementById('back-top');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > VH * 0.8) backTop.classList.add('show');
+  else backTop.classList.remove('show');
+}, { passive: true });
+backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+// ── CONFETTI on FINAL ──
+let confettiFired = false;
+const finalObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && !confettiFired) {
+      confettiFired = true;
+      fireConfetti();
+    }
+  });
+}, { threshold: 0.3 });
+const finalSection = document.getElementById('final');
+if (finalSection) finalObserver.observe(finalSection);
+
+function fireConfetti() {
+  const colors = ['#22d3ee','#818cf8','#4ade80','#fbbf24','#fb923c','#f87171','#f472b6','#a78bfa'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      const w = Math.random() * 10 + 5;
+      const h = Math.random() * 12 + 6;
+      piece.style.cssText = `
+        left:${Math.random() * 100}vw;
+        width:${w}px;height:${h}px;
+        background:${colors[Math.floor(Math.random() * colors.length)]};
+        animation:confettiFall ${Math.random() * 2 + 2}s ease-in forwards;
+        animation-delay:${Math.random() * 0.3}s;
+        border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+      `;
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 4500);
+    }, i * 40);
+  }
+}
+
+// ── KEYBOARD NAVIGATION ──
+document.addEventListener('keydown', (e) => {
+  if (PW.classList.contains('open')) return;
+  const rcTop = RC.getBoundingClientRect().top + window.scrollY;
+  const rs = window.scrollY - rcTop;
+  if (rs < 0) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+    e.preventDefault();
+    window.scrollBy({ top: SCROLL_PER_SIGN * 0.8, behavior: 'smooth' });
+  } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+    e.preventDefault();
+    window.scrollBy({ top: -SCROLL_PER_SIGN * 0.8, behavior: 'smooth' });
+  } else if (e.key === 'Enter') {
+    // Find closest sign and click it
+    let closest = null, minDist = Infinity;
+    signEls.forEach(({el, i}) => {
+      const style = el.style;
+      if (parseFloat(style.opacity) > 0.5) {
+        const scale = parseFloat(el.style.transform.match(/scale\(([^)]+)\)/)?.[1] || 0);
+        const dist = Math.abs(scale - 1.2);
+        if (dist < minDist) { minDist = dist; closest = el; }
+      }
+    });
+    if (closest) closest.click();
+  }
+});
+// ── AUTO-SCROLL ──
+const asBtn = document.getElementById('auto-scroll-btn');
+const asIcon = document.getElementById('as-icon');
+let autoScrolling = true;
+let autoScrollRAF = null;
+let autoScrollSpeed = 1.2; // pixels per frame
+let userInteracted = false;
+
+function autoScrollStep() {
+  if (!autoScrolling) return;
+  window.scrollBy(0, autoScrollSpeed);
+  // Stop at the very bottom
+  if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 2) {
+    stopAutoScroll();
+    return;
+  }
+  autoScrollRAF = requestAnimationFrame(autoScrollStep);
+}
+
+function startAutoScroll() {
+  autoScrolling = true;
+  asBtn.classList.remove('paused');
+  asBtn.classList.add('playing');
+  asIcon.textContent = '▶';
+  autoScrollRAF = requestAnimationFrame(autoScrollStep);
+}
+
+function stopAutoScroll() {
+  autoScrolling = false;
+  if (autoScrollRAF) cancelAnimationFrame(autoScrollRAF);
+  asBtn.classList.add('paused');
+  asBtn.classList.remove('playing');
+  asIcon.textContent = '⏸';
+}
+
+// Stop on user interaction
+function onUserInterrupt(e) {
+  // Ignore if from auto-scroll button itself
+  if (e && e.target && (e.target === asBtn || asBtn.contains(e.target))) return;
+  if (autoScrolling) stopAutoScroll();
+}
+
+window.addEventListener('wheel', onUserInterrupt, { passive: true });
+window.addEventListener('touchstart', onUserInterrupt, { passive: true });
+window.addEventListener('mousedown', onUserInterrupt, { passive: true });
+window.addEventListener('keydown', (e) => {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown','Home','End',' '].includes(e.key)) {
+    onUserInterrupt(e);
+  }
+});
+
+// Toggle button
+asBtn.addEventListener('click', () => {
+  if (autoScrolling) {
+    stopAutoScroll();
+  } else {
+    startAutoScroll();
+  }
+});
+
+// Start auto-scroll after a short delay on page load
+setTimeout(() => {
+  if (!userInteracted) startAutoScroll();
+}, 1500);
+</script>
+</body>
+</html>

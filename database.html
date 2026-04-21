@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kelola Basis Data - Dashboard Koperasi</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Framework Tailwind CSS & SweetAlert2 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- CryptoJS (AES, SHA256) untuk dekripsi payload Kemenkop -->
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js"></script>
+    
+    <!-- Konfigurasi Tailwind untuk menyelaraskan dengan warna CSS Anda -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#d32f2f',
+              aktif: '#10b981',
+              nonAktif: '#ef4444',
+              highlight: '#f59e0b',
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+        :root {
+            /* Palette Merah Putih Modern */
+            --primary: #d32f2f;
+            --primary-gradient: linear-gradient(135deg, #e53935, #b71c1c);
+            --aktif: #10b981;
+            --non-aktif: #ef4444;
+            --highlight: #f59e0b;
+            --sidebar-width: 280px;
+            --bg-body: #e2e8f0;
+            --bg-light: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #cbd5e1;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 12px 32px rgba(0,0,0,0.12);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            overflow: hidden; display: flex; flex-direction: column;
+            background-color: var(--bg-body);
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        /* Menyembunyikan panah bawaan di <details> browser */
+        summary { list-style: none; }
+        summary::-webkit-details-marker { display: none; }
+
+        /* Header Minimalis */
+        header {
+            background: var(--primary-gradient); 
+            color: white; 
+            padding: 6px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1001; 
+            box-shadow: var(--shadow-md);
+        }
+
+        .header-brand { display: flex; align-items: center; gap: 10px; }
+        .header-brand h1 { margin: 0; font-size: 0.95rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+        .header-brand i.fa-2x { font-size: 1.4em; }
+
+        .menu-toggle-btn {
+            background: rgba(255, 255, 255, 0.2); border: none; color: white;
+            font-size: 16px; cursor: pointer; padding: 6px 10px; border-radius: 6px;
+            transition: all 0.2s ease; margin-right: 6px; display: flex; align-items: center; justify-content: center;
+        }
+        .menu-toggle-btn:hover { background: rgba(255, 255, 255, 0.4); transform: scale(1.05); }
+
+        #stats-panel { 
+            font-size: 11px; font-weight: 500; background: rgba(255,255,255,0.2);
+            padding: 4px 12px; border-radius: 20px; backdrop-filter: blur(5px); display: flex; align-items: center;
+            justify-content: center; position: relative; overflow: hidden; cursor: pointer; min-width: 150px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.3s ease;
+        }
+        #stats-panel:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        #total-info { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; display: flex; align-items: center; gap: 6px; }
+        #stats-panel:hover #total-info { transform: translateY(-25px); opacity: 0; }
+        .refresh-overlay {
+            position: absolute; inset: 0; background: var(--surface); color: var(--primary);
+            display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; 
+            transform: translateY(25px); opacity: 0; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; border-radius: 20px;
+        }
+        #stats-panel:hover .refresh-overlay { transform: translateY(0); opacity: 1; }
+        .refresh-overlay i { transition: transform 0.5s ease; }
+        #stats-panel:hover .refresh-overlay i { transform: rotate(180deg); }
+
+        #admin-badge {
+            background: var(--highlight); color: #fff; padding: 3px 10px; 
+            border-radius: 20px; font-weight: 700; font-size: 9px; margin-left: 10px; box-shadow: 0 0 10px rgba(245, 158, 11, 0.4); letter-spacing: 1px;
+            display: inline-block;
+        }
+
+        #layout { display: flex; flex: 1; position: relative; overflow: hidden; }
+
+        #sidebar {
+            width: var(--sidebar-width); background: var(--surface); 
+            border-right: 1px solid var(--border); display: flex; flex-direction: column; 
+            transition: margin-left 0.3s ease, transform 0.3s ease; z-index: 1000; box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+        #sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); }
+
+        .sidebar-nav { padding: 20px; flex: 1; overflow-y: auto; }
+        .sidebar-link {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 8px;
+            color: var(--text-main); text-decoration: none; font-size: 13px; font-weight: 500;
+            border-radius: var(--radius-md); transition: all 0.2s ease; border: 1px solid transparent; background: var(--bg-light);
+            cursor: pointer;
+        }
+        .sidebar-link:hover { background: #fef2f2; border-color: var(--primary); color: var(--primary); transform: translateX(5px); }
+        .sidebar-link.active { background: #fef2f2; border-color: var(--primary); color: var(--primary); font-weight: 600; }
+        .sidebar-link i { font-size: 16px; width: 20px; text-align: center; color: var(--primary); }
+
+        .sidebar-footer {
+            padding: 15px 20px; background: var(--bg-light); border-top: 1px solid var(--border);
+            text-align: center; font-size: 11px; color: var(--text-muted); line-height: 1.6; flex-shrink: 0; letter-spacing: 0.3px;
+        }
+
+        .btn-action { background-color: var(--surface); color: var(--text-main); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 10px; font-family: 'Inter'; padding: 4px 8px; display: flex; align-items: center; gap: 4px; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+        .btn-action:hover { background-color: #f1f5f9; border-color: #94a3b8; }
+        
+        .data-table { width: 100%; border-collapse: collapse; font-size: 10px; text-align: left; white-space: nowrap; }
+        .data-table th { position: sticky; top: 0; background: #f1f5f9; padding: 4px 8px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); z-index: 10; user-select: none; transition: background 0.2s; }
+        .data-table td { padding: 3px 8px; border-bottom: 1px solid #f1f5f9; color: var(--text-main); vertical-align: middle; }
+        .data-table tr { transition: all 0.2s; }
+        .data-table tr:nth-child(even) { background: #fafafa; }
+        .data-table tr:hover { background: #f1f5f9; }
+
+        .status-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; border-radius: 12px; font-size: 8px; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: var(--shadow-sm); }
+        
+        .edit-input { width: 100%; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-md); box-sizing: border-box; font-size: 11px; font-family: 'Inter'; transition: 0.3s; background: var(--bg-light); }
+        .edit-input:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(211,47,47,0.1); }
+        
+        .gmaps-link { color: #2563eb; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; background: #eff6ff; border-radius: 20px; width: fit-content; transition: 0.2s; font-size: 10px; }
+        .gmaps-link:hover { background: #dbeafe; color: #1d4ed8; }
+
+        #loader { position: fixed; inset: 0; background: rgba(255,255,255,0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; }
+        #loader i { text-shadow: 0 4px 12px rgba(211,47,47,0.3); }
+
+        /* Search input styling untuk database.html */
+        .db-search-input {
+            padding: 6px 28px 6px 12px; border: 1px solid var(--border); 
+            border-radius: 30px; outline: none; font-family: 'Inter'; font-size: 11px;
+            background-color: var(--surface); transition: all 0.3s ease; box-sizing: border-box;
+            width: 250px;
+        }
+        .db-search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1); }
+        
+        @media (max-width: 992px) {
+            header { padding: 6px 10px; flex-wrap: wrap; gap: 6px; justify-content: center;}
+            .header-brand h1 { font-size: 0.85rem; text-align: center; }
+            #stats-panel { font-size: 9px; padding: 4px 8px; min-width: 120px; }
+            
+            #sidebar { position: absolute; left: 0; top: 0; transform: translateX(-100%); height: 100%; width: 280px; max-width: 85vw; box-shadow: 5px 0 25px rgba(0,0,0,0.1); margin-left: 0 !important; }
+            #sidebar.open { transform: translateX(0); }
+            
+            .db-search-input { width: 100%; }
+            .header-controls { flex-direction: column; align-items: stretch !important; gap: 10px; }
+            .action-buttons { justify-content: flex-start; }
+        }
+    </style>
+</head>
+<body class="bg-slate-200">
+    <div id="loader">
+        <i class="fas fa-circle-notch fa-spin fa-4x" style="color: var(--primary);"></i>
+        <p id="loader-text" style="margin-top: 20px; font-weight: 600; color: var(--text-main); font-size: 1.1rem; letter-spacing: 0.5px;">Memuat Data..</p>
+    </div>
+
+    <header>
+        <div class="header-brand">
+            <button class="menu-toggle-btn" onclick="toggleSidebar()" title="Toggle Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <i class="fas fa-map-location-dot fa-2x"></i>
+            <h1>Dashboard Koperasi Merah Putih</h1>
+            <div id="admin-badge"><i class="fas fa-shield-alt"></i> ADMIN</div>
+            <div id="session-timer" title="Sesi otomatis berakhir setelah 6 jam" style="background:rgba(255,255,255,0.2); color:#fff; padding:3px 10px; border-radius:20px; font-size:9px; font-weight:600; margin-left:6px; letter-spacing:0.5px; display:none;"></div>
+        </div>
+        <div id="stats-panel" onclick="loadDataFromServer()" title="Klik untuk memuat ulang data dari server">
+            <span id="total-info"><i class="fas fa-database"></i> Memuat Data...</span>
+            <div class="refresh-overlay">
+                <i class="fas fa-sync-alt"></i> Refresh Data
+            </div>
+        </div>
+    </header>
+
+    <div id="layout">
+        <div id="mobile-overlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,0.4); z-index:999;" onclick="toggleSidebar()"></div>
+        
+        <aside id="sidebar">
+            <div class="sidebar-nav">
+                <h3 style="margin-top:0; font-size:13px; font-weight:700; color:var(--text-main); margin-bottom:12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                    <i class="fas fa-link" style="color: var(--primary); margin-right: 6px;"></i> Menu Utama
+                </h3>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column;">
+                    <li><a href="index.html" id="link-peta" class="sidebar-link"><i class="fas fa-map-marked-alt"></i> Peta Persebaran</a></li>
+                    <li><a href="statistik.html" id="link-statistik" class="sidebar-link"><i class="fas fa-chart-line"></i> Dashboard Statistik</a></li>
+                    <li id="menu-db-container"><a href="database.html" id="link-database" class="sidebar-link active"><i class="fas fa-database"></i> Kelola Basis Data</a></li>
+                    
+                    <!-- HANYA TOMBOL KELUAR KARENA INI HALAMAN PROTECTED -->
+                    <li style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border);"></li>
+                    <li id="menu-logout"><a href="#" onclick="logoutAdmin(); return false;" class="sidebar-link" style="color: #dc2626; font-weight: 700;"><i class="fas fa-sign-out-alt" style="color: #dc2626;"></i> Keluar Admin</a></li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-footer">
+                created by <strong>@m45y</strong><br>
+                FOR LATSAR CPNS 2026<br>
+                GOL III, ANGKATAN I
+            </div>
+        </aside>
+
+        <!-- Container Database Management -->
+        <div id="content-wrapper" class="flex-1 flex flex-col p-4 md:p-6 gap-4 bg-slate-100 overflow-y-auto relative">
+            <div style="background: var(--surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); padding: 15px; flex-shrink: 0;">
+                <div class="flex justify-between items-center flex-wrap gap-4 header-controls">
+                    <h2 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--text-main);" class="whitespace-nowrap">
+                        <i class="fas fa-server" style="color: var(--primary); margin-right: 8px;"></i> Manajemen Data Koperasi
+                    </h2>
+                    
+                    <div class="flex items-center gap-3 flex-wrap flex-1 justify-end action-buttons">
+                        <!-- Search Bar -->
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="text" id="dbSearchInput" class="db-search-input pl-8" placeholder="Cari koperasi, NIK, desa..." oninput="handleDbSearch()">
+                            <i class="fas fa-times absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs cursor-pointer hover:text-red-500 hidden" id="clearDbSearchBtn" onclick="clearDbSearch()"></i>
+                        </div>
+                        
+                        <button class="btn-action hover:-translate-y-0.5 transition-transform whitespace-nowrap" style="background: var(--primary); color: white; padding: 8px 16px; font-size: 12px; border-radius: 30px; box-shadow: 0 4px 12px rgba(211,47,47,0.2);" onclick="addNewKoperasi()">
+                            <i class="fas fa-plus"></i> Tambah Koperasi Baru
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="flex: 1; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); min-height: 400px;">
+                <table class="data-table" style="width: 100%;">
+                    <thead style="background: #f8fafc;">
+                        <tr>
+                            <th style="width: 40px; text-align: center; position: sticky; top: 0; z-index: 10;">No</th>
+                            <th style="position: sticky; top: 0; z-index: 10;">Nama Koperasi</th>
+                            <th style="position: sticky; top: 0; z-index: 10;">NIK</th>
+                            <th style="position: sticky; top: 0; z-index: 10;">Kab/Kota</th>
+                            <th style="position: sticky; top: 0; z-index: 10;">Kecamatan</th>
+                            <th style="position: sticky; top: 0; z-index: 10;">Desa/Kel</th>
+                            <th style="position: sticky; top: 0; z-index: 10;">Status</th>
+                            <th style="text-align: center; width: 140px; position: sticky; top: 0; z-index: 10;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="db-table-body">
+                        <!-- Diisi via Javascript -->
+                    </tbody>
+                </table>
+                <div id="no-results-msg" class="hidden p-8 text-center text-slate-500 italic flex-col items-center gap-2">
+                    <i class="fas fa-search text-2xl text-slate-300"></i>
+                    <p>Tidak ada data koperasi yang cocok dengan pencarian.</p>
+                </div>
+            </div>
+
+            <div style="text-align: center; padding: 10px; background: var(--surface); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); flex-shrink: 0;">
+                <a href="https://docs.google.com/spreadsheets/d/14XjnK5a38pkK682P48K60zAjwwFbT5MDQcsHvxBkEW4/edit?usp=sharing" target="_blank" class="gmaps-link" style="font-size: 12px; padding: 8px 16px;">
+                    <i class="fas fa-external-link-alt"></i> Buka Google Sheets Database Asli
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL FORM UNTUK KELOLA BASIS DATA (POP-UP) -->
+    <div id="db-modal-overlay" class="fixed inset-0 bg-slate-900/70 z-[9900] hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
+                <h3 id="db-modal-title" class="font-bold text-lg text-slate-800"></h3>
+                <button onclick="closeDbModal()" class="text-slate-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6 bg-slate-50/50 flex flex-col gap-6" id="db-modal-form-content">
+                <!-- Form fields akan digenerate di sini -->
+            </div>
+            
+            <div class="p-4 border-t bg-slate-50 flex justify-end gap-3">
+                <button onclick="closeDbModal()" class="px-5 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors">Batal</button>
+                <button onclick="saveDbModalData()" class="px-5 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg text-xs font-semibold hover:shadow-lg transition-all"><i class="fas fa-save mr-1"></i> Simpan Data</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL VIEWER API KEMENKOP -->
+    <div id="api-modal-overlay" class="fixed inset-0 bg-slate-900/80 z-[9999] hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[96vh] flex flex-col overflow-hidden border border-slate-200">
+            <!-- Header Modal API -->
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                        <i class="fas fa-satellite-dish text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-[16px] text-slate-800 leading-tight">Detail Data API Kemenkop</h3>
+                        <p class="text-[11px] text-slate-500">Tampilan data sinkronisasi dari pusat</p>
+                    </div>
+                </div>
+                <button onclick="closeApiModal()" class="text-slate-400 hover:bg-red-50 hover:text-red-500 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <!-- Body Modal API -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-100 flex flex-col gap-5">
+                
+                <!-- Loader API -->
+                <div id="api-loading" class="hidden flex-col items-center justify-center py-12">
+                    <i class="fas fa-circle-notch fa-spin fa-3x text-blue-600 mb-4"></i>
+                    <p class="text-sm text-slate-600 font-semibold animate-pulse">Menarik & Memproses Data...</p>
+                </div>
+
+                <!-- Results Area -->
+                <div id="api-results" class="hidden flex-col gap-5">
+                    <!-- Hero Koperasi Result -->
+                    <div class="flex flex-wrap justify-between items-center gap-4 bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-blue-500 relative overflow-hidden">
+                        <div class="absolute right-0 top-0 bottom-0 w-64 bg-gradient-to-l from-blue-50 to-transparent pointer-events-none"></div>
+                        <div class="relative z-10">
+                            <h2 id="api-res-name" class="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-tight">NAMA KOPERASI</h2>
+                            <p id="api-res-loc" class="text-xs font-medium text-slate-500 mt-1 flex items-center gap-1.5"><i class="fas fa-map-marker-alt text-red-500"></i> <span id="api-res-loc-text">Lokasi</span></p>
+                        </div>
+                        <button onclick="useApiDataForForm()" class="btn-action !bg-green-600 !text-white !border-green-700 hover:!bg-green-700 hover:-translate-y-0.5 transition-transform px-5 py-2.5 text-xs font-bold shadow-md relative z-10">
+                            <i class="fas fa-check-circle text-sm"></i> Gunakan Data Ini ke Form
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                        <!-- Info Utama -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                            <h3 class="font-bold text-[13px] border-b pb-2 mb-3 text-slate-800 flex items-center gap-2"><i class="fas fa-info-circle text-blue-500"></i> Informasi Utama</h3>
+                            <div id="api-res-kv-main" class="grid grid-cols-[100px_1fr] gap-x-2 gap-y-2.5 text-[11px]">
+                                <!-- KV Items Main -->
+                            </div>
+                        </div>
+
+                        <!-- Info Tambahan -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                            <h3 class="font-bold text-[13px] border-b pb-2 mb-3 text-slate-800 flex items-center gap-2"><i class="fas fa-list-alt text-green-500"></i> Informasi Tambahan</h3>
+                            <div id="api-res-kv-add" class="grid grid-cols-[100px_1fr] gap-x-2 gap-y-2.5 text-[11px]">
+                                <!-- KV Items Additional -->
+                            </div>
+                        </div>
+                        
+                        <!-- Peta Lokasi -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col">
+                            <h3 class="font-bold text-[13px] border-b pb-2 mb-3 text-slate-800 flex items-center gap-2"><i class="fas fa-map text-red-500"></i> Peta Lokasi</h3>
+                            <div id="api-map" class="w-full min-h-[160px] h-48 lg:h-full rounded-lg border border-slate-200 z-10 flex-1 relative bg-slate-50"></div>
+                            <div id="api-map-hint" class="text-[10px] text-slate-500 mt-2 font-mono bg-slate-100 p-1.5 rounded inline-block w-fit"></div>
+                        </div>
+                    </div>
+
+                    <!-- Gambar Koperasi -->
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                         <h3 class="font-bold text-[13px] border-b pb-2 mb-3 text-slate-800 flex items-center gap-2"><i class="fas fa-images text-purple-500"></i> Gambar Koperasi</h3>
+                         <div id="api-res-images" class="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
+                             <!-- Images -->
+                         </div>
+                    </div>
+
+                    <!-- Wilayah Administratif -->
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-[13px] border-b pb-2 mb-3 text-slate-800 flex items-center gap-2"><i class="fas fa-sitemap text-orange-500"></i> Wilayah Administratif</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><b class="text-[10px] text-slate-500 uppercase block mb-1.5">Provinsi</b><div id="api-kv-prov" class="text-[10px] flex flex-col gap-1"></div></div>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><b class="text-[10px] text-slate-500 uppercase block mb-1.5">Kabupaten/Kota</b><div id="api-kv-dist" class="text-[10px] flex flex-col gap-1"></div></div>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><b class="text-[10px] text-slate-500 uppercase block mb-1.5">Kecamatan</b><div id="api-kv-sub" class="text-[10px] flex flex-col gap-1"></div></div>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><b class="text-[10px] text-slate-500 uppercase block mb-1.5">Desa/Kelurahan</b><div id="api-kv-vil" class="text-[10px] flex flex-col gap-1"></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Container Tabel Dinamis (Expandable) -->
+                    <div id="api-tables-wrapper" class="flex flex-col gap-5">
+                        <!-- Tables rendered here dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // --- KONFIGURASI URL GOOGLE APPS SCRIPT WEB APP ---
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzc96HHN04_Bd6DrkPXA5ww65-qqmu9v8--8rvlBQTHaqS9TSSEu-cjMMD7RBTwJpwL/exec";
+        
+        let rawData = [], filteredDbData = [], currentItem = null, dynamicHeadersList = []; 
+        let miniMap = null, miniMarker = null;
+        let canEdit = true; 
+        
+        // Definisi lengkap header yang ada di Spreadsheet
+        const standardHeaders = ['id', 'nama', 'alamat', 'desa', 'kecamatan', 'kabupaten', 'nik', 'lat', 'lng', 'status', 'kode_pos', 'pengurus', 'pengawas', 'gerai', 'kesehatan', 'tahun pendirian', 'jenis koperasi', 'jumlah anggota', 'ahu', 'sektor usaha', 'foto', 'url'];
+
+        // ============================================================
+        // SESSION MANAGER - Durasi sesi 6 jam
+        // ============================================================
+        const SESSION_DURATION_MS = 6 * 60 * 60 * 1000; // 6 jam
+        let sessionCheckInterval = null;
+
+        function isSessionValid() {
+            const auth = localStorage.getItem('koperasi_admin_auth');
+            const loginTime = parseInt(localStorage.getItem('koperasi_admin_login_time') || '0', 10);
+            if (auth !== 'true' || !loginTime) return false;
+            return (Date.now() - loginTime) < SESSION_DURATION_MS;
+        }
+
+        function clearSession() {
+            localStorage.removeItem('koperasi_admin_auth');
+            localStorage.removeItem('koperasi_admin_login_time');
+        }
+
+        function getRemainingSessionTime() {
+            const loginTime = parseInt(localStorage.getItem('koperasi_admin_login_time') || '0', 10);
+            if (!loginTime) return 0;
+            const remaining = SESSION_DURATION_MS - (Date.now() - loginTime);
+            return Math.max(0, remaining);
+        }
+
+        function formatRemainingTime(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            return hours > 0 ? `${hours} jam ${minutes} menit` : `${minutes} menit`;
+        }
+
+        function updateSessionBadge() {
+            const badge = document.getElementById('session-timer');
+            if (!badge) return;
+            if (isSessionValid()) {
+                badge.textContent = '⏱ ' + formatRemainingTime(getRemainingSessionTime());
+            }
+        }
+
+        function handleSessionExpired() {
+            clearInterval(sessionCheckInterval);
+            clearSession();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sesi Berakhir',
+                html: 'Sesi administrator Anda telah berakhir setelah <b>6 jam</b>.<br>Silakan login kembali untuk melanjutkan.',
+                confirmButtonText: 'Login Kembali',
+                confirmButtonColor: '#d32f2f',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then(() => {
+                window.location.href = 'login.html';
+            });
+        }
+
+        function startSessionWatcher() {
+            // Cek setiap 30 detik
+            sessionCheckInterval = setInterval(() => {
+                if (!isSessionValid()) {
+                    handleSessionExpired();
+                } else {
+                    updateSessionBadge();
+                }
+            }, 30000);
+            updateSessionBadge();
+        }
+
+        // VERIFIKASI SESI SAAT HALAMAN DIBUKA
+        if (isSessionValid()) {
+            canEdit = true;
+            document.getElementById('admin-badge').style.display = 'inline-block';
+            const timerBadge = document.getElementById('session-timer');
+            if (timerBadge) timerBadge.style.display = 'inline-block';
+            startSessionWatcher();
+        } else {
+            // Sesi tidak valid / kedaluwarsa
+            clearSession();
+            window.location.href = 'login.html';
+        }
+
+        // FUNGSI UNTUK LOGOUT
+        function logoutAdmin() {
+            clearInterval(sessionCheckInterval);
+            clearSession();
+            Swal.fire({
+                icon: 'info',
+                title: 'Logout Berhasil',
+                text: 'Anda telah keluar dari sesi administrator.',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = 'index.html';
+            });
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            if (window.innerWidth <= 992) {
+                sidebar.classList.toggle('open');
+                overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+            } else {
+                sidebar.classList.toggle('collapsed');
+                setTimeout(() => { if (miniMap) miniMap.invalidateSize(); }, 300);
+            }
+        }
+
+        function initMiniMap() {
+            if(!miniMap) {
+                const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 });
+                miniMap = L.map('mini-map', { layers: [osm] }).setView([-4.0, 122.5], 8);
+                miniMap.on('click', (e) => {
+                    const lat = e.latlng.lat.toFixed(8);
+                    const lng = e.latlng.lng.toFixed(8);
+                    document.getElementById('modal-edit-lat').value = lat;
+                    document.getElementById('modal-edit-lng').value = lng;
+                    if(miniMarker) miniMap.removeLayer(miniMarker);
+                    miniMarker = L.marker([lat, lng]).addTo(miniMap);
+                });
+            }
+        }
+
+        async function loadDataFromServer() {
+            document.getElementById('loader').style.display = 'flex';
+            try {
+                const response = await fetch(`${GAS_WEBAPP_URL}?action=getMapData`, { method: 'GET', redirect: 'follow' });
+                const res = await response.json();
+                if (res.success) {
+                    rawData = res.data;
+                    filteredDbData = [...rawData];
+                    dynamicHeadersList = res.dynamicHeaders || [];
+                    document.getElementById('total-info').innerHTML = `<i class="fas fa-database"></i> Total ${rawData.length} Data`;
+                    renderDatabaseTable();
+                    document.getElementById('loader').style.display = 'none';
+                } else {
+                    document.getElementById('loader').style.display = 'none'; 
+                    Swal.fire({icon: 'error', title: 'Gagal', text: "Gagal memuat data: " + res.message});
+                }
+            } catch (error) {
+                document.getElementById('loader').style.display = 'none'; console.error("Fetch error: ", error); 
+                Swal.fire({icon: 'error', title: 'Gagal', text: "Gagal mengambil data dari server."});
+            }
+        }
+
+        // FUNGSI PENCARIAN PADA TABEL DATABASE
+        function handleDbSearch() {
+            const q = document.getElementById('dbSearchInput').value.toLowerCase();
+            const clearBtn = document.getElementById('clearDbSearchBtn');
+            const noResultsMsg = document.getElementById('no-results-msg');
+            const tbody = document.getElementById('db-table-body');
+            
+            if (q.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            filteredDbData = rawData.filter(i => {
+                return (
+                    String(i.nama || "").toLowerCase().includes(q) || 
+                    String(i.desa || "").toLowerCase().includes(q) || 
+                    String(i.nik || "").toLowerCase().includes(q) || 
+                    String(i.kecamatan || "").toLowerCase().includes(q)
+                );
+            });
+
+            if (filteredDbData.length === 0) {
+                tbody.innerHTML = '';
+                noResultsMsg.classList.remove('hidden');
+                noResultsMsg.classList.add('flex');
+            } else {
+                noResultsMsg.classList.add('hidden');
+                noResultsMsg.classList.remove('flex');
+                renderDatabaseTable();
+            }
+        }
+
+        function clearDbSearch() {
+            document.getElementById('dbSearchInput').value = '';
+            document.getElementById('clearDbSearchBtn').classList.add('hidden');
+            document.getElementById('no-results-msg').classList.add('hidden');
+            filteredDbData = [...rawData];
+            renderDatabaseTable();
+            document.getElementById('dbSearchInput').focus();
+        }
+
+        function renderDatabaseTable() {
+            const tbody = document.getElementById('db-table-body');
+            tbody.innerHTML = '';
+            
+            if(filteredDbData.length === 0) {
+                // Di handle oleh fungsi search
+                return;
+            }
+
+            filteredDbData.forEach((item, index) => {
+                const isAktif = String(item.status || "").toLowerCase().includes("aktif") && !String(item.status || "").toLowerCase().includes("tidak");
+                const baseColor = isAktif ? "var(--aktif)" : "var(--non-aktif)";
+                
+                let slug = "";
+                let urlVal = item.url || item.link || "-";
+                if (urlVal && urlVal !== "-") {
+                    let urlStr = String(urlVal).trim().split('?')[0];
+                    if (urlStr.endsWith('/')) urlStr = urlStr.slice(0, -1);
+                    const parts = urlStr.split('/');
+                    slug = parts[parts.length - 1];
+                }
+
+                // Nama koperasi sebagai teks biasa dan trigger modal API
+                let namaKoperasiHtml = `<span style="font-weight:600;">${item.nama || '-'}</span>`;
+                if (slug) {
+                    namaKoperasiHtml = `<span onclick="fetchApiDirectly('${slug}', '${item.id}')" class="font-semibold cursor-pointer hover:text-slate-600 transition-colors border-b border-dotted border-slate-400" title="Klik untuk menarik data otomatis dari API Kemenkop">${item.nama || '-'}</span>`;
+                }
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="text-align:center; color:var(--text-muted); font-weight:500;">${index + 1}</td>
+                    <td>${namaKoperasiHtml}</td>
+                    <td>${item.nik || '-'}</td>
+                    <td>${item.kabupaten || '-'}</td>
+                    <td>${item.kecamatan || '-'}</td>
+                    <td>${item.desa || '-'}</td>
+                    <td><span class="status-badge" style="background:${baseColor}">${item.status || '-'}</span></td>
+                    <td style="text-align:center; white-space:nowrap;">
+                        <button class="btn-action" style="display:inline-flex; background:#eff6ff; color:#2563eb; border-color:#bfdbfe; margin-right:4px;" onclick="editFromDB('${item.id}')" title="Edit Data"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn-action" style="display:inline-flex; background:#fef2f2; color:#dc2626; border-color:#fecaca;" onclick="deleteFromDB('${item.id}')" title="Hapus Data"><i class="fas fa-trash"></i> Hapus</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function showDatabaseModal(isNew) {
+            // PERBAIKAN: Hapus instance peta lama sebelum me-render ulang innerHTML
+            if (miniMap !== null) {
+                miniMap.off();
+                miniMap.remove();
+                miniMap = null;
+                miniMarker = null;
+            }
+
+            document.getElementById('db-modal-overlay').classList.remove('hidden');
+            document.getElementById('db-modal-overlay').classList.add('flex');
+            document.getElementById('db-modal-title').innerHTML = isNew ? '<i class="fas fa-plus-circle text-primary mr-2"></i> Tambah Koperasi Baru' : '<i class="fas fa-edit text-primary mr-2"></i> Edit Data Koperasi';
+            
+            let dynamicEditHtml = '';
+            if (dynamicHeadersList && dynamicHeadersList.length > 0) {
+                dynamicHeadersList.forEach(header => {
+                    if (!standardHeaders.includes(header.toLowerCase().trim())) {
+                        const val = currentItem[header] === '-' ? '' : (currentItem[header] || ''); 
+                        const safeId = 'modal-dyn-' + header.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                        dynamicEditHtml += `<div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">${header}</label><input type="text" id="${safeId}" data-header="${header}" class="edit-input modal-dynamic-input-field bg-white" value="${val}"></div>`;
+                    }
+                });
+                if (dynamicEditHtml) { dynamicEditHtml = '<div class="col-span-full border-t border-dashed border-slate-300 my-2 pt-3"><label class="text-[10px] font-bold text-primary tracking-wide mb-2 block">UBAH INFORMASI LAINNYA</label><div class="grid grid-cols-1 md:grid-cols-2 gap-3">' + dynamicEditHtml + '</div></div>'; }
+            }
+            
+            const isAktif = String(currentItem.status || "").toLowerCase().includes("aktif") && !String(currentItem.status || "").toLowerCase().includes("tidak");
+            
+            const content = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- INFORMASI UTAMA -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4">
+                        <h4 class="font-bold text-[12px] text-blue-600 uppercase border-b border-slate-100 pb-2"><i class="fas fa-info-circle mr-1"></i> Informasi Utama</h4>
+                        
+                        <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Nama Koperasi</label><input type="text" id="modal-edit-nama" data-header="nama" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.nama || ''}"></div>
+                        <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">URL Sistem Koperasi (Untuk sinkronisasi)</label><input type="text" id="modal-edit-url" data-header="url" placeholder="Contoh: https://simkopdes.go.id/wua-wua" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.url === '-' ? '' : (currentItem.url || '')}"></div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">NIK</label><input type="text" id="modal-edit-nik" data-header="nik" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.nik === '-' ? '' : (currentItem.nik || '')}"></div>
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Status Koperasi</label>
+                                <select id="modal-edit-status" data-header="status" class="edit-input modal-dynamic-input-field bg-white"><option value="Aktif" ${isAktif ? 'selected' : ''}>Aktif</option><option value="Tidak Aktif" ${!isAktif ? 'selected' : ''}>Tidak Aktif</option></select>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Alamat Lengkap</label><input type="text" id="modal-edit-alamat" data-header="alamat" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.alamat === '-' ? '' : (currentItem.alamat || '')}"></div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Desa/Kel</label><input type="text" id="modal-edit-desa" data-header="desa" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.desa === '-' ? '' : (currentItem.desa || '')}"></div>
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Kecamatan</label><input type="text" id="modal-edit-kecamatan" data-header="kecamatan" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.kecamatan === '-' ? '' : (currentItem.kecamatan || '')}"></div>
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Kab/Kota</label><input type="text" id="modal-edit-kabupaten" data-header="kabupaten" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.kabupaten === '-' ? '' : (currentItem.kabupaten || '')}"></div>
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Kode Pos</label><input type="text" id="modal-edit-kode_pos" data-header="kode_pos" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.kode_pos === '-' ? '' : (currentItem.kode_pos || '')}"></div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">SK AHU</label><input type="text" id="modal-edit-sk_ahu" data-header="ahu" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem['ahu'] === '-' ? '' : (currentItem['ahu'] || '')}"></div>
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Tahun Pendirian</label><input type="text" id="modal-edit-tahun_pendirian" data-header="tahun pendirian" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem['tahun pendirian'] === '-' ? '' : (currentItem['tahun pendirian'] || '')}"></div>
+                        </div>
+                        
+                        <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Jenis Koperasi</label><input type="text" id="modal-edit-jenis" data-header="jenis koperasi" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem['jenis koperasi'] === '-' ? '' : (currentItem['jenis koperasi'] || '')}"></div>
+
+                        <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Nama Pengurus</label><input type="text" id="modal-edit-pengurus" data-header="pengurus" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.pengurus === '-' ? '' : (currentItem.pengurus || '')}"></div>
+                        <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Nama Pengawas</label><input type="text" id="modal-edit-pengawas" data-header="pengawas" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.pengawas === '-' ? '' : (currentItem.pengawas || '')}"></div>
+                        <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Jumlah Anggota</label><input type="text" id="modal-edit-jumlah_anggota" data-header="jumlah anggota" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem['jumlah anggota'] === '-' ? '' : (currentItem['jumlah anggota'] || '')}"></div>
+                    </div>
+
+                    <!-- INFORMASI TAMBAHAN & PETA -->
+                    <div class="flex flex-col gap-6">
+                        
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4">
+                            <h4 class="font-bold text-[12px] text-green-600 uppercase border-b border-slate-100 pb-2"><i class="fas fa-list-alt mr-1"></i> Informasi Tambahan</h4>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Unit Gerai Usaha</label><input type="text" id="modal-edit-gerai" data-header="gerai" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.gerai === '-' ? '' : (currentItem.gerai || '')}"></div>
+                                <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Tingkat Kesehatan</label><input type="text" id="modal-edit-kesehatan" data-header="kesehatan" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.kesehatan === '-' ? '' : (currentItem.kesehatan || '')}"></div>
+                            </div>
+                            
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Sektor Usaha</label><input type="text" id="modal-edit-sektor_usaha" data-header="sektor usaha" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem['sektor usaha'] === '-' ? '' : (currentItem['sektor usaha'] || '')}"></div>
+
+                            ${dynamicEditHtml ? `<div class="mt-2 border-t border-dashed border-slate-200 pt-4"><h5 class="text-[10px] font-bold text-primary tracking-wide mb-3">KOLOM LAINNYA (DARI SPREADSHEET)</h5><div class="grid grid-cols-2 gap-4">${dynamicEditHtml}</div></div>` : ''}
+
+                            <div class="mt-2 border-t border-dashed border-slate-200 pt-4">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1 block">Unggah Gambar Baru</label>
+                                <div class="flex gap-2 items-center">
+                                    <input type="file" id="modal-upload-foto" accept="image/*" multiple class="text-[10px] flex-1 border border-slate-200 rounded p-1">
+                                    <button class="btn-action bg-slate-200" onclick="uploadImagesToModal()"><i class="fas fa-cloud-upload-alt"></i> Unggah</button>
+                                </div>
+                                <div id="modal-upload-status" class="text-[10px] font-semibold text-primary mt-1"></div>
+                            </div>
+                            <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Tautan URL Foto (Pisahkan dengan koma)</label><textarea id="modal-edit-foto" data-header="foto" class="edit-input modal-dynamic-input-field bg-white" style="resize:vertical; height:50px;">${currentItem.foto === '-' ? '' : currentItem.foto}</textarea></div>
+                        </div>
+
+                        <!-- MAP SECTION -->
+                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-4 relative">
+                            <h4 class="font-bold text-[12px] text-red-600 uppercase border-b border-slate-100 pb-2"><i class="fas fa-map-marker-alt mr-1"></i> Titik Lokasi Peta</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Latitude (Y)</label><input type="text" id="modal-edit-lat" data-header="lat" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.lat || ''}"></div>
+                                <div class="flex flex-col gap-1"><label class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Longitude (X)</label><input type="text" id="modal-edit-lng" data-header="lng" class="edit-input modal-dynamic-input-field bg-white" value="${currentItem.lng || ''}"></div>
+                            </div>
+                            <div class="w-full h-48 rounded-lg border border-slate-300 relative z-10" id="mini-map"></div>
+                            <div class="absolute bottom-6 right-6 z-[1000] bg-white/90 px-3 py-1.5 rounded-full text-[10px] font-bold shadow backdrop-blur text-primary border border-red-200 pointer-events-none"><i class="fas fa-crosshairs"></i> Klik peta untuk set</div>
+                        </div>
+
+                    </div>
+
+                </div>
+            `;
+            document.getElementById('db-modal-form-content').innerHTML = content;
+            initMiniMap();
+
+            const latVal = parseFloat(currentItem.lat); const lngVal = parseFloat(currentItem.lng);
+            if(!isNaN(latVal) && !isNaN(lngVal)) {
+                miniMap.setView([latVal, lngVal], 15);
+                if(miniMarker) miniMap.removeLayer(miniMarker);
+                miniMarker = L.marker([latVal, lngVal]).addTo(miniMap);
+            } else {
+                miniMap.setView([-4.0, 122.5], 8);
+                if(miniMarker) miniMap.removeLayer(miniMarker);
+            }
+            
+            // PERBAIKAN: Invalidating size to ensure map renders correctly in modal
+            setTimeout(() => {
+               if(miniMap) miniMap.invalidateSize();
+            }, 300);
+        }
+
+        function closeDbModal() {
+            document.getElementById('db-modal-overlay').classList.remove('flex');
+            document.getElementById('db-modal-overlay').classList.add('hidden');
+        }
+
+        function editFromDB(id) {
+            const item = rawData.find(i => i.id == id);
+            if(item) {
+                currentItem = item;
+                showDatabaseModal(false); 
+            }
+        }
+        
+        async function deleteFromDB(id) {
+            const confirmResult = await Swal.fire({
+                title: 'Hapus Data?',
+                text: "Anda yakin ingin menghapus data koperasi ini?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            });
+
+            if (!confirmResult.isConfirmed) return;
+
+            document.getElementById('loader-text').innerText = "Menghapus data...";
+            document.getElementById('loader').style.display = 'flex';
+            try {
+                const response = await fetch(GAS_WEBAPP_URL, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+                    body: JSON.stringify({ action: 'deleteKoperasiData', id: id }) 
+                });
+                const res = await response.json();
+                if(res.success) {
+                    rawData = rawData.filter(i => i.id != id);
+                    filteredDbData = filteredDbData.filter(i => i.id != id);
+                    renderDatabaseTable();
+                    Swal.fire({icon: 'success', title: 'Berhasil', text: 'Data berhasil dihapus.', timer: 1500, showConfirmButton: false});
+                } else {
+                    Swal.fire({icon: 'error', title: 'Gagal', text: "Gagal menghapus data: " + res.message});
+                }
+            } catch(e) {
+                console.error(e);
+                Swal.fire({icon: 'error', title: 'Gagal', text: "Koneksi gagal saat menghapus data."});
+            } finally {
+                document.getElementById('loader').style.display = 'none';
+            }
+        }
+
+        function addNewKoperasi() {
+            let maxId = 0;
+            if (rawData.length > 0) {
+                rawData.forEach(item => {
+                    if (item.id) {
+                        const numStr = item.id.toString().replace(/[^0-9]/g, '');
+                        if (numStr) {
+                            const num = parseInt(numStr, 10);
+                            if (num > maxId) maxId = num;
+                        }
+                    }
+                });
+            }
+            
+            const newId = "row_" + (maxId + 1);
+
+            currentItem = { 
+                id: newId, 
+                nama: '', status: 'Aktif', alamat: '', desa: '', kecamatan: '', kabupaten: '', 
+                nik: '', lat: '', lng: '', 'ahu': '', 'tahun pendirian': '', pengurus: '', 'pengawas': '', 'jumlah anggota': '', 'kode_pos': '',
+                'sektor usaha': '', 'jenis koperasi': '', gerai: '', kesehatan: '', foto: '', url: '' 
+            };
+            
+            showDatabaseModal(true);
+        }
+
+        async function uploadImagesToModal() {
+            const fileInput = document.getElementById('modal-upload-foto'); const statusText = document.getElementById('modal-upload-status'); const fotoUrlField = document.getElementById('modal-edit-foto');
+            if (fileInput.files.length === 0) { statusText.innerText = "Pilih file gambar terlebih dahulu."; return; }
+            statusText.innerText = `Mengunggah 0 dari ${fileInput.files.length} gambar...`; statusText.style.color = "var(--highlight)"; let uploadedUrls = [];
+            for (let i = 0; i < fileInput.files.length; i++) {
+                const file = fileInput.files[i];
+                const base64Data = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result.split(',')[1]); reader.readAsDataURL(file); });
+                const payload = { action: 'uploadImage', data: base64Data, mimetype: file.type, filename: new Date().getTime() + "_" + file.name };
+                try {
+                    const response = await fetch(GAS_WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow', body: JSON.stringify(payload) });
+                    const res = await response.json();
+                    if (res.success) { uploadedUrls.push(res.url); statusText.innerText = `Mengunggah ${i + 1} dari ${fileInput.files.length} gambar...`; } 
+                    else { Swal.fire({icon: 'error', title: 'Gagal', text: `Gagal mengunggah ${file.name}: ${res.message}`}); }
+                } catch (err) { console.error(err); Swal.fire({icon: 'error', title: 'Terputus', text: `Koneksi terputus saat mengunggah ${file.name}`}); }
+            }
+            if (uploadedUrls.length > 0) {
+                statusText.innerText = "Berhasil diunggah!"; statusText.style.color = "var(--aktif)";
+                const currentVal = fotoUrlField.value.trim();
+                if (currentVal && currentVal !== "-") { fotoUrlField.value = currentVal + ", " + uploadedUrls.join(", "); } else { fotoUrlField.value = uploadedUrls.join(", "); }
+            }
+        }
+
+        async function saveDbModalData() {
+            if (!canEdit) return; 
+            
+            let payloadData = { 
+                id: currentItem.id 
+            };
+
+            payloadData.dynamicFields = {};
+
+            document.querySelectorAll('.modal-dynamic-input-field').forEach(input => { 
+                const headerName = input.getAttribute('data-header'); 
+                if (headerName) { 
+                    if (standardHeaders.includes(headerName.toLowerCase())) {
+                        payloadData[headerName] = input.value; 
+                    } else {
+                        payloadData.dynamicFields[headerName] = input.value;
+                    }
+                }
+            });
+
+            if (payloadData.lat) {
+                let cleanLat = payloadData.lat.replace(/,/g, '.').replace(/[^\d.-]/g, '');
+                let parts = cleanLat.split('.');
+                if(parts.length > 2) cleanLat = parts[0] + '.' + parts.slice(1).join('');
+                payloadData.lat = cleanLat;
+            }
+            if (payloadData.lng) {
+                let cleanLng = payloadData.lng.replace(/,/g, '.').replace(/[^\d.-]/g, '');
+                let parts = cleanLng.split('.');
+                if(parts.length > 2) cleanLng = parts[0] + '.' + parts.slice(1).join('');
+                payloadData.lng = cleanLng;
+            }
+
+            const localUpdateData = { ...payloadData, ...payloadData.dynamicFields };
+            delete localUpdateData.dynamicFields;
+
+            document.getElementById('loader-text').innerText = "Menyinkronkan perubahan ke Cloud..."; document.getElementById('loader').style.display = 'flex';
+            
+            try {
+                const response = await fetch(GAS_WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow', body: JSON.stringify({ action: 'saveKoperasiData', data: payloadData }) });
+                const res = await response.json();
+                if (res && res.success) { 
+                    if (res.newId) {
+                        localUpdateData.id = res.newId;
+                        currentItem.id = res.newId;
+                    }
+                    
+                    updateLocalData(localUpdateData); 
+                    document.getElementById('loader').style.display = 'none'; 
+                    closeDbModal();
+                    
+                    Swal.fire({icon: 'success', title: 'Berhasil', text: 'Data berhasil disimpan!', timer: 1500, showConfirmButton: false});
+                } else { document.getElementById('loader').style.display = 'none'; Swal.fire({icon: 'error', title: 'Gagal', text: "Gagal sinkronisasi data: " + (res.message || "Unknown error")}); }
+            } catch (error) { document.getElementById('loader').style.display = 'none'; console.error("Fetch error:", error); Swal.fire({icon: 'error', title: 'Gagal', text: "Koneksi gagal: Gagal mengirim data ke server."}); }
+        }
+        
+        function updateLocalData(newData) {
+            let isNew = true;
+            const mergeData = (item) => {
+                if (item.id === newData.id) {
+                    isNew = false;
+                    Object.keys(newData).forEach(key => { item[key] = (newData[key] !== "" && newData[key] !== null && newData[key] !== undefined) ? newData[key] : "-"; });
+                }
+            };
+            rawData.forEach(mergeData); 
+            
+            if (isNew) {
+                let itemToAdd = {};
+                Object.keys(newData).forEach(key => { itemToAdd[key] = (newData[key] !== "" && newData[key] !== null && newData[key] !== undefined) ? newData[key] : "-"; });
+                rawData.push(itemToAdd);
+            }
+
+            // Update filtered data if no search is active, else maintain the view
+            if (document.getElementById('dbSearchInput').value.length === 0) {
+                filteredDbData = [...rawData];
+            } else {
+                handleDbSearch();
+            }
+
+            renderDatabaseTable();
+            document.getElementById('total-info').innerHTML = `<i class="fas fa-database"></i> Total ${rawData.length} Data`;
+        }
+
+        // =========================================================================================
+        // ==================== LOGIKA INTEGRASI API KEMENKOP & DEKRIPSI ============================
+        // =========================================================================================
+
+        const PASS_API = "EX7rvuSQItlrBOSzePdlrrGuQOjOmIPs";
+        const IV_STR_API = "HIYa12MVEqtZIiBG"; 
+        let apiMap = null, apiMarker = null;
+        let apiRawData = null; 
+        let apiTargetId = null; 
+
+        function openApiModal() {
+            document.getElementById('api-modal-overlay').classList.remove('hidden');
+            document.getElementById('api-modal-overlay').classList.add('flex');
+            document.getElementById('api-results').classList.add('hidden');
+            apiRawData = null;
+        }
+
+        function closeApiModal() {
+            document.getElementById('api-modal-overlay').classList.add('hidden');
+            document.getElementById('api-modal-overlay').classList.remove('flex');
+        }
+
+        async function fetchApiDirectly(slug, sourceId) {
+            apiTargetId = sourceId;
+            openApiModal();
+            showApiLoader(true);
+            try {
+                const res = await fetch(`https://api.merahputih.kop.id/api/cooperatives/by-slug/${slug}`);
+                if (!res.ok) throw new Error(`Status Code: ${res.status}`);
+                const data = await res.json();
+                processApiData(data);
+            } catch (err) {
+                Swal.fire({icon: 'error', title: 'Gagal Menarik Data', text: err.message});
+                closeApiModal();
+            } finally {
+                showApiLoader(false);
+            }
+        }
+
+        function showApiLoader(show) {
+            if (show) {
+                document.getElementById('api-loading').classList.remove('hidden');
+                document.getElementById('api-loading').classList.add('flex');
+                document.getElementById('api-results').classList.add('hidden');
+            } else {
+                document.getElementById('api-loading').classList.add('hidden');
+                document.getElementById('api-loading').classList.remove('flex');
+            }
+        }
+
+        function processApiData(inputObj) {
+            try {
+                let finalData;
+                
+                if (inputObj && typeof inputObj.data === "string") {
+                    const b64 = inputObj.data.replace(/\\\//g,"/");
+                    const key = CryptoJS.SHA256(PASS_API);
+                    const iv = CryptoJS.enc.Utf8.parse(IV_STR_API);
+                    const dec = CryptoJS.AES.decrypt(
+                        { ciphertext: CryptoJS.enc.Base64.parse(b64) },
+                        key,
+                        { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
+                    ).toString(CryptoJS.enc.Utf8);
+                    
+                    if (!dec) throw new Error("Gagal mendekripsi payload API.");
+                    finalData = JSON.parse(dec);
+                } else {
+                    finalData = inputObj.data || inputObj;
+                }
+
+                if(!finalData || typeof finalData !== "object") throw new Error("Struktur JSON tidak dapat dikenali.");
+                apiRawData = finalData; 
+                renderApiUI(finalData);
+            } catch (e) {
+                Swal.fire({icon: 'error', title: 'Gagal Memproses Data', text: e.message});
+                closeApiModal();
+            }
+        }
+
+        function renderApiUI(data) {
+            document.getElementById('api-results').classList.remove('hidden');
+            document.getElementById('api-results').classList.add('flex');
+
+            // Header
+            document.getElementById('api-res-name').textContent = data.name || "Tanpa Nama";
+            
+            const locParts = [];
+            if(data.village?.name) locParts.push(data.village.name);
+            if(data.subdistrict?.name) locParts.push(data.subdistrict.name);
+            if(data.district?.name) locParts.push(data.district.name);
+            if(data.province?.name) locParts.push(data.province.name);
+            document.getElementById('api-res-loc-text').textContent = locParts.join(", ") || "Lokasi tidak diketahui";
+
+            // Ekstraksi data yang dibutuhkan
+            const safeText = v => (v === null || v === undefined || v === "") ? "-" : String(v);
+            
+            let pengurusList = [];
+            let pengawasList = [];
+            if(Array.isArray(data.managements)) {
+                pengurusList = data.managements.filter(m => m.status && m.status.toUpperCase() === 'PENGURUS').map(m => m.name);
+                pengawasList = data.managements.filter(m => m.status && m.status.toUpperCase() === 'PENGAWAS').map(m => m.name);
+            }
+
+            let sektorUsahaList = [];
+            if(Array.isArray(data.klu_types)) {
+                sektorUsahaList = data.klu_types.map(k => k.type || k.name);
+            }
+
+            // PERBAIKAN: Gunakan ID api-res-kv-main dan api-res-kv-add sesuai struktur HTML yang baru
+            const kvMain = [
+                ["Nama Koperasi", data.name],
+                ["NIK", data.nik],
+                ["Alamat Lengkap", data.address],
+                ["AHU", data.sk_number],
+                ["Tahun Pendirian", data.establishment_year || "-"], 
+                ["Kode Pos", data.postal_code],
+                ["Jumlah Anggota", Array.isArray(data.members) ? data.members.length : 0],
+                ["Pengurus", pengurusList.length > 0 ? pengurusList.join(', ') : "-"],
+                ["Pengawas", pengawasList.length > 0 ? pengawasList.join(', ') : "-"]
+            ];
+
+            const kvAdd = [
+                ["RAT", data.rat || "-"], 
+                ["Unit Gerai Usaha", Array.isArray(data.outlets) ? data.outlets.length : 0],
+                ["Penilaian Kesehatan", data.health_score || data.kesehatan || "-"], 
+                ["Sektor Usaha", sektorUsahaList.length > 0 ? sektorUsahaList.join(', ') : "-"]
+            ];
+
+            document.getElementById('api-res-kv-main').innerHTML = kvMain.map(([k,v]) => `<b class="text-slate-500 font-bold">${k}</b><span class="text-slate-800 break-words">${safeText(v)}</span>`).join('');
+            document.getElementById('api-res-kv-add').innerHTML = kvAdd.map(([k,v]) => `<b class="text-slate-500 font-bold">${k}</b><span class="text-slate-800 break-words">${safeText(v)}</span>`).join('');
+
+            // Peta Lokasi
+            const lat = parseFloat(data.latitude ?? data.lat);
+            const lng = parseFloat(data.longitude ?? data.lng ?? data.lon);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                if(!apiMap) {
+                    apiMap = L.map("api-map");
+                    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom: 19}).addTo(apiMap);
+                }
+                apiMap.setView([lat,lng], 14);
+                if(apiMarker) apiMarker.remove();
+                apiMarker = L.marker([lat,lng]).addTo(apiMap);
+                document.getElementById('api-map-hint').innerHTML = `Koordinat: <b>${lat.toFixed(6)}, ${lng.toFixed(6)}</b>`;
+                setTimeout(()=>apiMap.invalidateSize(), 300);
+            } else {
+                document.getElementById('api-map').innerHTML = `<div class="w-full h-full flex items-center justify-center text-slate-400 text-xs italic"><i class="fas fa-exclamation-triangle mr-2"></i> Koordinat tidak tersedia</div>`;
+                document.getElementById('api-map-hint').innerHTML = "";
+            }
+
+            // Wilayah Administratif
+            const renderKvObj = (obj) => {
+                if(!obj) return "-";
+                return Object.entries(obj).map(([k,v]) => `<div class="flex justify-between border-b border-slate-200 last:border-0 py-1"><span class="text-slate-400 capitalize">${k}</span><span class="font-semibold text-slate-700 text-right break-all pl-2">${safeText(v)}</span></div>`).join('');
+            };
+            document.getElementById('api-kv-prov').innerHTML = renderKvObj(data.province);
+            document.getElementById('api-kv-dist').innerHTML = renderKvObj(data.district);
+            document.getElementById('api-kv-sub').innerHTML = renderKvObj(data.subdistrict);
+            document.getElementById('api-kv-vil').innerHTML = renderKvObj(data.village);
+
+            // Images
+            let imgs = [];
+            if(data.logo_file) imgs.push({label:"Logo Koperasi", url:data.logo_file});
+            if(data.banner_file) imgs.push({label:"Banner", url:data.banner_file});
+            if(Array.isArray(data.outlets)){
+                data.outlets.forEach((o,i)=>{
+                    if(o?.primary_image) imgs.push({label:`Outlet #${i+1} - Utama`, url:o.primary_image});
+                    if(o?.secondary_image) imgs.push({label:`Outlet #${i+1} - Alternatif`, url:o.secondary_image});
+                });
+            }
+            if(imgs.length === 0) {
+                document.getElementById('api-res-images').innerHTML = '<p class="text-xs text-slate-400 italic">Tidak ada gambar yang dilampirkan.</p>';
+            } else {
+                document.getElementById('api-res-images').innerHTML = imgs.map(it => `
+                    <div class="border border-slate-200 rounded-lg overflow-hidden shrink-0 w-56 flex flex-col bg-slate-50">
+                        <img src="${it.url}" alt="${it.label}" class="w-full h-32 object-cover bg-white">
+                        <div class="text-[10px] font-bold text-center py-2 text-slate-600 truncate px-2">${it.label}</div>
+                    </div>
+                `).join('');
+            }
+
+            // Render Multiple Tables dynamically with Collapsible/Expandable logic
+            const tablesContainer = document.getElementById('api-tables-wrapper');
+            tablesContainer.innerHTML = '';
+            
+            const toArr = arr => Array.isArray(arr) ? arr.map(x => (x && typeof x==="object")? x : { value: x }) : [];
+            
+            const tablesDef = [
+                { title: 'Managements (Pengurus & Pengawas)', data: toArr(data.managements), icon: 'fa-users' },
+                { title: 'Members (Anggota)', data: toArr(data.members), icon: 'fa-id-card' },
+                { title: 'Outlets (Gerai Usaha)', data: toArr(data.outlets), icon: 'fa-store' },
+                { title: 'Potentials (Potensi Desa)', data: toArr(data.potentials), icon: 'fa-chart-line' },
+                { title: 'KLU/S', data: toArr(data.klus), icon: 'fa-layer-group' },
+                { title: 'KLU Types', data: toArr(data.klu_types), icon: 'fa-tags' },
+                { title: 'Member Stats (Statistik Mingguan)', data: toArr(data.member_stats), icon: 'fa-chart-bar' },
+                { title: 'Development Reports', data: toArr(data.development_reports), icon: 'fa-hard-hat' },
+                { title: 'Merged Villages', data: toArr(data.merged_villages), icon: 'fa-map-signs' },
+                { title: 'News', data: toArr(data.news), icon: 'fa-newspaper' },
+            ];
+
+            tablesDef.forEach(tb => {
+                const box = document.createElement('details');
+                box.className = 'bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden group';
+                
+                // Terbuka otomatis jika data ada dan <= 5 baris
+                if (tb.data.length > 0 && tb.data.length <= 5) {
+                    box.open = true;
+                }
+                
+                let countBadge = tb.data.length > 0 ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px] ml-2 font-bold">${tb.data.length} data</span>` : '';
+                
+                let headerHtml = `
+                    <summary class="font-bold text-[13px] text-slate-800 p-4 flex items-center justify-between bg-slate-50 cursor-pointer outline-none hover:bg-slate-100 transition-colors select-none group-open:border-b border-slate-200">
+                        <div class="flex items-center"><i class="fas ${tb.icon} text-slate-400 mr-2"></i> ${tb.title} ${countBadge}</div>
+                        <i class="fas fa-chevron-down text-slate-400 transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                `;
+                
+                let bodyHtml = '';
+                if (tb.data.length === 0) {
+                    bodyHtml = `<div class="p-5 text-center text-xs text-slate-400 italic">Tidak ada data untuk tabel ini.</div>`;
+                } else {
+                    const cols = Array.from(tb.data.reduce((s,row)=>{ Object.keys(row||{}).forEach(k=>s.add(k)); return s; }, new Set()));
+                    let ths = cols.map(c => `<th class="p-2.5 border-b border-slate-200 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide whitespace-nowrap bg-slate-50">${c}</th>`).join('');
+                    let trs = tb.data.map(row => {
+                        let tds = cols.map(c => {
+                            let val = row[c];
+                            if (c.toLowerCase().includes("image") && val) return `<td class="p-2.5 border-b border-slate-100"><img src="${val}" class="max-w-[120px] rounded border border-slate-200"></td>`;
+                            if (typeof val === "object" && val !== null) val = JSON.stringify(val);
+                            return `<td class="p-2.5 border-b border-slate-100 text-[11px] text-slate-700 align-top">${val || '-'}</td>`;
+                        }).join('');
+                        return `<tr class="hover:bg-slate-50 transition-colors">${tds}</tr>`;
+                    }).join('');
+                    
+                    bodyHtml = `<div class="overflow-x-auto custom-scrollbar max-h-96"><table class="w-full text-left border-collapse"><thead><tr class="sticky top-0 shadow-sm z-10">${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
+                }
+
+                box.innerHTML = headerHtml + bodyHtml;
+                tablesContainer.appendChild(box);
+            });
+        }
+
+        function useApiDataForForm() {
+            if (!apiRawData || !apiTargetId) return;
+            closeApiModal();
+
+            // Referensi item yang diklik saat ini
+            let existingItem = rawData.find(i => i.id == apiTargetId);
+            
+            if (!existingItem) {
+                Swal.fire('Error', 'Data referensi tidak ditemukan!', 'error');
+                return;
+            }
+
+            // ==============================================================
+            // HANYA MENGAMBIL 5 DATA SPESIFIK SESUAI REQUEST:
+            // Kode Pos, Pengurus, Pengawas, Jumlah Anggota, Gerai
+            // ==============================================================
+            
+            let pengurusStr = "";
+            let pengawasStr = "";
+            if (apiRawData.managements && apiRawData.managements.length > 0) {
+                pengurusStr = apiRawData.managements.filter(m => m.status && m.status.toUpperCase() === 'PENGURUS').map(m => m.name || m.nama || m.employee_name).filter(Boolean).join(", ");
+                pengawasStr = apiRawData.managements.filter(m => m.status && m.status.toUpperCase() === 'PENGAWAS').map(m => m.name || m.nama || m.employee_name).filter(Boolean).join(", ");
+            }
+
+            let jumlahAnggota = apiRawData.members ? apiRawData.members.length.toString() : '0';
+            let jumlahGerai = apiRawData.outlets ? apiRawData.outlets.length.toString() : '0';
+            let kodePos = apiRawData.postal_code || '';
+
+            // Clone data untuk dijadikan source modal form
+            currentItem = { ...existingItem };
+            
+            // Timpa 5 Kolom Target
+            currentItem['kode_pos'] = kodePos || currentItem['kode_pos'];
+            currentItem['pengurus'] = pengurusStr || currentItem['pengurus'];
+            currentItem['pengawas'] = pengawasStr || currentItem['pengawas'];
+            currentItem['jumlah anggota'] = jumlahAnggota;
+            currentItem['gerai'] = jumlahGerai;
+
+            // Buka Modal Form dengan data yang telah dioverwrite
+            showDatabaseModal(false);
+            
+            Swal.fire({
+                icon: 'success', 
+                title: 'Data Tersalin', 
+                text: 'Kode Pos, Pengurus, Pengawas, Jumlah Anggota, dan Gerai berhasil ditarik dari API ke dalam Form. Silakan Simpan!', 
+                timer: 4000, 
+                showConfirmButton: false
+            });
+        }
+        
+        window.onload = loadDataFromServer;
+    </script>
+</body>
+</html>
