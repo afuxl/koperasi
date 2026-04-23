@@ -194,11 +194,13 @@ export default function HomePage() {
       return (String(i.nama || '').toLowerCase().includes(q) || String(i.desa || '').toLowerCase().includes(q) || String(i.nik || '').toLowerCase().includes(q) || String(i.pengurus || '').toLowerCase().includes(q));
     });
     setCurrentFilteredData(filtered);
-    setCurrentPage(1);
+  }, [rawData, filterKabupaten, filterKecamatan, filterDesa, searchQuery, checkedStatus, checkedGerai, checkedKesehatan]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    setCurrentPage(1);
     // Update boundary
     updateBoundaryLayer(filterKabupaten, filterKecamatan);
-  }, [rawData, filterKabupaten, filterKecamatan, filterDesa, searchQuery, checkedStatus, checkedGerai, checkedKesehatan]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filterKabupaten, filterKecamatan, filterDesa, searchQuery, checkedStatus, checkedGerai, checkedKesehatan]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ========== RENDER MAP MARKERS ==========
   useEffect(() => {

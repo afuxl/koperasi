@@ -133,12 +133,21 @@ export default function DatabasePage() {
       String(i.nik || '').toLowerCase().includes(q)
     );
     setFilteredData(result);
-    setCurrentPage(1);
   }, [rawData, searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   // Pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   // ===== CRUD =====
   function openEditModal(item) {
