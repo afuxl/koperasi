@@ -658,7 +658,7 @@ export default function HomePage() {
                       <option value="10">10 Baris</option><option value="20">20 Baris</option><option value="50">50 Baris</option><option value="100">100 Baris</option><option value="all">Semua Data</option>
                     </select>
                   </div>
-                  
+
                   <div style={{ position: 'relative' }}>
                     <button className="btn-action" style={{ background: '#fff', color: '#475569', border: '1px solid #cbd5e1' }} onClick={() => setColMenuOpen(!colMenuOpen)}>
                       <i className="fas fa-columns" /> Pilih Kolom
@@ -680,7 +680,7 @@ export default function HomePage() {
                       </div>
                     )}
                   </div>
-                  
+
                   <button className="btn-action btn-export" onClick={exportToExcel}><i className="fas fa-file-excel" /> Ekspor Excel</button>
                 </div>
               </div>
