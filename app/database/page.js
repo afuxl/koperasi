@@ -7,7 +7,7 @@ import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import Loader from '@/components/Loader';
 import { useSession } from '@/components/SessionProvider';
-import { fetchMapData, saveKoperasiData, deleteKoperasiData, uploadImage, fetchKemenkopData, cleanCoordinate } from '@/lib/api';
+import { fetchMapData, saveKoperasiData, deleteKoperasiData, uploadImage, fetchKemenkopData, cleanCoordinate, convertDriveUrl } from '@/lib/api';
 import { STANDARD_HEADERS, KEMENKOP_PASS, KEMENKOP_IV } from '@/lib/constants';
 import CryptoJS from 'crypto-js';
 
@@ -246,15 +246,22 @@ export default function DatabasePage() {
       const base64Data = await new Promise(resolve => { const reader = new FileReader(); reader.onload = () => resolve(reader.result.split(',')[1]); reader.readAsDataURL(file); });
       try {
         const res = await uploadImage(base64Data, file.type, Date.now() + '_' + file.name);
-        if (res.success) { uploadedUrls.push(res.url); statusText.innerText = `Mengunggah ${i + 1} dari ${fileInput.files.length} gambar...`; }
-        else Swal.fire({ icon: 'error', title: 'Gagal', text: `Gagal: ${res.message}` });
+        console.log("Upload Response:", res);
+        if (res.success || res.url || res.fileUrl) { 
+          const finalUrl = res.url || res.fileUrl || res.data || res.downloadUrl || Object.values(res).find(v => typeof v === 'string' && v.startsWith('http'));
+          if (finalUrl) uploadedUrls.push(finalUrl); 
+          statusText.innerText = `Mengunggah ${i + 1} dari ${fileInput.files.length} gambar...`; 
+        }
+        else Swal.fire({ icon: 'error', title: 'Gagal', text: `Gagal: ${res.message || 'Respons tidak valid'}` });
       } catch (err) { Swal.fire({ icon: 'error', title: 'Terputus', text: `Koneksi terputus.` }); }
     }
     if (uploadedUrls.length > 0) {
       statusText.innerText = 'Berhasil diunggah!';
       statusText.style.color = 'var(--aktif)';
       const currentVal = fotoUrlField.value.trim();
-      fotoUrlField.value = (currentVal && currentVal !== '-') ? currentVal + ', ' + uploadedUrls.join(', ') : uploadedUrls.join(', ');
+      const newVal = (currentVal && currentVal !== '-') ? currentVal + ', ' + uploadedUrls.join(', ') : uploadedUrls.join(', ');
+      fotoUrlField.value = newVal;
+      setCurrentItem(prev => ({ ...prev, foto: newVal }));
     }
   }
 
@@ -521,14 +528,27 @@ export default function DatabasePage() {
                       <option value="Aktif">Aktif</option><option value="Tidak Aktif">Tidak Aktif</option>
                     </select>
                   ) : header === 'foto' ? (
-                    <>
-                      <textarea id="modal-edit-foto" className="edit-input modal-dynamic-input-field" data-header={header} defaultValue={currentItem[header] === '-' ? '' : (currentItem[header] || '')} style={{ resize: 'vertical', height: 60 }} />
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4, flexWrap: 'wrap' }}>
-                        <input type="file" id="modal-upload-foto" accept="image/*" multiple style={{ fontSize: 11, flex: 1, minWidth: 0 }} />
-                        <button className="btn-save" style={{ width: 'auto', margin: 0, padding: '6px 14px', fontSize: 11, flexShrink: 0 }} onClick={handleModalImageUpload}><i className="fas fa-cloud-upload-alt" /> Unggah</button>
+                    <div key={header} className="info-row" style={{ display: 'block' }}>
+                      <label style={{ fontWeight: 600, color: 'var(--text-muted)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>Galeri Foto (URL / Upload Drive)</label>
+                      <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+                        <textarea id="modal-edit-foto" className="edit-input modal-dynamic-input-field" data-header={header} defaultValue={currentItem[header] === '-' ? '' : (currentItem[header] || '')} style={{ resize: 'vertical', height: 60, width: '100%', border: '1px solid #cbd5e1' }} placeholder="Masukkan URL gambar (pisahkan koma) atau upload via tombol di bawah..." />
+                        
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                          <input type="file" id="modal-upload-foto" accept="image/*" multiple style={{ fontSize: 11, flex: 1, minWidth: 0, border: '1px dashed #cbd5e1', padding: '6px', borderRadius: 6, background: '#fff' }} />
+                          <button className="btn-action" style={{ width: 'auto', margin: 0, padding: '6px 14px', fontSize: 11, flexShrink: 0, background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6 }} onClick={handleModalImageUpload}><i className="fas fa-cloud-upload-alt" /> Upload ke Drive</button>
+                        </div>
+                        <div id="modal-upload-status" style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 4 }} />
+                        
+                        {currentItem[header] && currentItem[header] !== '-' && (
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                            {currentItem[header].split(',').map(f => f.trim()).filter(f => f !== '').map((url, idx) => {
+                              const thumbUrl = convertDriveUrl(url);
+                              return <img key={idx} src={thumbUrl} style={{ width: 45, height: 45, objectFit: 'cover', borderRadius: 6, border: '1px solid #cbd5e1' }} alt="Thumb" onError={e => e.target.style.display = 'none'} />
+                            })}
+                          </div>
+                        )}
                       </div>
-                      <div id="modal-upload-status" style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 4 }} />
-                    </>
+                    </div>
                   ) : (
                     <input type="text" className="edit-input modal-dynamic-input-field" data-header={header} defaultValue={currentItem[header] === '-' ? '' : (currentItem[header] || '')} />
                   )}

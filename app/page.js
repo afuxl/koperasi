@@ -423,6 +423,7 @@ export default function HomePage() {
           return updated;
         });
         setLoading(false);
+        setCurrentItem(prev => ({ ...prev, ...localUpdateData }));
         setIsEditMode(false);
         Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data berhasil disimpan!', timer: 1500, showConfirmButton: false });
       } else { setLoading(false); Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal sinkronisasi data: ' + (res?.message || 'Unknown error') }); }
@@ -443,24 +444,26 @@ export default function HomePage() {
       const base64Data = await new Promise(resolve => { const reader = new FileReader(); reader.onload = () => resolve(reader.result.split(',')[1]); reader.readAsDataURL(file); });
       try {
         const res = await uploadImage(base64Data, file.type, Date.now() + '_' + file.name);
-        if (res.success) { uploadedUrls.push(res.url); statusText.innerText = `Mengunggah ${i + 1} dari ${fileInput.files.length} gambar...`; }
-        else Swal.fire({ icon: 'error', title: 'Gagal', text: `Gagal mengunggah ${file.name}: ${res.message}` });
+        console.log("Upload Response:", res);
+        if (res.success || res.url || res.fileUrl) { 
+          const finalUrl = res.url || res.fileUrl || res.data || res.downloadUrl || Object.values(res).find(v => typeof v === 'string' && v.startsWith('http'));
+          if (finalUrl) uploadedUrls.push(finalUrl); 
+          statusText.innerText = `Mengunggah ${i + 1} dari ${fileInput.files.length} gambar...`; 
+        }
+        else Swal.fire({ icon: 'error', title: 'Gagal', text: `Gagal mengunggah ${file.name}: ${res.message || 'Respons tidak valid'}` });
       } catch (err) { Swal.fire({ icon: 'error', title: 'Terputus', text: `Koneksi terputus saat mengunggah ${file.name}` }); }
     }
     if (uploadedUrls.length > 0) {
       statusText.innerText = 'Berhasil diunggah!';
       statusText.style.color = 'var(--aktif)';
       const currentVal = fotoUrlField.value.trim();
-      fotoUrlField.value = (currentVal && currentVal !== '-') ? currentVal + ', ' + uploadedUrls.join(', ') : uploadedUrls.join(', ');
+      const newVal = (currentVal && currentVal !== '-') ? currentVal + ', ' + uploadedUrls.join(', ') : uploadedUrls.join(', ');
+      fotoUrlField.value = newVal;
+      setCurrentItem(prev => ({ ...prev, foto: newVal }));
     }
   }
 
-  // ========== UPLOAD EVENT BRIDGE ==========
-  useEffect(() => {
-    function onStartUpload() { handleImageUpload(); }
-    document.addEventListener('startUpload', onStartUpload);
-    return () => document.removeEventListener('startUpload', onStartUpload);
-  });
+  // UPLOAD EVENT BRIDGE REMOVED - using native React onClick
 
   // ========== RESIZER ==========
   useEffect(() => {
@@ -512,32 +515,65 @@ export default function HomePage() {
 
     if (isEditMode) {
       return (
-        <div className="detail-only" dangerouslySetInnerHTML={{
-          __html: `
-            <div class="hint-box"><i class="fas fa-crosshairs"></i> Klik peta untuk ubah koordinat lokasi.</div>
-            <div class="info-row"><label>Nama Koperasi</label><input type="text" id="edit-nama" data-header="nama" class="edit-input dynamic-input-field" value="${currentItem.nama || ''}"></div>
-            <div class="info-row"><label>Status Koperasi</label><select id="edit-status" data-header="status" class="edit-input dynamic-input-field"><option value="Aktif" ${isAktif ? 'selected' : ''}>Aktif</option><option value="Tidak Aktif" ${!isAktif ? 'selected' : ''}>Tidak Aktif</option></select></div>
-            <div class="info-row"><label>URL</label><input type="text" id="edit-url" data-header="url" class="edit-input dynamic-input-field" value="${currentItem.url === '-' ? '' : (currentItem.url || '')}"></div>
-            <hr style="border:0;border-top:1px dashed var(--border);margin:15px 0;">
-            <div class="info-row"><label>Alamat Lengkap</label><input type="text" id="edit-alamat" data-header="alamat" class="edit-input dynamic-input-field" value="${currentItem.alamat === '-' ? '' : (currentItem.alamat || '')}"></div>
-            <div style="display:flex;gap:12px"><div class="info-row" style="flex:1"><label>Desa/Kel</label><input type="text" id="edit-desa" data-header="desa" class="edit-input dynamic-input-field" value="${currentItem.desa === '-' ? '' : (currentItem.desa || '')}"></div><div class="info-row" style="flex:1"><label>Kecamatan</label><input type="text" id="edit-kecamatan" data-header="kecamatan" class="edit-input dynamic-input-field" value="${currentItem.kecamatan === '-' ? '' : (currentItem.kecamatan || '')}"></div></div>
-            <div style="display:flex;gap:12px"><div class="info-row" style="flex:1"><label>Kab/Kota</label><input type="text" id="edit-kabupaten" data-header="kabupaten" class="edit-input dynamic-input-field" value="${currentItem.kabupaten === '-' ? '' : (currentItem.kabupaten || '')}"></div><div class="info-row" style="flex:1"><label>Kode Pos</label><input type="text" id="edit-kode_pos" data-header="kode_pos" class="edit-input dynamic-input-field" value="${currentItem.kode_pos === '-' ? '' : (currentItem.kode_pos || '')}"></div></div>
-            <div style="display:flex;gap:12px"><div class="info-row" style="flex:1"><label>Latitude (Y)</label><input type="text" id="edit-lat" data-header="lat" class="edit-input dynamic-input-field" value="${currentItem.lat || ''}"></div><div class="info-row" style="flex:1"><label>Longitude (X)</label><input type="text" id="edit-lng" data-header="lng" class="edit-input dynamic-input-field" value="${currentItem.lng || ''}"></div></div>
-            <hr style="border:0;border-top:1px dashed var(--border);margin:15px 0;">
-            <div class="info-row"><label>NIK</label><input type="text" data-header="nik" class="edit-input dynamic-input-field" value="${currentItem.nik === '-' ? '' : (currentItem.nik || '')}"></div>
-            <div class="info-row"><label>SK AHU</label><input type="text" data-header="ahu" class="edit-input dynamic-input-field" value="${currentItem.ahu === '-' ? '' : (currentItem.ahu || '')}"></div>
-            <div class="info-row"><label>Jenis Koperasi</label><input type="text" data-header="jenis koperasi" class="edit-input dynamic-input-field" value="${currentItem['jenis koperasi'] === '-' ? '' : (currentItem['jenis koperasi'] || '')}"></div>
-            <div class="info-row"><label>Tahun Pendirian</label><input type="text" data-header="tahun pendirian" class="edit-input dynamic-input-field" value="${currentItem['tahun pendirian'] === '-' ? '' : (currentItem['tahun pendirian'] || '')}"></div>
-            <div class="info-row"><label>Nama Pengurus</label><input type="text" data-header="pengurus" class="edit-input dynamic-input-field" value="${currentItem.pengurus === '-' ? '' : (currentItem.pengurus || '')}"></div>
-            <div class="info-row"><label>Nama Pengawas</label><input type="text" data-header="pengawas" class="edit-input dynamic-input-field" value="${currentItem.pengawas === '-' ? '' : (currentItem.pengawas || '')}"></div>
-            <div class="info-row"><label>Jumlah Anggota</label><input type="text" data-header="jumlah anggota" class="edit-input dynamic-input-field" value="${currentItem['jumlah anggota'] === '-' ? '' : (currentItem['jumlah anggota'] || '')}"></div>
-            <div class="info-row"><label>Sektor Usaha</label><input type="text" data-header="sektor usaha" class="edit-input dynamic-input-field" value="${currentItem['sektor usaha'] === '-' ? '' : (currentItem['sektor usaha'] || '')}"></div>
-            <div class="info-row"><label>Unit Gerai</label><input type="text" data-header="gerai" class="edit-input dynamic-input-field" value="${currentItem.gerai === '-' ? '' : (currentItem.gerai || '')}"></div>
-            <div class="info-row"><label>Tingkat Kesehatan</label><input type="text" data-header="kesehatan" class="edit-input dynamic-input-field" value="${currentItem.kesehatan === '-' ? '' : (currentItem.kesehatan || '')}"></div>
-            <div class="info-row"><label>Unggah Gambar Baru</label><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><input type="file" id="upload-foto" accept="image/*" multiple style="font-size:11px;flex:1;min-width:0;"><button onclick="document.dispatchEvent(new CustomEvent('startUpload'))" class="btn-save" style="width:auto;margin:0;padding:6px 14px;font-size:11px;flex-shrink:0;"><i class='fas fa-cloud-upload-alt'></i> Unggah</button></div><div id="upload-status" style="font-size:11px;font-weight:600;color:var(--primary);margin-top:6px;"></div></div>
-            <div class="info-row"><label>Tautan URL Foto (Pisahkan koma)</label><textarea id="edit-foto" data-header="foto" class="edit-input dynamic-input-field" style="resize:vertical;height:60px;">${currentItem.foto === '-' ? '' : (currentItem.foto || '')}</textarea></div>
-          `
-        }} />
+        <div className="detail-only">
+          <div className="hint-box"><i className="fas fa-crosshairs" /> Klik peta untuk ubah koordinat lokasi.</div>
+          <div className="info-row"><label>Nama Koperasi</label><input type="text" id="edit-nama" data-header="nama" className="edit-input dynamic-input-field" defaultValue={currentItem.nama || ''} /></div>
+          <div className="info-row">
+            <label>Status Koperasi</label>
+            <select id="edit-status" data-header="status" className="edit-input dynamic-input-field" defaultValue={isAktif ? 'Aktif' : 'Tidak Aktif'}>
+              <option value="Aktif">Aktif</option>
+              <option value="Tidak Aktif">Tidak Aktif</option>
+            </select>
+          </div>
+          <div className="info-row"><label>URL</label><input type="text" id="edit-url" data-header="url" className="edit-input dynamic-input-field" defaultValue={currentItem.url === '-' ? '' : (currentItem.url || '')} /></div>
+          <hr style={{ border: 0, borderTop: '1px dashed var(--border)', margin: '15px 0' }} />
+          <div className="info-row"><label>Alamat Lengkap</label><input type="text" id="edit-alamat" data-header="alamat" className="edit-input dynamic-input-field" defaultValue={currentItem.alamat === '-' ? '' : (currentItem.alamat || '')} /></div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div className="info-row" style={{ flex: 1 }}><label>Desa/Kel</label><input type="text" id="edit-desa" data-header="desa" className="edit-input dynamic-input-field" defaultValue={currentItem.desa === '-' ? '' : (currentItem.desa || '')} /></div>
+            <div className="info-row" style={{ flex: 1 }}><label>Kecamatan</label><input type="text" id="edit-kecamatan" data-header="kecamatan" className="edit-input dynamic-input-field" defaultValue={currentItem.kecamatan === '-' ? '' : (currentItem.kecamatan || '')} /></div>
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div className="info-row" style={{ flex: 1 }}><label>Kab/Kota</label><input type="text" id="edit-kabupaten" data-header="kabupaten" className="edit-input dynamic-input-field" defaultValue={currentItem.kabupaten === '-' ? '' : (currentItem.kabupaten || '')} /></div>
+            <div className="info-row" style={{ flex: 1 }}><label>Kode Pos</label><input type="text" id="edit-kode_pos" data-header="kode_pos" className="edit-input dynamic-input-field" defaultValue={currentItem.kode_pos === '-' ? '' : (currentItem.kode_pos || '')} /></div>
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div className="info-row" style={{ flex: 1 }}><label>Latitude (Y)</label><input type="text" id="edit-lat" data-header="lat" className="edit-input dynamic-input-field" defaultValue={currentItem.lat || ''} /></div>
+            <div className="info-row" style={{ flex: 1 }}><label>Longitude (X)</label><input type="text" id="edit-lng" data-header="lng" className="edit-input dynamic-input-field" defaultValue={currentItem.lng || ''} /></div>
+          </div>
+          <hr style={{ border: 0, borderTop: '1px dashed var(--border)', margin: '15px 0' }} />
+          <div className="info-row"><label>NIK</label><input type="text" data-header="nik" className="edit-input dynamic-input-field" defaultValue={currentItem.nik === '-' ? '' : (currentItem.nik || '')} /></div>
+          <div className="info-row"><label>SK AHU</label><input type="text" data-header="ahu" className="edit-input dynamic-input-field" defaultValue={currentItem.ahu === '-' ? '' : (currentItem.ahu || '')} /></div>
+          <div className="info-row"><label>Jenis Koperasi</label><input type="text" data-header="jenis koperasi" className="edit-input dynamic-input-field" defaultValue={currentItem['jenis koperasi'] === '-' ? '' : (currentItem['jenis koperasi'] || '')} /></div>
+          <div className="info-row"><label>Tahun Pendirian</label><input type="text" data-header="tahun pendirian" className="edit-input dynamic-input-field" defaultValue={currentItem['tahun pendirian'] === '-' ? '' : (currentItem['tahun pendirian'] || '')} /></div>
+          <div className="info-row"><label>Nama Pengurus</label><input type="text" data-header="pengurus" className="edit-input dynamic-input-field" defaultValue={currentItem.pengurus === '-' ? '' : (currentItem.pengurus || '')} /></div>
+          <div className="info-row"><label>Nama Pengawas</label><input type="text" data-header="pengawas" className="edit-input dynamic-input-field" defaultValue={currentItem.pengawas === '-' ? '' : (currentItem.pengawas || '')} /></div>
+          <div className="info-row"><label>Jumlah Anggota</label><input type="text" data-header="jumlah anggota" className="edit-input dynamic-input-field" defaultValue={currentItem['jumlah anggota'] === '-' ? '' : (currentItem['jumlah anggota'] || '')} /></div>
+          <div className="info-row"><label>Sektor Usaha</label><input type="text" data-header="sektor usaha" className="edit-input dynamic-input-field" defaultValue={currentItem['sektor usaha'] === '-' ? '' : (currentItem['sektor usaha'] || '')} /></div>
+          <div className="info-row"><label>Unit Gerai</label><input type="text" data-header="gerai" className="edit-input dynamic-input-field" defaultValue={currentItem.gerai === '-' ? '' : (currentItem.gerai || '')} /></div>
+          <div className="info-row"><label>Tingkat Kesehatan</label><input type="text" data-header="kesehatan" className="edit-input dynamic-input-field" defaultValue={currentItem.kesehatan === '-' ? '' : (currentItem.kesehatan || '')} /></div>
+          
+          <div className="info-row" style={{ display: 'block' }}>
+            <label style={{ fontWeight: 600, color: 'var(--text-muted)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>Galeri Foto (URL / Upload Drive)</label>
+            <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+              <textarea id="edit-foto" data-header="foto" className="edit-input dynamic-input-field" style={{ resize: 'vertical', height: 60, width: '100%', border: '1px solid #cbd5e1' }} defaultValue={currentItem.foto === '-' ? '' : (currentItem.foto || '')} placeholder="Masukkan URL gambar (pisahkan koma) atau upload via tombol di bawah..." />
+              
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input type="file" id="upload-foto" accept="image/*" multiple style={{ fontSize: 11, flex: 1, minWidth: 0, border: '1px dashed #cbd5e1', padding: '6px', borderRadius: 6, background: '#fff' }} />
+                <button type="button" className="btn-action" style={{ width: 'auto', margin: 0, padding: '6px 14px', fontSize: 11, flexShrink: 0, background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6 }} onClick={handleImageUpload}><i className="fas fa-cloud-upload-alt" /> Upload ke Drive</button>
+              </div>
+              <div id="upload-status" style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 4 }} />
+              
+              {currentItem.foto && currentItem.foto !== '-' && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                  {currentItem.foto.split(',').map(f => f.trim()).filter(f => f !== '').map((url, idx) => {
+                    const thumbUrl = convertDriveUrl(url);
+                    return <img key={idx} src={thumbUrl} style={{ width: 45, height: 45, objectFit: 'cover', borderRadius: 6, border: '1px solid #cbd5e1' }} alt="Thumb" onError={e => e.target.style.display = 'none'} />
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       );
     }
 
