@@ -11,6 +11,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const links = [
     { href: '/', label: 'Peta Persebaran', icon: 'fa-map-marked-alt', id: 'link-peta' },
     { href: '/statistik', label: 'Dashboard Statistik', icon: 'fa-chart-line', id: 'link-statistik' },
+    { href: '/komentar', label: 'Komentar & Testimoni', icon: 'fa-comments', id: 'link-komentar' },
   ];
 
   const handleLogout = () => {
