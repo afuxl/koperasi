@@ -9,8 +9,16 @@ export default function Header({ title, icon, statsContent, onRefresh, children 
     <header>
       <div className="header-brand">
         {children /* menu toggle button */}
-        <i className={`fas ${icon || 'fa-map-location-dot'} fa-2x`} />
-        <h1>{title || 'Dashboard Koperasi Merah Putih'}</h1>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/3/31/Coat_of_arms_of_Southeast_Sulawesi.svg"
+          alt="Logo Sulawesi Tenggara"
+          className="header-logo"
+        />
+        <div className="header-title-group">
+          <h1>{title || 'Dashboard Koperasi Merah Putih'}</h1>
+          <span className="header-subtitle">Provinsi Sulawesi Tenggara</span>
+        </div>
         {isAdmin && (
           <div id="admin-badge" style={{ display: 'inline-block' }}>
             <i className="fas fa-shield-alt" /> ADMIN

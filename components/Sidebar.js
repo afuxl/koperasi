@@ -96,9 +96,17 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         <div className="sidebar-footer">
-          created by <strong>@m45y</strong><br />
-          FOR LATSAR CPNS 2026<br />
-          GOL III, ANGKATAN I
+          <div style={{ marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid rgba(203,213,225,0.5)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-main)', marginBottom: 2 }}>
+              <i className="fas fa-landmark" style={{ color: 'var(--primary)', marginRight: 4 }} />
+              Dinas Koperasi, Usaha Mikro, Kecil dan Menengah
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Provinsi Sulawesi Tenggara</div>
+          </div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+            Dikembangkan oleh <strong style={{ color: 'var(--text-main)' }}>@m45y</strong><br />
+            Latsar CPNS 2026 — Gol. III, Angkatan I
+          </div>
         </div>
       </aside>
     </>

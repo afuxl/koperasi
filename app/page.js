@@ -128,7 +128,13 @@ export default function HomePage() {
       markersLayerRef.current = ml;
       labelsLayerRef.current = ll;
 
-      L.control.layers({ "Open Street Map": osm, "Google Satellite": satellite, "Google Terrain": googleTerrain, "ESRI": esri }, { "Batas Wilayah (Kecamatan)": bg }, { position: 'bottomleft' }).addTo(map);
+      const kabBoundaryGroup = L.featureGroup().addTo(map);
+
+      L.control.layers(
+        { "Open Street Map": osm, "Google Satellite": satellite, "Google Terrain": googleTerrain, "ESRI": esri },
+        { "Batas Kabupaten/Kota": kabBoundaryGroup, "Batas Kecamatan (Filter)": bg },
+        { position: 'bottomleft' }
+      ).addTo(map);
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 
       map.on('zoomend', () => {
@@ -146,7 +152,38 @@ export default function HomePage() {
         tempEditMarkerRef.current = L.marker(e.latlng).addTo(map);
       });
 
-      // Load boundary GeoJSON
+      // Load kabupaten boundary GeoJSON (sultra.geojson)
+      try {
+        const kabResp = await fetch('/sultra.geojson');
+        if (kabResp.ok) {
+          const kabData = await kabResp.json();
+          L.geoJSON(kabData, {
+            style: () => ({
+              color: '#b91c1c',
+              weight: 2,
+              fillColor: '#fef2f2',
+              fillOpacity: 0.03,
+              dashArray: '6, 4',
+              opacity: 0.6
+            }),
+            onEachFeature: (feature, layer) => {
+              const name = feature.properties.NAME_2;
+              const type = feature.properties.TYPE_2 || '';
+              if (name) {
+                layer.bindTooltip(`${type} ${name}`, {
+                  permanent: false,
+                  direction: 'center',
+                  className: 'leaflet-tooltip-koperasi',
+                  sticky: true
+                });
+              }
+            },
+            interactive: true
+          }).addTo(kabBoundaryGroup);
+        }
+      } catch (err) { console.warn("Gagal memuat batas kabupaten:", err); }
+
+      // Load kecamatan boundary GeoJSON
       try {
         const resp = await fetch('/kecamatan.geojson');
         if (resp.ok) boundaryDataRef.current = await resp.json();
