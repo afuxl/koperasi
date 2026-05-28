@@ -349,6 +349,17 @@ export default function DatabasePage() {
     let existingItem = rawData.find(i => i.id == apiTargetId);
     if (!existingItem) { Swal.fire('Error', 'Data referensi tidak ditemukan!', 'error'); return; }
 
+    let savedSettings = null;
+    try {
+      const s = localStorage.getItem('syncSettings');
+      if (s) savedSettings = JSON.parse(s);
+    } catch (e) {}
+
+    const settings = savedSettings || {
+      alamat: true, lat: true, lng: true, sk_number: true, nik: true,
+      kode_pos: true, pengurus: true, pengawas: true, jumlah_anggota: true, gerai: true
+    };
+
     let pengurusStr = '', pengawasStr = '';
     if (apiRawData.managements?.length) {
       pengurusStr = apiRawData.managements.filter(m => m.status?.toUpperCase() === 'PENGURUS').map(m => m.name || m.nama).filter(Boolean).join(', ');
@@ -356,16 +367,25 @@ export default function DatabasePage() {
     }
 
     const updatedItem = { ...existingItem };
-    updatedItem.kode_pos = apiRawData.postal_code || updatedItem.kode_pos;
-    updatedItem.pengurus = pengurusStr || updatedItem.pengurus;
-    updatedItem.pengawas = pengawasStr || updatedItem.pengawas;
-    updatedItem['jumlah anggota'] = apiRawData.members ? apiRawData.members.length.toString() : '0';
-    updatedItem.gerai = apiRawData.outlets ? apiRawData.outlets.length.toString() : '0';
+    
+    if (settings.kode_pos) updatedItem.kode_pos = apiRawData.postal_code || updatedItem.kode_pos;
+    if (settings.pengurus) updatedItem.pengurus = pengurusStr || updatedItem.pengurus;
+    if (settings.pengawas) updatedItem.pengawas = pengawasStr || updatedItem.pengawas;
+    if (settings.jumlah_anggota) updatedItem['jumlah anggota'] = apiRawData.members ? apiRawData.members.length.toString() : '0';
+    if (settings.gerai) updatedItem.gerai = apiRawData.outlets ? apiRawData.outlets.length.toString() : '0';
+    
+    if (settings.alamat) updatedItem.alamat = apiRawData.address || updatedItem.alamat;
+    if (settings.lat) updatedItem.lat = apiRawData.latitude || apiRawData.lat || updatedItem.lat;
+    if (settings.lng) updatedItem.lng = apiRawData.longitude || apiRawData.lng || apiRawData.lon || updatedItem.lng;
+    if (settings.sk_number) updatedItem.ahu = apiRawData.sk_number || updatedItem.ahu;
+    if (settings.nik) updatedItem.nik = apiRawData.nik || updatedItem.nik;
 
     setCurrentItem(updatedItem);
     setIsNewData(false);
     setModalOpen(true);
-    Swal.fire({ icon: 'success', title: 'Data Tersalin', text: 'Kode Pos, Pengurus, Pengawas, Jumlah Anggota, dan Gerai berhasil ditarik dari API.', timer: 4000, showConfirmButton: false });
+    
+    const fields = Object.keys(settings).filter(k => settings[k]).map(k => k.replace('_', ' ')).join(', ');
+    Swal.fire({ icon: 'success', title: 'Data Tersalin', text: `Data berhasil ditarik dari API untuk bidang: ${fields}.`, timer: 4000, showConfirmButton: false });
   }
 
   // Render API results

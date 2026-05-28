@@ -65,6 +65,13 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        .top-scrollbar-container { overflow-x: auto; transform: rotateX(180deg); }
+        .top-scrollbar-inner { transform: rotateX(180deg); }
+        .top-scrollbar-container::-webkit-scrollbar { height: 8px; }
+        .top-scrollbar-container::-webkit-scrollbar-track { background: transparent; }
+        .top-scrollbar-container::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        .top-scrollbar-container::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
         /* Menyembunyikan panah bawaan di <details> browser */
         summary { list-style: none; }
@@ -257,7 +264,9 @@
                 </div>
             </div>
             
-            <div style="flex: 1; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); min-height: 400px;">
+            <div class="top-scrollbar-container custom-scrollbar" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="top-scrollbar-inner" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                    <div style="flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); min-height: 400px;" class="custom-scrollbar">
                 <table class="data-table" style="width: 100%;">
                     <thead style="background: #f8fafc;">
                         <tr>
@@ -278,6 +287,8 @@
                 <div id="no-results-msg" class="hidden p-8 text-center text-slate-500 italic flex-col items-center gap-2">
                     <i class="fas fa-search text-2xl text-slate-300"></i>
                     <p>Tidak ada data koperasi yang cocok dengan pencarian.</p>
+                </div>
+            </div>
                 </div>
             </div>
 
@@ -1179,7 +1190,38 @@
                     bodyHtml = `<div class="p-5 text-center text-xs text-slate-400 italic">Tidak ada data untuk tabel ini.</div>`;
                 } else {
                     const cols = Array.from(tb.data.reduce((s,row)=>{ Object.keys(row||{}).forEach(k=>s.add(k)); return s; }, new Set()));
-                    let ths = cols.map(c => `<th class="p-2.5 border-b border-slate-200 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide whitespace-nowrap bg-slate-50">${c}</th>`).join('');
+                    
+                    const formatHeader = (k) => {
+                        const map = {
+                            'cooperative_asset_development_report_id': 'id_laporan',
+                            'cooperative_asset_development_indicator_id': 'id_indikator',
+                            'cooperative_asset_id': 'id_aset',
+                            'description': 'keterangan',
+                            'development_progress': 'progres',
+                            'image_primary': 'foto_utama',
+                            'image_secondary': 'foto_kedua',
+                            'image_other_1': 'foto_lain_1',
+                            'image_other_2': 'foto_lain_2',
+                            'surveyor': 'surveyor',
+                            'created_at': 'dibuat_pada',
+                            'updated_at': 'diubah_pada',
+                            'manpower': 'jml_pekerja',
+                            'development_status': 'status_bangun',
+                            'indicator_construction_type': 'tipe_konstruksi',
+                            'indicator_indicator': 'nama_indikator',
+                            'indicator_weight': 'bobot_indikator',
+                            'indicator_description': 'ket_indikator',
+                            'asset_name': 'nama_aset',
+                            'asset_cooperative_id': 'id_koperasi',
+                            'asset_asset_type': 'tipe_aset',
+                            'asset_asset_status': 'status_aset',
+                            'asset_image_primary': 'foto_aset_1',
+                            'asset_image_secondary': 'foto_aset_2'
+                        };
+                        return map[k] || k;
+                    };
+
+                    let ths = cols.map(c => `<th class="p-2.5 border-b border-slate-200 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide whitespace-nowrap bg-slate-50">${formatHeader(c)}</th>`).join('');
                     let trs = tb.data.map(row => {
                         let tds = cols.map(c => {
                             let val = row[c];
@@ -1190,7 +1232,7 @@
                         return `<tr class="hover:bg-slate-50 transition-colors">${tds}</tr>`;
                     }).join('');
                     
-                    bodyHtml = `<div class="overflow-x-auto custom-scrollbar max-h-96"><table class="w-full text-left border-collapse"><thead><tr class="sticky top-0 shadow-sm z-10">${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
+                    bodyHtml = `<div class="overflow-x-auto custom-scrollbar top-scrollbar-container max-h-96"><table class="w-full text-left border-collapse top-scrollbar-inner"><thead><tr class="sticky top-0 shadow-sm z-10">${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
                 }
 
                 box.innerHTML = headerHtml + bodyHtml;
@@ -1210,11 +1252,17 @@
                 return;
             }
 
-            // ==============================================================
-            // HANYA MENGAMBIL 5 DATA SPESIFIK SESUAI REQUEST:
-            // Kode Pos, Pengurus, Pengawas, Jumlah Anggota, Gerai
-            // ==============================================================
-            
+            let savedSettings = null;
+            try {
+                const s = localStorage.getItem('syncSettings');
+                if (s) savedSettings = JSON.parse(s);
+            } catch (e) {}
+
+            const settings = savedSettings || {
+                alamat: true, lat: true, lng: true, sk_number: true, nik: true,
+                kode_pos: true, pengurus: true, pengawas: true, jumlah_anggota: true, gerai: true
+            };
+
             let pengurusStr = "";
             let pengawasStr = "";
             if (apiRawData.managements && apiRawData.managements.length > 0) {
@@ -1222,29 +1270,31 @@
                 pengawasStr = apiRawData.managements.filter(m => m.status && m.status.toUpperCase() === 'PENGAWAS').map(m => m.name || m.nama || m.employee_name).filter(Boolean).join(", ");
             }
 
-            let jumlahAnggota = apiRawData.members ? apiRawData.members.length.toString() : '0';
-            let jumlahGerai = apiRawData.outlets ? apiRawData.outlets.length.toString() : '0';
-            let kodePos = apiRawData.postal_code || '';
-
             // Clone data untuk dijadikan source modal form
             currentItem = { ...existingItem };
             
-            // Timpa 5 Kolom Target
-            currentItem['kode_pos'] = kodePos || currentItem['kode_pos'];
-            currentItem['pengurus'] = pengurusStr || currentItem['pengurus'];
-            currentItem['pengawas'] = pengawasStr || currentItem['pengawas'];
-            currentItem['jumlah anggota'] = jumlahAnggota;
-            currentItem['gerai'] = jumlahGerai;
+            if (settings.kode_pos) currentItem['kode_pos'] = apiRawData.postal_code || currentItem['kode_pos'];
+            if (settings.pengurus) currentItem['pengurus'] = pengurusStr || currentItem['pengurus'];
+            if (settings.pengawas) currentItem['pengawas'] = pengawasStr || currentItem['pengawas'];
+            if (settings.jumlah_anggota) currentItem['jumlah anggota'] = apiRawData.members ? apiRawData.members.length.toString() : '0';
+            if (settings.gerai) currentItem['gerai'] = apiRawData.outlets ? apiRawData.outlets.length.toString() : '0';
+
+            if (settings.alamat) currentItem['alamat'] = apiRawData.address || currentItem['alamat'];
+            if (settings.lat) currentItem['lat'] = apiRawData.latitude || apiRawData.lat || currentItem['lat'];
+            if (settings.lng) currentItem['lng'] = apiRawData.longitude || apiRawData.lng || apiRawData.lon || currentItem['lng'];
+            if (settings.sk_number) currentItem['ahu'] = apiRawData.sk_number || currentItem['ahu'];
+            if (settings.nik) currentItem['nik'] = apiRawData.nik || currentItem['nik'];
 
             // Buka Modal Form dengan data yang telah dioverwrite
             showDatabaseModal(false);
             
+            const fields = Object.keys(settings).filter(k => settings[k]).map(k => k.replace('_', ' ')).join(', ');
             Swal.fire({
                 icon: 'success', 
                 title: 'Data Tersalin', 
-                text: 'Kode Pos, Pengurus, Pengawas, Jumlah Anggota, dan Gerai berhasil ditarik dari API ke dalam Form. Silakan Simpan!', 
+                text: `Data berhasil ditarik dari API untuk bidang: ${fields}.`, 
                 timer: 4000, 
-                showConfirmButton: false
+                showConfirmButton: false 
             });
         }
         

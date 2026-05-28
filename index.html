@@ -15,6 +15,8 @@
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <!-- Library untuk fitur Drag and Drop kolom -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <!-- Library untuk dekripsi API -->
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js"></script>
     
     <!-- Konfigurasi Tailwind untuk menyelaraskan dengan warna CSS Anda -->
     <script>
@@ -66,6 +68,13 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        .top-scrollbar-container { overflow-x: auto; transform: rotateX(180deg); }
+        .top-scrollbar-inner { transform: rotateX(180deg); }
+        .top-scrollbar-container::-webkit-scrollbar { height: 8px; }
+        .top-scrollbar-container::-webkit-scrollbar-track { background: transparent; }
+        .top-scrollbar-container::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        .top-scrollbar-container::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
         /* Header Minimalis */
         header {
@@ -489,11 +498,15 @@
                     </div>
                 </div>
                 
-                <div class="table-wrapper">
-                    <table class="data-table">
+                <div class="top-scrollbar-container custom-scrollbar" style="flex: 1; display: flex; flex-direction: column;">
+                    <div class="top-scrollbar-inner" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                        <div class="table-wrapper custom-scrollbar" style="overflow-x: hidden;">
+                            <table class="data-table">
                         <thead id="table-head"></thead>
                         <tbody id="table-body"></tbody>
                     </table>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="pagination-container">
@@ -1241,6 +1254,7 @@
                     <div class="info-row" style="margin-top: 15px;"><label>Navigasi Peta</label>
                         ${hasCoords ? `<a href="https://www.google.com/maps/search/?api=1&query=${latVal},${lngVal}" target="_blank" class="gmaps-link"><i class="fas fa-location-arrow"></i> Buka Rute di Google Maps</a>` : '<span style="color:var(--non-aktif); font-size:12px; font-weight:500;"><i class="fas fa-exclamation-triangle"></i> Titik koordinat belum diatur</span>'}
                     </div>
+                    ${item.url && item.url !== '-' ? `<button class="btn-action" style="width:100%; margin-top:12px; background-color:#2563eb; color:white; border:none; justify-content:center;" onclick="fetchApiFromUrl('${item.url}')"><i class="fas fa-info-circle"></i> Lihat Detail Selengkapnya (API Kemenkop)</button>` : ''}
                 </div>`;
             panel.style.display = 'flex';
         }
@@ -1484,6 +1498,397 @@
         }
         
         window.onload = initMap;
+    </script>
+    <!-- STYLE UNTUK TABS API MODAL -->
+    <style>
+        .api-tabs { display: flex; border-bottom: 1px solid #e2e8f0; margin-bottom: 1rem; overflow-x: auto; scrollbar-width: none; }
+        .api-tabs::-webkit-scrollbar { display: none; }
+        .api-tab-btn { padding: 0.75rem 1.25rem; font-size: 13px; font-weight: 600; color: #64748b; background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+        .api-tab-btn:hover { color: #3b82f6; }
+        .api-tab-btn.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+        .api-tab-content { display: none; }
+        .api-tab-content.active { display: block; }
+    </style>
+    
+    <!-- API MODAL OVERLAY (TABBED) -->
+    <div id="api-modal-overlay" class="fixed inset-0 bg-slate-900/80 z-[9999] hidden items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[96vh] flex flex-col overflow-hidden border border-slate-200">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                        <i class="fas fa-satellite-dish text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-[16px] text-slate-800 leading-tight">Detail Data API Kemenkop</h3>
+                        <p class="text-[11px] text-slate-500">Hasil penarikan langsung dari server pusat</p>
+                    </div>
+                </div>
+                <button onclick="closeApiModal()" class="text-slate-400 hover:bg-red-50 hover:text-red-500 w-8 h-8 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Body -->
+            <div class="flex-1 overflow-y-auto bg-slate-100 flex flex-col relative">
+                <div id="api-loading" class="hidden flex-col items-center justify-center py-20">
+                    <i class="fas fa-circle-notch fa-spin fa-3x text-blue-600 mb-4"></i>
+                    <p class="text-sm text-slate-600 font-semibold animate-pulse">Menarik Data...</p>
+                </div>
+                
+                <div id="api-results" class="hidden flex-col h-full">
+                    <!-- Hero Info -->
+                    <div class="bg-white p-5 border-b border-slate-200 shrink-0">
+                        <h2 id="api-res-name" class="text-xl md:text-2xl font-black text-slate-800 uppercase tracking-tight">NAMA KOPERASI</h2>
+                        <p id="api-res-loc" class="text-xs font-medium text-slate-500 mt-1 flex items-center gap-1.5"><i class="fas fa-map-marker-alt text-red-500"></i> <span id="api-res-loc-text">Lokasi</span></p>
+                    </div>
+                    
+                    <!-- Tabs Header -->
+                    <div class="bg-white shrink-0 px-5 border-b border-slate-200">
+                        <div id="api-tabs-container" class="api-tabs mb-0 flex overflow-x-auto custom-scrollbar">
+                            <button class="api-tab-btn active" data-tab="utama" onclick="switchApiTab('utama')">Utama & Tambahan</button>
+                            <button class="api-tab-btn" data-tab="media" onclick="switchApiTab('media')">Gambar & Lokasi</button>
+                            <button class="api-tab-btn" data-tab="wilayah" onclick="switchApiTab('wilayah')">Wilayah</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabs Content -->
+                    <div id="api-tabs-content-container" class="flex-1 overflow-y-auto p-5 custom-scrollbar">
+                        
+                        <!-- TAB: Utama -->
+                        <div id="api-tab-utama" class="api-tab-content active flex flex-col gap-5">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                                    <h3 class="font-bold text-[13px] border-b pb-2 mb-3 text-slate-800 flex items-center gap-2"><i class="fas fa-info-circle text-blue-500"></i> Informasi Utama</h3>
+                                    <div id="api-res-kv-main" class="grid grid-cols-[100px_1fr] gap-x-2 gap-y-2.5 text-[11px]"></div>
+                                </div>
+                                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                                    <h3 class="font-bold text-[13px] border-b pb-2 mb-3 text-slate-800 flex items-center gap-2"><i class="fas fa-list-alt text-green-500"></i> Informasi Tambahan</h3>
+                                    <div id="api-res-kv-add" class="grid grid-cols-[100px_1fr] gap-x-2 gap-y-2.5 text-[11px]"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+
+                        
+                        <!-- TAB: Media (Gambar & Peta) -->
+                        <div id="api-tab-media" class="api-tab-content flex flex-col gap-5">
+                            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                                <h3 class="font-bold text-[13px] border-b pb-2 mb-3 text-slate-800 flex items-center gap-2"><i class="fas fa-map text-red-500"></i> Peta Lokasi</h3>
+                                <div id="api-map" class="w-full h-64 rounded-lg border border-slate-200 z-10 relative bg-slate-50"></div>
+                                <div id="api-map-hint" class="text-[10px] text-slate-500 mt-2 font-mono bg-slate-100 p-1.5 rounded inline-block w-fit"></div>
+                            </div>
+                            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                                <h3 class="font-bold text-[13px] border-b pb-2 mb-3 text-slate-800 flex items-center gap-2"><i class="fas fa-images text-purple-500"></i> Gambar Koperasi</h3>
+                                <div id="api-res-images" class="flex flex-wrap gap-4 pb-2"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- TAB: Wilayah -->
+                        <div id="api-tab-wilayah" class="api-tab-content">
+                            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><b class="text-[10px] text-slate-500 uppercase block mb-1.5">Provinsi</b><div id="api-kv-prov" class="text-[10px] flex flex-col gap-1"></div></div>
+                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><b class="text-[10px] text-slate-500 uppercase block mb-1.5">Kab/Kota</b><div id="api-kv-dist" class="text-[10px] flex flex-col gap-1"></div></div>
+                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><b class="text-[10px] text-slate-500 uppercase block mb-1.5">Kecamatan</b><div id="api-kv-sub" class="text-[10px] flex flex-col gap-1"></div></div>
+                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-100"><b class="text-[10px] text-slate-500 uppercase block mb-1.5">Desa/Kel</b><div id="api-kv-vil" class="text-[10px] flex flex-col gap-1"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT UNTUK API MODAL DI INDEX -->
+    <script>
+        function switchApiTab(tabName) {
+            document.querySelectorAll('.api-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.api-tab-content').forEach(content => content.classList.remove('active'));
+            
+            const btn = document.querySelector(`.api-tab-btn[data-tab="${tabName}"]`);
+            if (btn) btn.classList.add('active');
+            
+            const activeContent = document.getElementById('api-tab-' + tabName);
+            if (activeContent) activeContent.classList.add('active');
+            
+            if (tabName === 'media' && apiMap) {
+                setTimeout(() => apiMap.invalidateSize(), 200);
+            }
+        }
+
+        const PASS_API = "EX7rvuSQItlrBOSzePdlrrGuQOjOmIPs";
+        const IV_STR_API = "HIYa12MVEqtZIiBG"; 
+        let apiMap = null, apiMarker = null;
+
+        function openApiModal() {
+            document.getElementById('api-modal-overlay').classList.remove('hidden');
+            document.getElementById('api-modal-overlay').classList.add('flex');
+            document.getElementById('api-results').classList.add('hidden');
+            switchApiTab('utama');
+        }
+
+        function closeApiModal() {
+            document.getElementById('api-modal-overlay').classList.add('hidden');
+            document.getElementById('api-modal-overlay').classList.remove('flex');
+        }
+
+        async function fetchApiFromUrl(urlStr) {
+            if (!urlStr || urlStr === '-') return;
+            let slug = "";
+            let cleanUrl = String(urlStr).trim().split('?')[0];
+            if (cleanUrl.endsWith('/')) cleanUrl = cleanUrl.slice(0, -1);
+            const parts = cleanUrl.split('/');
+            slug = parts[parts.length - 1];
+            
+            if (!slug) { Swal.fire('Gagal', 'URL tidak valid untuk ditarik API nya.', 'error'); return; }
+            
+            openApiModal();
+            showApiLoader(true);
+            try {
+                const res = await fetch(`https://api.merahputih.kop.id/api/cooperatives/by-slug/${slug}`);
+                if (!res.ok) throw new Error(`Status Code: ${res.status}`);
+                const data = await res.json();
+                processApiData(data);
+            } catch (err) {
+                Swal.fire({icon: 'error', title: 'Gagal Menarik Data', text: err.message});
+                closeApiModal();
+            } finally {
+                showApiLoader(false);
+            }
+        }
+
+        function showApiLoader(show) {
+            if (show) {
+                document.getElementById('api-loading').classList.remove('hidden');
+                document.getElementById('api-loading').classList.add('flex');
+                document.getElementById('api-results').classList.add('hidden');
+            } else {
+                document.getElementById('api-loading').classList.add('hidden');
+                document.getElementById('api-loading').classList.remove('flex');
+            }
+        }
+
+        function processApiData(inputObj) {
+            try {
+                let finalData;
+                if (inputObj && typeof inputObj.data === "string") {
+                    const b64 = inputObj.data.replace(/\\\\\//g,"/");
+                    const key = CryptoJS.SHA256(PASS_API);
+                    const iv = CryptoJS.enc.Utf8.parse(IV_STR_API);
+                    const dec = CryptoJS.AES.decrypt(
+                        { ciphertext: CryptoJS.enc.Base64.parse(b64) },
+                        key,
+                        { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 }
+                    ).toString(CryptoJS.enc.Utf8);
+                    
+                    if (!dec) throw new Error("Gagal mendekripsi payload API.");
+                    finalData = JSON.parse(dec);
+                } else {
+                    finalData = inputObj.data || inputObj;
+                }
+
+                if(!finalData || typeof finalData !== "object") throw new Error("Struktur JSON tidak dapat dikenali.");
+                renderApiUI(finalData);
+            } catch (e) {
+                Swal.fire({icon: 'error', title: 'Gagal Memproses Data', text: e.message});
+                closeApiModal();
+            }
+        }
+
+        function renderApiUI(data) {
+            document.getElementById('api-results').classList.remove('hidden');
+            document.getElementById('api-results').classList.add('flex');
+
+            document.getElementById('api-res-name').textContent = data.name || "Tanpa Nama";
+            const locParts = [];
+            if(data.village?.name) locParts.push(data.village.name);
+            if(data.subdistrict?.name) locParts.push(data.subdistrict.name);
+            if(data.district?.name) locParts.push(data.district.name);
+            if(data.province?.name) locParts.push(data.province.name);
+            document.getElementById('api-res-loc-text').textContent = locParts.join(", ") || "Lokasi tidak diketahui";
+
+            const safeText = v => (v === null || v === undefined || v === "") ? "-" : String(v);
+            
+            let pengurusList = [];
+            let pengawasList = [];
+            if(Array.isArray(data.managements)) {
+                pengurusList = data.managements.filter(m => m.status && m.status.toUpperCase() === 'PENGURUS').map(m => m.name);
+                pengawasList = data.managements.filter(m => m.status && m.status.toUpperCase() === 'PENGAWAS').map(m => m.name);
+            }
+            let sektorUsahaList = [];
+            if(Array.isArray(data.klu_types)) {
+                sektorUsahaList = data.klu_types.map(k => k.type || k.name);
+            }
+
+            const kvMain = [
+                ["Nama Koperasi", data.name],
+                ["NIK", data.nik],
+                ["Alamat Lengkap", data.address],
+                ["AHU", data.sk_number],
+                ["Tahun Pendirian", data.establishment_year || "-"], 
+                ["Kode Pos", data.postal_code],
+                ["Jumlah Anggota", Array.isArray(data.members) ? data.members.length : 0],
+                ["Pengurus", pengurusList.length > 0 ? pengurusList.join(', ') : "-"],
+                ["Pengawas", pengawasList.length > 0 ? pengawasList.join(', ') : "-"]
+            ];
+
+            const kvAdd = [
+                ["RAT", data.rat || "-"], 
+                ["Unit Gerai Usaha", Array.isArray(data.outlets) ? data.outlets.length : 0],
+                ["Penilaian Kesehatan", data.health_score || data.kesehatan || "-"], 
+                ["Sektor Usaha", sektorUsahaList.length > 0 ? sektorUsahaList.join(', ') : "-"]
+            ];
+
+            document.getElementById('api-res-kv-main').innerHTML = kvMain.map(item => '<b class="text-slate-500 font-bold">' + item[0] + '</b><span class="text-slate-800 break-words">' + safeText(item[1]) + '</span>').join('');
+            document.getElementById('api-res-kv-add').innerHTML = kvAdd.map(item => '<b class="text-slate-500 font-bold">' + item[0] + '</b><span class="text-slate-800 break-words">' + safeText(item[1]) + '</span>').join('');
+
+            const lat = parseFloat(data.latitude ?? data.lat);
+            const lng = parseFloat(data.longitude ?? data.lng ?? data.lon);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                if(!apiMap) {
+                    apiMap = L.map("api-map");
+                    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom: 19}).addTo(apiMap);
+                }
+                apiMap.setView([lat,lng], 14);
+                if(apiMarker) apiMarker.remove();
+                apiMarker = L.marker([lat,lng]).addTo(apiMap);
+                document.getElementById('api-map-hint').innerHTML = 'Koordinat: <b>' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '</b>';
+            } else {
+                document.getElementById('api-map').innerHTML = '<div class="w-full h-full flex items-center justify-center text-slate-400 text-xs italic"><i class="fas fa-exclamation-triangle mr-2"></i> Koordinat tidak tersedia</div>';
+                document.getElementById('api-map-hint').innerHTML = "";
+            }
+
+            const renderKvObj = (obj) => {
+                if(!obj) return "-";
+                return Object.entries(obj).map(entry => '<div class="flex justify-between border-b border-slate-200 last:border-0 py-1"><span class="text-slate-400 capitalize">' + entry[0] + '</span><span class="font-semibold text-slate-700 text-right break-all pl-2">' + safeText(entry[1]) + '</span></div>').join('');
+            };
+            document.getElementById('api-kv-prov').innerHTML = renderKvObj(data.province);
+            document.getElementById('api-kv-dist').innerHTML = renderKvObj(data.district);
+            document.getElementById('api-kv-sub').innerHTML = renderKvObj(data.subdistrict);
+            document.getElementById('api-kv-vil').innerHTML = renderKvObj(data.village);
+
+            let imgs = [];
+            if(data.logo_file) imgs.push({label:"Logo Koperasi", url:data.logo_file});
+            if(data.banner_file) imgs.push({label:"Banner", url:data.banner_file});
+            if(Array.isArray(data.outlets)){
+                data.outlets.forEach((o,i)=>{
+                    if(o?.primary_image) imgs.push({label:"Outlet #" + (i+1) + " - Utama", url:o.primary_image});
+                    if(o?.secondary_image) imgs.push({label:"Outlet #" + (i+1) + " - Alternatif", url:o.secondary_image});
+                });
+            }
+            if(imgs.length === 0) {
+                document.getElementById('api-res-images').innerHTML = '<p class="text-xs text-slate-400 italic">Tidak ada gambar yang dilampirkan.</p>';
+            } else {
+                document.getElementById('api-res-images').innerHTML = imgs.map(it => '<div class="border border-slate-200 rounded-lg overflow-hidden w-48 flex flex-col bg-slate-50 grow-0 shrink-0"><img src="' + it.url + '" alt="' + it.label + '" class="w-full h-32 object-cover bg-white"><div class="text-[10px] font-bold text-center py-2 text-slate-600 truncate px-2">' + it.label + '</div></div>').join('');
+            }
+
+            const tabsContainer = document.getElementById('api-tabs-container');
+            const contentsContainer = document.getElementById('api-tabs-content-container');
+            
+            // Remove any dynamically added tabs from previous calls
+            document.querySelectorAll('.dynamic-api-tab').forEach(el => el.remove());
+            
+            const toArr = arr => Array.isArray(arr) ? arr.map(x => (x && typeof x==="object")? x : { value: x }) : [];
+            const tablesDef = [
+                { id: 'managements', title: 'Managements', data: toArr(data.managements), icon: 'fa-users' },
+                { id: 'members', title: 'Members', data: toArr(data.members), icon: 'fa-id-card' },
+                { id: 'outlets', title: 'Outlets', data: toArr(data.outlets), icon: 'fa-store' },
+                { id: 'potentials', title: 'Potentials', data: toArr(data.potentials), icon: 'fa-chart-line' },
+                { id: 'klus', title: 'KLU/S', data: toArr(data.klus), icon: 'fa-layer-group' },
+                { id: 'klu_types', title: 'KLU Types', data: toArr(data.klu_types), icon: 'fa-tags' },
+                { id: 'member_stats', title: 'Member Stats', data: toArr(data.member_stats), icon: 'fa-chart-bar' },
+                { id: 'development_reports', title: 'Reports', data: toArr(data.development_reports), icon: 'fa-hard-hat' },
+                { id: 'merged_villages', title: 'Merged Villages', data: toArr(data.merged_villages), icon: 'fa-map-signs' },
+                { id: 'news', title: 'News', data: toArr(data.news), icon: 'fa-newspaper' },
+            ];
+
+            tablesDef.forEach(tb => {
+                if (tb.data.length === 0) return; // Skip tabs with no data
+
+                // Create Tab Button
+                const btn = document.createElement('button');
+                btn.className = 'api-tab-btn dynamic-api-tab shrink-0 flex items-center gap-1.5';
+                btn.dataset.tab = tb.id;
+                btn.onclick = () => switchApiTab(tb.id);
+                btn.innerHTML = `<i class="fas ${tb.icon}"></i> ${tb.title} <span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full text-[9px] font-bold">${tb.data.length}</span>`;
+                tabsContainer.appendChild(btn);
+
+                // Create Tab Content
+                const contentDiv = document.createElement('div');
+                contentDiv.id = `api-tab-${tb.id}`;
+                contentDiv.className = 'api-tab-content dynamic-api-tab';
+                let cols = Array.from(tb.data.reduce((s,row)=>{ Object.keys(row||{}).forEach(k=>s.add(k)); return s; }, new Set()));
+                cols = cols.filter(c => c !== 'member_identification_number');
+                
+                const formatHeader = (k) => {
+                    const map = {
+                        'cooperative_asset_development_report_id': 'id_laporan',
+                        'cooperative_asset_development_indicator_id': 'id_indikator',
+                        'cooperative_asset_id': 'id_aset',
+                        'description': 'keterangan',
+                        'development_progress': 'progres',
+                        'image_primary': 'foto_utama',
+                        'image_secondary': 'foto_kedua',
+                        'image_other_1': 'foto_lain_1',
+                        'image_other_2': 'foto_lain_2',
+                        'surveyor': 'surveyor',
+                        'created_at': 'dibuat_pada',
+                        'updated_at': 'diubah_pada',
+                        'manpower': 'jml_pekerja',
+                        'development_status': 'status_bangun',
+                        'indicator_construction_type': 'tipe_konstruksi',
+                        'indicator_indicator': 'nama_indikator',
+                        'indicator_weight': 'bobot_indikator',
+                        'indicator_description': 'ket_indikator',
+                        'asset_name': 'nama_aset',
+                        'asset_cooperative_id': 'id_koperasi',
+                        'asset_asset_type': 'tipe_aset',
+                        'asset_asset_status': 'status_aset',
+                        'asset_image_primary': 'foto_aset_1',
+                        'asset_image_secondary': 'foto_aset_2'
+                    };
+                    return map[k] || k;
+                };
+
+                const maskSensitiveData = (key, value) => {
+                    if (!value || typeof value !== 'string') return value;
+                    const k = String(key).toLowerCase();
+                    if (k === 'nik' || k.includes('ktp')) {
+                        return value.length > 8 ? value.substring(0, 4) + '*'.repeat(value.length - 8) + value.substring(value.length - 4) : '*'.repeat(value.length);
+                    }
+                    if (k.includes('phone') || k.includes('hp') || k.includes('telepon')) {
+                        return value.length > 6 ? value.substring(0, 4) + '*'.repeat(value.length - 7) + value.substring(value.length - 3) : '*'.repeat(value.length);
+                    }
+                    if (k.includes('email')) {
+                        const parts = value.split('@');
+                        return parts.length === 2 && parts[0].length > 2 ? parts[0].substring(0, 2) + '*'.repeat(parts[0].length - 2) + '@' + parts[1] : value;
+                    }
+                    if (k.includes('npwp')) {
+                        return value.length > 6 ? value.substring(0, 2) + '*'.repeat(value.length - 5) + value.substring(value.length - 3) : '*'.repeat(value.length);
+                    }
+                    return value;
+                };
+
+                let ths = cols.map(c => '<th class="p-2.5 border-b border-slate-200 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide whitespace-nowrap bg-slate-50">' + formatHeader(c) + '</th>').join('');
+                let trs = tb.data.map(row => {
+                    let tds = cols.map(c => {
+                        let val = row[c];
+                        if (c.toLowerCase().includes("image") && val) return '<td class="p-2.5 border-b border-slate-100"><img src="' + val + '" class="max-w-[120px] rounded border border-slate-200"></td>';
+                        if (typeof val === "object" && val !== null) val = JSON.stringify(val);
+                        val = maskSensitiveData(c, val);
+                        return '<td class="p-2.5 border-b border-slate-100 text-[11px] text-slate-700 align-top">' + (val || '-') + '</td>';
+                    }).join('');
+                    return '<tr class="hover:bg-slate-50 transition-colors">' + tds + '</tr>';
+                }).join('');
+                
+                contentDiv.innerHTML = '<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"><div class="overflow-x-auto custom-scrollbar top-scrollbar-container"><table class="w-full text-left border-collapse top-scrollbar-inner"><thead><tr class="bg-slate-50">' + ths + '</tr></thead><tbody>' + trs + '</tbody></table></div></div>';
+                
+                contentsContainer.appendChild(contentDiv);
+            });
+        }
     </script>
 </body>
 </html>

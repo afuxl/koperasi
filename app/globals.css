@@ -214,6 +214,14 @@ header {
 
 .table-wrapper { flex: 1; overflow-y: auto; overflow-x: auto; }
 
+/* Horizontal Scrollbar on Top Utility */
+.top-scrollbar-container { overflow-x: auto; transform: rotateX(180deg); }
+.top-scrollbar-inner { transform: rotateX(180deg); }
+.top-scrollbar-container::-webkit-scrollbar { height: 8px; }
+.top-scrollbar-container::-webkit-scrollbar-track { background: transparent; }
+.top-scrollbar-container::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+.top-scrollbar-container::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
 .data-table { width: 100%; border-collapse: collapse; font-size: 10px; text-align: left; white-space: nowrap; }
 .data-table th { position: sticky; top: 0; background: #f1f5f9; padding: 4px 8px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; border-bottom: 2px solid var(--border); z-index: 10; cursor: pointer; user-select: none; transition: background 0.2s; }
 .data-table th:hover { background: #e2e8f0; color: var(--text-main); }

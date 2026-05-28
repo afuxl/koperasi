@@ -48,16 +48,28 @@ export default function Sidebar({ isOpen, onClose }) {
             ))}
 
             {isAdmin && (
-              <li id="menu-db-container">
-                <Link
-                  href="/database"
-                  id="link-database"
-                  className={`sidebar-link ${pathname === '/database' ? 'active' : ''}`}
-                  onClick={onClose}
-                >
-                  <i className="fas fa-database" /> Kelola Basis Data
-                </Link>
-              </li>
+              <>
+                <li id="menu-db-container">
+                  <Link
+                    href="/database"
+                    id="link-database"
+                    className={`sidebar-link ${pathname === '/database' ? 'active' : ''}`}
+                    onClick={onClose}
+                  >
+                    <i className="fas fa-database" /> Kelola Basis Data
+                  </Link>
+                </li>
+                <li id="menu-pengaturan-container">
+                  <Link
+                    href="/pengaturan"
+                    id="link-pengaturan"
+                    className={`sidebar-link ${pathname === '/pengaturan' ? 'active' : ''}`}
+                    onClick={onClose}
+                  >
+                    <i className="fas fa-sync-alt" /> Pengaturan Sinkron
+                  </Link>
+                </li>
+              </>
             )}
 
             <li style={{ marginTop: 15, paddingTop: 15, borderTop: '1px dashed var(--border)' }} />
