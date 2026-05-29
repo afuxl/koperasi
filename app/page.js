@@ -308,6 +308,7 @@ export default function HomePage() {
         const borderColor = isAktif ? '#047857' : '#b91c1c'; // darker shade for stroke
 
         const marker = L.circleMarker([latVal, lngVal], {
+          pane: 'markerPane',
           radius: 6,
           fillColor: fillColor,
           color: borderColor,
