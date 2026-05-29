@@ -317,7 +317,7 @@ export default function HomePage() {
         });
 
         marker.bindTooltip(`<b>${item.nama}</b><br><small style="color:#cbd5e1;font-weight:400;">Desa ${item.desa}</small>`, { className: 'leaflet-tooltip-koperasi', direction: 'top', offset: [0, -5] });
-        marker.on('click', () => selectItem(item, marker));
+        marker.on('click', (e) => { L.DomEvent.stopPropagation(e); selectItem(item, marker); });
         
         // Custom property to store baseColor if used elsewhere
         marker.baseColor = fillColor;
