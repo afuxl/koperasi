@@ -124,8 +124,8 @@ export default function HomePage() {
       const bg = L.featureGroup().addTo(map);
       const ml = L.featureGroup().addTo(map);
       const ll = L.featureGroup().addTo(map);
-      const kabBoundaryGroup = L.featureGroup().addTo(map);
-      const kecBoundaryGroup = L.featureGroup().addTo(map);
+      const kabBoundaryGroup = L.featureGroup();
+      const kecBoundaryGroup = L.featureGroup();
       
       markersLayerRef.current = ml;
       labelsLayerRef.current = ll;

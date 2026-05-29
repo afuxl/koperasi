@@ -934,8 +934,8 @@
             
             leafletMap = L.map('map', { zoomControl: false, layers: [osm] }).setView([-4.0, 122.5], 8); 
 
-            boundaryGroup = L.featureGroup().addTo(leafletMap);
-            let kabBoundaryGroup = L.featureGroup().addTo(leafletMap);
+            boundaryGroup = L.featureGroup();
+            let kabBoundaryGroup = L.featureGroup();
             markersLayer = L.featureGroup().addTo(leafletMap); 
             labelsLayer = L.featureGroup().addTo(leafletMap);
 
