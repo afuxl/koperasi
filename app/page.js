@@ -124,15 +124,16 @@ export default function HomePage() {
       const bg = L.featureGroup().addTo(map);
       const ml = L.featureGroup().addTo(map);
       const ll = L.featureGroup().addTo(map);
-      boundaryGroupRef.current = bg;
+      const kabBoundaryGroup = L.featureGroup().addTo(map);
+      const kecBoundaryGroup = L.featureGroup().addTo(map);
+      
       markersLayerRef.current = ml;
       labelsLayerRef.current = ll;
-
-      const kabBoundaryGroup = L.featureGroup().addTo(map);
+      boundaryGroupRef.current = kecBoundaryGroup; // used by filter if needed
 
       L.control.layers(
         { "Open Street Map": osm, "Google Satellite": satellite, "Google Terrain": googleTerrain, "ESRI": esri },
-        { "Batas Kabupaten/Kota": kabBoundaryGroup, "Batas Kecamatan (Filter)": bg },
+        { "Batas Kabupaten/Kota": kabBoundaryGroup, "Batas Kecamatan": kecBoundaryGroup },
         { position: 'bottomleft' }
       ).addTo(map);
       L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -142,7 +143,16 @@ export default function HomePage() {
         else { if (map.hasLayer(ll)) map.removeLayer(ll); }
       });
 
+      let clickTimeout = null;
+
       map.on('click', (e) => {
+        // Reset view when clicking empty area
+        kabBoundaryGroup.eachLayer(layer => {
+            layer.setStyle({ color: '#b91c1c', opacity: 0.6, fillOpacity: 0.03 });
+        });
+        kecBoundaryGroup.clearLayers();
+        map.setView([-4.0, 122.5], 8);
+
         if (!isEditModeRef.current || !isAdminRef.current) return;
         const latInput = document.getElementById('edit-lat');
         const lngInput = document.getElementById('edit-lng');
@@ -152,42 +162,69 @@ export default function HomePage() {
         tempEditMarkerRef.current = L.marker(e.latlng).addTo(map);
       });
 
+      // Load kecamatan boundary GeoJSON
+      try {
+        const resp = await fetch('/kecamatan.geojson');
+        if (resp.ok) boundaryDataRef.current = await resp.json();
+      } catch (err) { console.warn("Gagal memuat GeoJSON kecamatan:", err); }
+
       // Load kabupaten boundary GeoJSON (sultra.geojson)
       try {
         const kabResp = await fetch('/sultra.geojson');
         if (kabResp.ok) {
           const kabData = await kabResp.json();
           L.geoJSON(kabData, {
-            style: () => ({
-              color: '#b91c1c',
-              weight: 2,
-              fillColor: '#fef2f2',
-              fillOpacity: 0.03,
-              dashArray: '6, 4',
-              opacity: 0.6
-            }),
+            style: () => ({ color: '#b91c1c', weight: 2, fillColor: '#fef2f2', fillOpacity: 0.03, dashArray: '6, 4', opacity: 0.6 }),
             onEachFeature: (feature, layer) => {
               const name = feature.properties.NAME_2;
               const type = feature.properties.TYPE_2 || '';
               if (name) {
-                layer.bindTooltip(`${type} ${name}`, {
-                  permanent: false,
-                  direction: 'center',
-                  className: 'leaflet-tooltip-koperasi',
-                  sticky: true
-                });
+                layer.bindTooltip(`${type} ${name}`, { permanent: false, direction: 'center', className: 'leaflet-tooltip-koperasi', sticky: true });
               }
+
+              layer.on('click', (e) => {
+                L.DomEvent.stopPropagation(e);
+                
+                if (clickTimeout) {
+                  clearTimeout(clickTimeout);
+                  clickTimeout = null;
+                  
+                  // Double Click: Tampilkan Kecamatan
+                  layer.setStyle({ opacity: 0, fillOpacity: 0 }); // Sembunyikan kabupaten ini
+                  if (boundaryDataRef.current) {
+                    kecBoundaryGroup.clearLayers();
+                    L.geoJSON(boundaryDataRef.current, {
+                      filter: (f) => {
+                        const kabName = f.properties.WADMKK || f.properties.KABUPATEN || f.properties.kabupaten || f.properties.nm_kabupaten;
+                        if (kabName && kabName.toUpperCase() === name.toUpperCase()) return true;
+                        if (!kabName) return true; // Fallback jika data geojson belum memiliki properti kabupaten
+                        return false;
+                      },
+                      style: () => ({ color: '#047857', weight: 2, fillColor: '#10b981', fillOpacity: 0.1, dashArray: '5, 5' }),
+                      onEachFeature: (f, l) => {
+                        const kecName = f.properties.nm_kecamatan || f.properties.WADMKC || f.properties.KECAMATAN || f.properties.kecamatan || f.properties.NAMOBJ;
+                        if (kecName) l.bindTooltip(`Kec. ${kecName}`, { permanent: false, direction: 'center', sticky: true });
+                        l.on('click', (e2) => L.DomEvent.stopPropagation(e2)); // Prevent reset map
+                      },
+                      interactive: true
+                    }).addTo(kecBoundaryGroup);
+                  }
+                } else {
+                  // Single Click: Highlight & Zoom Kabupaten
+                  clickTimeout = setTimeout(() => {
+                    clickTimeout = null;
+                    kabBoundaryGroup.eachLayer(l => l.setStyle({ opacity: 0.1, fillOpacity: 0 }));
+                    layer.setStyle({ opacity: 1, fillOpacity: 0.15, color: '#dc2626' });
+                    kecBoundaryGroup.clearLayers();
+                    map.fitBounds(layer.getBounds(), { padding: [20, 20], duration: 0.5 });
+                  }, 250);
+                }
+              });
             },
             interactive: true
           }).addTo(kabBoundaryGroup);
         }
       } catch (err) { console.warn("Gagal memuat batas kabupaten:", err); }
-
-      // Load kecamatan boundary GeoJSON
-      try {
-        const resp = await fetch('/kecamatan.geojson');
-        if (resp.ok) boundaryDataRef.current = await resp.json();
-      } catch (err) { console.warn("Gagal memuat GeoJSON:", err); }
 
       // Load data
       loadData();

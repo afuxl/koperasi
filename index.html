@@ -948,7 +948,7 @@
 
             const overlayMaps = {
                 "Batas Kabupaten/Kota": kabBoundaryGroup,
-                "Batas Kecamatan (Filter)": boundaryGroup
+                "Batas Kecamatan": boundaryGroup
             };
 
             L.control.layers(baseMaps, overlayMaps, {position: 'bottomleft'}).addTo(leafletMap); 
@@ -959,6 +959,21 @@
             makeDraggable(document.getElementById("info-panel"));
             leafletMap.on('click', onMapClickForPin);
             initResizer(); 
+
+            let mapClickTimeout = null;
+
+            leafletMap.on('click', (e) => {
+                if (kabBoundaryGroup) {
+                    kabBoundaryGroup.eachLayer(layer => {
+                        layer.setStyle({ color: '#b91c1c', opacity: 0.6, fillOpacity: 0.03 });
+                    });
+                }
+                if (boundaryGroup) boundaryGroup.clearLayers();
+                leafletMap.setView([-4.0, 122.5], 8);
+            });
+
+            // Load GeoJSON data
+            fetch('/kecamatan.geojson').then(res => res.json()).then(data => { boundaryData = data; }).catch(err => console.warn("Gagal memuat GeoJSON kecamatan:", err));
 
             // Load Kabupaten Boundary
             fetch('/sultra.geojson').then(res => res.json()).then(data => {
@@ -972,11 +987,49 @@
                         if (name) {
                             layer.bindTooltip(`${type} ${name}`, { permanent: false, direction: 'center', className: 'leaflet-tooltip-koperasi', sticky: true });
                         }
-                    }
+
+                        layer.on('click', (e) => {
+                            L.DomEvent.stopPropagation(e);
+                            if (mapClickTimeout) {
+                                clearTimeout(mapClickTimeout);
+                                mapClickTimeout = null;
+
+                                // Double Click: Tampilkan Kecamatan
+                                layer.setStyle({ opacity: 0, fillOpacity: 0 }); // Sembunyikan kabupaten
+                                if (boundaryData) {
+                                    boundaryGroup.clearLayers();
+                                    L.geoJSON(boundaryData, {
+                                        filter: function(f) {
+                                            const kabName = f.properties.WADMKK || f.properties.KABUPATEN || f.properties.kabupaten || f.properties.nm_kabupaten;
+                                            if (kabName && kabName.toUpperCase() === name.toUpperCase()) return true;
+                                            if (!kabName) return true; // Fallback
+                                            return false;
+                                        },
+                                        style: function() { return { color: '#047857', weight: 2, fillColor: '#10b981', fillOpacity: 0.1, dashArray: '5, 5' }; },
+                                        onEachFeature: function(f, l) {
+                                            const kecName = f.properties.nm_kecamatan || f.properties.WADMKC || f.properties.KECAMATAN || f.properties.kecamatan || f.properties.NAMOBJ;
+                                            if (kecName) l.bindTooltip(`Kec. ${kecName}`, { permanent: false, direction: 'center', sticky: true });
+                                            l.on('click', (e2) => L.DomEvent.stopPropagation(e2)); // Prevent reset
+                                        },
+                                        interactive: true
+                                    }).addTo(boundaryGroup);
+                                }
+                            } else {
+                                // Single Click: Highlight Kabupaten
+                                mapClickTimeout = setTimeout(() => {
+                                    mapClickTimeout = null;
+                                    kabBoundaryGroup.eachLayer(l => l.setStyle({ opacity: 0.1, fillOpacity: 0 }));
+                                    layer.setStyle({ opacity: 1, fillOpacity: 0.15, color: '#dc2626' });
+                                    boundaryGroup.clearLayers();
+                                    leafletMap.fitBounds(layer.getBounds(), { padding: [20, 20], duration: 0.5 });
+                                }, 250);
+                            }
+                        });
+                    },
+                    interactive: true
                 }).addTo(kabBoundaryGroup);
             }).catch(err => console.warn("Gagal memuat batas kabupaten:", err));
 
-            loadBoundaryData();
             loadDataFromServer();
         }
 
