@@ -121,14 +121,18 @@ export default function HomePage() {
       const map = L.map(mapRef.current, { zoomControl: false, layers: [osm] }).setView([-4.0, 122.5], 8);
       mapInstanceRef.current = map;
 
+      const bg = L.featureGroup().addTo(map);
       const ml = L.featureGroup().addTo(map);
       const ll = L.featureGroup().addTo(map);
+      boundaryGroupRef.current = bg;
       markersLayerRef.current = ml;
       labelsLayerRef.current = ll;
 
+      const kabBoundaryGroup = L.featureGroup().addTo(map);
+
       L.control.layers(
         { "Open Street Map": osm, "Google Satellite": satellite, "Google Terrain": googleTerrain, "ESRI": esri },
-        {},
+        { "Batas Kabupaten/Kota": kabBoundaryGroup, "Batas Kecamatan (Filter)": bg },
         { position: 'bottomleft' }
       ).addTo(map);
       L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -148,7 +152,42 @@ export default function HomePage() {
         tempEditMarkerRef.current = L.marker(e.latlng).addTo(map);
       });
 
-      // Batas wilayah removed per user request for performance
+      // Load kabupaten boundary GeoJSON (sultra.geojson)
+      try {
+        const kabResp = await fetch('/sultra.geojson');
+        if (kabResp.ok) {
+          const kabData = await kabResp.json();
+          L.geoJSON(kabData, {
+            style: () => ({
+              color: '#b91c1c',
+              weight: 2,
+              fillColor: '#fef2f2',
+              fillOpacity: 0.03,
+              dashArray: '6, 4',
+              opacity: 0.6
+            }),
+            onEachFeature: (feature, layer) => {
+              const name = feature.properties.NAME_2;
+              const type = feature.properties.TYPE_2 || '';
+              if (name) {
+                layer.bindTooltip(`${type} ${name}`, {
+                  permanent: false,
+                  direction: 'center',
+                  className: 'leaflet-tooltip-koperasi',
+                  sticky: true
+                });
+              }
+            },
+            interactive: true
+          }).addTo(kabBoundaryGroup);
+        }
+      } catch (err) { console.warn("Gagal memuat batas kabupaten:", err); }
+
+      // Load kecamatan boundary GeoJSON
+      try {
+        const resp = await fetch('/kecamatan.geojson');
+        if (resp.ok) boundaryDataRef.current = await resp.json();
+      } catch (err) { console.warn("Gagal memuat GeoJSON:", err); }
 
       // Load data
       loadData();
@@ -224,21 +263,30 @@ export default function HomePage() {
       const latVal = parseFloat(item.lat);
       const lngVal = parseFloat(item.lng);
       const hasCoords = !isNaN(latVal) && !isNaN(lngVal);
-      const isAktif = String(item.status || '').toLowerCase().includes('aktif') && !String(item.status || '').toLowerCase().includes('tidak');
-      const baseColor = isAktif ? 'var(--aktif)' : 'var(--non-aktif)';
 
       if (hasCoords) {
-        const customIcon = L.divIcon({
-          className: 'custom-logo-marker',
-          html: `<div style="width:34px;height:34px;background:white;border-radius:50%;border:3px solid ${baseColor};box-shadow:0 4px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;overflow:hidden;transition:all 0.3s ease;"><img src="/kopkel128.png" style="width:20px;height:20px;object-fit:contain;"></div>`,
-          iconSize: [34, 34], iconAnchor: [17, 17], tooltipAnchor: [0, -20],
+        const isAktif = String(item.status || '').toLowerCase().includes('aktif') && !String(item.status || '').toLowerCase().includes('tidak');
+        // Define colors based on global CSS variables for consistency, or literal fallbacks
+        const fillColor = isAktif ? '#10b981' : '#ef4444'; // var(--aktif) or var(--non-aktif)
+        const borderColor = isAktif ? '#047857' : '#b91c1c'; // darker shade for stroke
+
+        const marker = L.circleMarker([latVal, lngVal], {
+          radius: 6,
+          fillColor: fillColor,
+          color: borderColor,
+          weight: 1.5,
+          opacity: 1,
+          fillOpacity: 0.8
         });
 
-        const marker = L.marker([latVal, lngVal], { icon: customIcon });
         marker.bindTooltip(`<b>${item.nama}</b><br><small style="color:#cbd5e1;font-weight:400;">Desa ${item.desa}</small>`, { className: 'leaflet-tooltip-koperasi', direction: 'top', offset: [0, -5] });
         marker.on('click', () => selectItem(item, marker));
+        
+        // Custom property to store baseColor if used elsewhere
+        marker.baseColor = fillColor;
+        
         markersLayerRef.current.addLayer(marker);
-        allMarkersRef.current.push({ marker, data: item, baseColor });
+        allMarkersRef.current.push({ marker, data: item, baseColor: fillColor });
 
         const labelMarker = L.marker([latVal, lngVal], {
           icon: L.divIcon({ className: 'custom-map-label', html: `<div>${item.nama}</div>`, iconSize: [0, 0], iconAnchor: [0, 0] }), interactive: false,
@@ -272,7 +320,33 @@ export default function HomePage() {
 
   // ========== BOUNDARY ==========
   function updateBoundaryLayer(kabupaten, kecamatan) {
-    // Function logic removed as per user request to improve performance by not drawing boundaries
+    const L = LRef.current;
+    if (!L || !boundaryGroupRef.current) return;
+    boundaryGroupRef.current.clearLayers();
+    geoJsonLayerRef.current = null;
+    if (!boundaryDataRef.current || (!kabupaten && !kecamatan)) return;
+
+    let validKecList = [];
+    if (kabupaten && !kecamatan) {
+      validKecList = [...new Set(rawData.filter(i => i.kabupaten === kabupaten).map(i => String(i.kecamatan).toUpperCase()))];
+    }
+
+    const layer = L.geoJSON(boundaryDataRef.current, {
+      filter: (feature) => {
+        const propKec = feature.properties.nm_kecamatan || feature.properties.WADMKC || feature.properties.KECAMATAN || feature.properties.kecamatan || feature.properties.NAMOBJ;
+        if (!propKec) return false;
+        if (kecamatan !== '') return propKec.toUpperCase() === kecamatan.toUpperCase();
+        else if (kabupaten !== '' && validKecList.length > 0) return validKecList.includes(propKec.toUpperCase());
+        return false;
+      },
+      style: () => ({ color: 'var(--primary)', weight: 2, fillColor: 'var(--primary)', fillOpacity: 0.1, dashArray: '5, 5' }),
+      interactive: false,
+    }).addTo(boundaryGroupRef.current);
+    geoJsonLayerRef.current = layer;
+
+    if (layer.getBounds().isValid() && mapInstanceRef.current.hasLayer(boundaryGroupRef.current)) {
+      mapInstanceRef.current.fitBounds(layer.getBounds(), { padding: [50, 50], duration: 1 });
+    }
   }
 
   // ========== SELECT ITEM ==========

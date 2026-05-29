@@ -661,12 +661,62 @@
 
         // --- FUNGSI BARU UNTUK MEMUAT DATA GEOJSON ---
         async function loadBoundaryData() {
-            // Function logic removed as per user request to improve performance
+            try {
+                const response = await fetch(GEOJSON_URL);
+                if (response.ok) {
+                    boundaryData = await response.json();
+                }
+            } catch (error) {
+                console.warn("Gagal memuat GeoJSON kecamatan:", error);
+            }
         }
 
         // --- FUNGSI UNTUK MEMPERBARUI LAYER POLIGON BERDASARKAN FILTER ---
         function updateBoundaryLayer(kabupaten, kecamatan) {
-            // Function logic removed as per user request to improve performance
+            if (boundaryGroup) {
+                boundaryGroup.clearLayers();
+                geoJsonLayer = null;
+            }
+
+            if (!boundaryData) return;
+            if (!kabupaten && !kecamatan) return; // Sembunyikan poligon jika reset filter
+
+            // Ambil daftar kecamatan yang valid jika hanya Kabupaten yang dipilih
+            let validKecamatanList = [];
+            if (kabupaten && !kecamatan) {
+                validKecamatanList = [...new Set(rawData.filter(i => i.kabupaten === kabupaten).map(i => String(i.kecamatan).toUpperCase()))];
+            }
+
+            geoJsonLayer = L.geoJSON(boundaryData, {
+                filter: function(feature) {
+                    // Cek nama kecamatan pada properti GeoJSON
+                    const propKec = feature.properties.nm_kecamatan || feature.properties.WADMKC || feature.properties.KECAMATAN || feature.properties.kecamatan || feature.properties.NAMOBJ;
+                    if (!propKec) return false;
+
+                    if (kecamatan !== "") {
+                        return propKec.toUpperCase() === kecamatan.toUpperCase();
+                    } else if (kabupaten !== "" && validKecamatanList.length > 0) {
+                        return validKecamatanList.includes(propKec.toUpperCase());
+                    }
+                    return false;
+                },
+                style: function(feature) {
+                    return {
+                        color: "var(--primary)", // Warna batas
+                        weight: 2,
+                        fillColor: "var(--primary)", // Warna isi
+                        fillOpacity: 0.1,
+                        dashArray: '5, 5'
+                    };
+                },
+                // Tambahkan opsi ini agar poligon tidak mencegat event klik pada marker
+                interactive: false
+            }).addTo(boundaryGroup);
+
+            // Fokus zoom ke area poligon yang difilter (hanya jika layer aktif ditampilkan)
+            if (geoJsonLayer.getBounds().isValid() && leafletMap.hasLayer(boundaryGroup)) {
+                leafletMap.fitBounds(geoJsonLayer.getBounds(), { padding: [50, 50], duration: 1 });
+            }
         }
 
         function toggleSidebar() {
@@ -884,6 +934,8 @@
             
             leafletMap = L.map('map', { zoomControl: false, layers: [osm] }).setView([-4.0, 122.5], 8); 
 
+            boundaryGroup = L.featureGroup().addTo(leafletMap);
+            let kabBoundaryGroup = L.featureGroup().addTo(leafletMap);
             markersLayer = L.featureGroup().addTo(leafletMap); 
             labelsLayer = L.featureGroup().addTo(leafletMap);
 
@@ -894,7 +946,10 @@
                 "ESRI": esri
             };
 
-            const overlayMaps = {};
+            const overlayMaps = {
+                "Batas Kabupaten/Kota": kabBoundaryGroup,
+                "Batas Kecamatan (Filter)": boundaryGroup
+            };
 
             L.control.layers(baseMaps, overlayMaps, {position: 'bottomleft'}).addTo(leafletMap); 
             L.control.zoom({ position: 'bottomright' }).addTo(leafletMap);
@@ -905,8 +960,23 @@
             leafletMap.on('click', onMapClickForPin);
             initResizer(); 
 
-            // Batas wilayah removed per user request for performance
-            
+            // Load Kabupaten Boundary
+            fetch('/sultra.geojson').then(res => res.json()).then(data => {
+                L.geoJSON(data, {
+                    style: function(feature) {
+                        return { color: '#b91c1c', weight: 2, fillColor: '#fef2f2', fillOpacity: 0.03, dashArray: '6, 4', opacity: 0.6 };
+                    },
+                    onEachFeature: function(feature, layer) {
+                        const name = feature.properties.NAME_2;
+                        const type = feature.properties.TYPE_2 || '';
+                        if (name) {
+                            layer.bindTooltip(`${type} ${name}`, { permanent: false, direction: 'center', className: 'leaflet-tooltip-koperasi', sticky: true });
+                        }
+                    }
+                }).addTo(kabBoundaryGroup);
+            }).catch(err => console.warn("Gagal memuat batas kabupaten:", err));
+
+            loadBoundaryData();
             loadDataFromServer();
         }
 
@@ -1023,39 +1093,25 @@
                 const baseColor = isAktif ? "var(--aktif)" : "var(--non-aktif)";
                 
                 if (hasCoords) {
-                    // --- PERUBAHAN: LOGO CUSTOM MARKER ---
-                    // Ganti URL di bawah ini dengan URL logo asli Anda (disarankan format PNG transparan atau SVG)
-                    const logoUrl = "/kopkel128.png"; // Contoh ikon building
-                    
-                    const customIcon = L.divIcon({
-                        className: 'custom-logo-marker', // Class dihapus agar tidak kena style bawaan leaflet
-                        html: `
-                            <div style="
-                                width: 34px; height: 34px; 
-                                background: white; 
-                                border-radius: 50%; 
-                                border: 3px solid ${baseColor}; /* Warna Hijau/Merah dinamis */
-                                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-                                display: flex; align-items: center; justify-content: center;
-                                overflow: hidden;
-                                transition: all 0.3s ease;
-                            ">
-                                <img src="${logoUrl}" style="width: 20px; height: 20px; object-fit: contain;">
-                            </div>
-                        `,
-                        iconSize: [34, 34],
-                        iconAnchor: [17, 17], // Titik jangkar tepat di tengah marker
-                        tooltipAnchor: [0, -20]
+                    const isAktif = String(item.status || "").toLowerCase().includes("aktif") && !String(item.status || "").toLowerCase().includes("tidak");
+                    const fillColor = isAktif ? "#10b981" : "#ef4444";
+                    const borderColor = isAktif ? "#047857" : "#b91c1c";
+
+                    const marker = L.circleMarker([latVal, lngVal], {
+                        radius: 6,
+                        fillColor: fillColor,
+                        color: borderColor,
+                        weight: 1.5,
+                        opacity: 1,
+                        fillOpacity: 0.8
                     });
-                
-                    const marker = L.marker([latVal, lngVal], { icon: customIcon });
                     
                     marker.bindTooltip(`<b>${item.nama}</b><br><small style="color: #cbd5e1; font-weight:400;">Desa ${item.desa}</small>`, { className: 'leaflet-tooltip-koperasi', direction: 'top', offset: [0, -5] });
-                    // -------------------------------------
                 
                     marker.on('click', () => selectItem(item, marker));
+                    marker.baseColor = fillColor;
                     markersLayer.addLayer(marker); 
-                    allMarkers.push({ marker, data: item, baseColor });
+                    allMarkers.push({ marker, data: item, baseColor: fillColor });
 
                     const labelMarker = L.marker([latVal, lngVal], {
                         icon: L.divIcon({ className: 'custom-map-label', html: `<div>${item.nama}</div>`, iconSize: [0, 0], iconAnchor: [0, 0] }), interactive: false 
