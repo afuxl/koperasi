@@ -121,18 +121,14 @@ export default function HomePage() {
       const map = L.map(mapRef.current, { zoomControl: false, layers: [osm] }).setView([-4.0, 122.5], 8);
       mapInstanceRef.current = map;
 
-      const bg = L.featureGroup().addTo(map);
       const ml = L.featureGroup().addTo(map);
       const ll = L.featureGroup().addTo(map);
-      boundaryGroupRef.current = bg;
       markersLayerRef.current = ml;
       labelsLayerRef.current = ll;
 
-      const kabBoundaryGroup = L.featureGroup().addTo(map);
-
       L.control.layers(
         { "Open Street Map": osm, "Google Satellite": satellite, "Google Terrain": googleTerrain, "ESRI": esri },
-        { "Batas Kabupaten/Kota": kabBoundaryGroup, "Batas Kecamatan (Filter)": bg },
+        {},
         { position: 'bottomleft' }
       ).addTo(map);
       L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -152,42 +148,7 @@ export default function HomePage() {
         tempEditMarkerRef.current = L.marker(e.latlng).addTo(map);
       });
 
-      // Load kabupaten boundary GeoJSON (sultra.geojson)
-      try {
-        const kabResp = await fetch('/sultra.geojson');
-        if (kabResp.ok) {
-          const kabData = await kabResp.json();
-          L.geoJSON(kabData, {
-            style: () => ({
-              color: '#b91c1c',
-              weight: 2,
-              fillColor: '#fef2f2',
-              fillOpacity: 0.03,
-              dashArray: '6, 4',
-              opacity: 0.6
-            }),
-            onEachFeature: (feature, layer) => {
-              const name = feature.properties.NAME_2;
-              const type = feature.properties.TYPE_2 || '';
-              if (name) {
-                layer.bindTooltip(`${type} ${name}`, {
-                  permanent: false,
-                  direction: 'center',
-                  className: 'leaflet-tooltip-koperasi',
-                  sticky: true
-                });
-              }
-            },
-            interactive: true
-          }).addTo(kabBoundaryGroup);
-        }
-      } catch (err) { console.warn("Gagal memuat batas kabupaten:", err); }
-
-      // Load kecamatan boundary GeoJSON
-      try {
-        const resp = await fetch('/kecamatan.geojson');
-        if (resp.ok) boundaryDataRef.current = await resp.json();
-      } catch (err) { console.warn("Gagal memuat GeoJSON:", err); }
+      // Batas wilayah removed per user request for performance
 
       // Load data
       loadData();
@@ -311,33 +272,7 @@ export default function HomePage() {
 
   // ========== BOUNDARY ==========
   function updateBoundaryLayer(kabupaten, kecamatan) {
-    const L = LRef.current;
-    if (!L || !boundaryGroupRef.current) return;
-    boundaryGroupRef.current.clearLayers();
-    geoJsonLayerRef.current = null;
-    if (!boundaryDataRef.current || (!kabupaten && !kecamatan)) return;
-
-    let validKecList = [];
-    if (kabupaten && !kecamatan) {
-      validKecList = [...new Set(rawData.filter(i => i.kabupaten === kabupaten).map(i => String(i.kecamatan).toUpperCase()))];
-    }
-
-    const layer = L.geoJSON(boundaryDataRef.current, {
-      filter: (feature) => {
-        const propKec = feature.properties.nm_kecamatan || feature.properties.WADMKC || feature.properties.KECAMATAN || feature.properties.kecamatan || feature.properties.NAMOBJ;
-        if (!propKec) return false;
-        if (kecamatan !== '') return propKec.toUpperCase() === kecamatan.toUpperCase();
-        else if (kabupaten !== '' && validKecList.length > 0) return validKecList.includes(propKec.toUpperCase());
-        return false;
-      },
-      style: () => ({ color: 'var(--primary)', weight: 2, fillColor: 'var(--primary)', fillOpacity: 0.1, dashArray: '5, 5' }),
-      interactive: false,
-    }).addTo(boundaryGroupRef.current);
-    geoJsonLayerRef.current = layer;
-
-    if (layer.getBounds().isValid() && mapInstanceRef.current.hasLayer(boundaryGroupRef.current)) {
-      mapInstanceRef.current.fitBounds(layer.getBounds(), { padding: [50, 50], duration: 1 });
-    }
+    // Function logic removed as per user request to improve performance by not drawing boundaries
   }
 
   // ========== SELECT ITEM ==========
