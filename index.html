@@ -1217,7 +1217,7 @@
                 });
 
                 tr.onclick = () => {
-                    if (hasCoords) leafletMap.flyTo([parseFloat(item.lat), parseFloat(item.lng)], 18, {duration: 1.5});
+                    // Zoom ditangani oleh selectItem
                     const markerObj = allMarkers.find(m => m.data.id === item.id); selectItem(item, markerObj ? markerObj.marker : null);
                     if (window.innerWidth <= 992) { document.getElementById('sidebar').classList.remove('open'); document.getElementById('mobile-overlay').style.display = 'none'; document.getElementById('content-wrapper').scrollTop = 0; }
                 };
@@ -1247,10 +1247,10 @@
                 lastSelectedMarker = marker; 
                 
                 if (leafletMap) {
-                    leafletMap.flyTo(marker.getLatLng(), 16, { duration: 0.8 });
+                    leafletMap.flyTo(marker.getLatLng(), 17, { duration: 0.8 });
                 }
             } else if (item.lat && item.lng && leafletMap) {
-                leafletMap.flyTo([parseFloat(item.lat), parseFloat(item.lng)], 16, { duration: 0.8 });
+                leafletMap.flyTo([parseFloat(item.lat), parseFloat(item.lng)], 17, { duration: 0.8 });
             }
             
             document.querySelectorAll('.data-table tr').forEach(el => el.classList.remove('selected'));

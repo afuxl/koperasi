@@ -399,10 +399,10 @@ export default function HomePage() {
       lastSelectedMarkerRef.current = marker;
       
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.flyTo(marker.getLatLng(), 16, { duration: 0.8 });
+        mapInstanceRef.current.flyTo(marker.getLatLng(), 17, { duration: 0.8 });
       }
     } else if (item.lat && item.lng && mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([parseFloat(item.lat), parseFloat(item.lng)], 16, { duration: 0.8 });
+      mapInstanceRef.current.flyTo([parseFloat(item.lat), parseFloat(item.lng)], 17, { duration: 0.8 });
     }
     setSelectedRowId(item.id);
     setCurrentItem(item);
@@ -967,7 +967,7 @@ export default function HomePage() {
                     return (
                       <tr key={item.id} className={selectedRowId === item.id ? 'selected' : ''}
                         onClick={() => {
-                          if (hasCoords) mapInstanceRef.current?.flyTo([parseFloat(item.lat), parseFloat(item.lng)], 18, { duration: 1.5 });
+                          // Map zooming is handled inside selectItem
                           const markerObj = allMarkersRef.current.find(m => m.data.id === item.id);
                           selectItem(item, markerObj?.marker);
                         }}>
