@@ -1236,24 +1236,21 @@
             // Reset style marker sebelumnya
             if (lastSelectedMarker) { 
                 const mData = allMarkers.find(m => m.marker === lastSelectedMarker); 
-                if(mData) {
-                    // Kembalikan ke border standar
-                    const divEl = lastSelectedMarker.getElement().querySelector('div');
-                    if(divEl) {
-                        divEl.style.border = `3px solid ${mData.baseColor}`;
-                        divEl.style.transform = "scale(1)";
-                    }
+                if(mData && mData.marker.setStyle) {
+                    mData.marker.setStyle({ color: mData.baseColor === '#10b981' ? '#047857' : '#b91c1c', radius: 6, weight: 1.5 });
                 } 
             }
             
             // Set style marker yang baru diklik (Efek membesar dan warna kuning highlight)
-            if (marker) { 
-                const divEl = marker.getElement().querySelector('div');
-                if(divEl) {
-                    divEl.style.border = "3px solid var(--highlight)";
-                    divEl.style.transform = "scale(1.2)";
-                }
+            if (marker && marker.setStyle) { 
+                marker.setStyle({ color: '#f59e0b', radius: 8, weight: 3 });
                 lastSelectedMarker = marker; 
+                
+                if (leafletMap) {
+                    leafletMap.flyTo(marker.getLatLng(), 16, { duration: 0.8 });
+                }
+            } else if (item.lat && item.lng && leafletMap) {
+                leafletMap.flyTo([parseFloat(item.lat), parseFloat(item.lng)], 16, { duration: 0.8 });
             }
             
             document.querySelectorAll('.data-table tr').forEach(el => el.classList.remove('selected'));

@@ -390,15 +390,19 @@ export default function HomePage() {
   function selectItem(item, marker) {
     if (lastSelectedMarkerRef.current) {
       const mData = allMarkersRef.current.find(m => m.marker === lastSelectedMarkerRef.current);
-      if (mData) {
-        const divEl = lastSelectedMarkerRef.current.getElement()?.querySelector('div');
-        if (divEl) { divEl.style.border = `3px solid ${mData.baseColor}`; divEl.style.transform = 'scale(1)'; }
+      if (mData && mData.marker.setStyle) {
+        mData.marker.setStyle({ color: mData.baseColor === '#10b981' ? '#047857' : '#b91c1c', radius: 6, weight: 1.5 });
       }
     }
-    if (marker) {
-      const divEl = marker.getElement()?.querySelector('div');
-      if (divEl) { divEl.style.border = '3px solid var(--highlight)'; divEl.style.transform = 'scale(1.2)'; }
+    if (marker && marker.setStyle) {
+      marker.setStyle({ color: '#f59e0b', radius: 8, weight: 3 }); // highlight color
       lastSelectedMarkerRef.current = marker;
+      
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.flyTo(marker.getLatLng(), 16, { duration: 0.8 });
+      }
+    } else if (item.lat && item.lng && mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([parseFloat(item.lat), parseFloat(item.lng)], 16, { duration: 0.8 });
     }
     setSelectedRowId(item.id);
     setCurrentItem(item);
